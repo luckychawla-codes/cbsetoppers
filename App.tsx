@@ -1,4 +1,4 @@
-
+// CBSE TOPPERS - Premium Education Platform
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, User, QuizResult, Question } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2 } from './constants';
