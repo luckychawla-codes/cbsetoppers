@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, User, QuizResult, Question } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2 } from './constants';
-import { saveResult, verifyStudent, fetchUserAttemptCount, fetchUserResults, registerStudent, supabase } from './services/supabase';
+import { verifyStudent, registerStudent, supabase } from './services/supabase';
 
 const EXAM_DURATION = 90 * 60;
 const MAX_ATTEMPTS = 5;
@@ -356,27 +356,7 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
 
 const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string) => void, setView: (v: View) => void }> = ({ user, onStartExam, setView }) => {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [subjectStats, setSubjectStats] = useState<Record<string, { attempts: number, history: any[] }>>({});
-  const [loading, setLoading] = useState(false);
   const [showTgMenu, setShowTgMenu] = useState(false);
-
-  const fetchSubjectStats = useCallback(async (subj: string) => {
-    setLoading(true);
-    try {
-      const papers = ['P1', 'P2', 'Mock'];
-      const results: any = {};
-      for (const pid of papers) {
-        const [count, hist] = await Promise.all([
-          fetchUserAttemptCount(user.id, subj, pid),
-          fetchUserResults(user.id, subj, pid)
-        ]);
-        results[pid] = { attempts: count, history: hist };
-      }
-      setSubjectStats(results);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, [user.id]);
-
-  useEffect(() => { if (selectedSubject) fetchSubjectStats(selectedSubject); }, [selectedSubject, fetchSubjectStats]);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-20 relative text-left">
@@ -443,8 +423,8 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
           </div>
         ) : (
           <div className="animate-in fade-in duration-500">
-            <button onClick={() => { setSelectedSubject(null); setSubjectStats({}); }} className="mb-10 flex items-center gap-3 text-[10px] font-black uppercase text-slate-400 hover:text-violet-600 transition-all active:scale-95">
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg></div>
+            <button onClick={() => setSelectedSubject(null)} className="mb-10 flex items-center gap-3 text-[10px] font-black uppercase text-slate-400 hover:text-violet-600 transition-all active:scale-95">
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 v-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg></div>
               Back to Portal
             </button>
             <div className="flex flex-col items-center md:items-start text-center md:text-left mb-12">
@@ -453,19 +433,16 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {['P1', 'P2', 'Mock'].map(pid => {
-                const s = subjectStats[pid] || { attempts: 0, history: [] };
-                const canStart = s.attempts < MAX_ATTEMPTS;
                 return (
                   <div key={pid} className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-50 flex flex-col hover:shadow-2xl transition-all relative group overflow-hidden">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-violet-50 rounded-bl-[4rem] -mr-12 -mt-12 group-hover:bg-violet-600 transition-all duration-500" />
                     <div className="text-left relative z-10">
                       <h4 className="font-black text-base uppercase text-slate-900 mb-8">{pid === 'P1' ? 'Assessment P-1' : pid === 'P2' ? 'Assessment P-2' : 'Full Mock Exam'}</h4>
                       <div className="mb-10 flex flex-col">
-                        <div className="flex items-baseline gap-2"><span className="text-5xl font-black text-slate-900 tracking-tighter">{s.attempts}</span><span className="text-slate-200 font-bold text-2xl">/ {MAX_ATTEMPTS}</span></div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Completed Sessions</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Unlimited Access</span>
                       </div>
-                      <button onClick={() => onStartExam(selectedSubject, pid)} disabled={!canStart || loading} className={`w-full py-5 rounded-[1.5rem] font-black uppercase text-[11px] tracking-widest transition-all ${canStart ? 'bg-violet-600 text-white shadow-xl hover:bg-violet-700 active:scale-95' : 'bg-slate-100 text-slate-300'}`}>
-                        {loading ? 'SYNCING...' : canStart ? 'Launch Assessment' : 'Quota Full'}
+                      <button onClick={() => onStartExam(selectedSubject || '', pid)} className="w-full py-5 rounded-[1.5rem] font-black uppercase text-[11px] tracking-widest transition-all bg-violet-600 text-white shadow-xl hover:bg-violet-700 active:scale-95">
+                        Launch Assessment
                       </button>
                     </div>
                   </div>
@@ -558,9 +535,8 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
     setSubmitting(true);
     let score = 0;
     answers.forEach((ans, idx) => { if (ans === questions[idx].answer) score++; });
-    await saveResult({ student_id: user.id, name: user.name, score: score, paper_id: paperId, subject: subject, answers: answers });
     onFinish({ score, total: 100, subject, paperId, answers, timestamp: Date.now(), timeSpent: EXAM_DURATION - timeLeft });
-  }, [answers, questions, subject, paperId, timeLeft, onFinish, user]);
+  }, [answers, questions, subject, paperId, timeLeft, onFinish]);
 
   return (
     <div className="fixed inset-0 bg-white z-[100] flex flex-col overflow-hidden text-left">
