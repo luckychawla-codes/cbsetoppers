@@ -63,6 +63,21 @@ const TypingPartnershipText: React.FC = () => {
   );
 };
 
+const TypingGreeting: React.FC<{ name: string }> = ({ name }) => {
+  const fullText = `Ready for Success, ${name}?`;
+  const [displayed, setDisplayed] = useState('');
+  useEffect(() => {
+    let i = 0; setDisplayed('');
+    const timer = setInterval(() => {
+      setDisplayed(fullText.substring(0, i + 1));
+      i++;
+      if (i >= fullText.length) clearInterval(timer);
+    }, 50);
+    return () => clearInterval(timer);
+  }, [name]);
+  return <>{displayed}</>;
+};
+
 const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => void }> = ({ onLogin, setView }) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [regStep, setRegStep] = useState(1);
@@ -383,8 +398,8 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
         {!selectedSubject ? (
           <div className="animate-in fade-in duration-700">
             <div className="mb-10 text-center">
-              <h2 className="text-2xl md:text-4xl font-black text-violet-600 uppercase tracking-tighter leading-tight mb-1">
-                Ready for Success, {user.name.split(' ')[0]}?
+              <h2 className="text-2xl md:text-4xl font-black text-violet-600 uppercase tracking-tighter leading-tight mb-1 min-h-[1.2em]">
+                <TypingGreeting name={user.name.split(' ')[0]} />
               </h2>
               <p className="text-slate-400 font-bold text-[10px] md:text-xs uppercase tracking-[0.3em]">
                 Select a Subject to start MOCK TEST
