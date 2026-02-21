@@ -360,7 +360,7 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-20 relative text-left">
-      <header className="bg-white border-b px-6 md:px-12 py-3 md:py-5 flex justify-between items-center sticky top-0 z-50 shadow-md">
+      <header className="bg-white border-b px-6 md:px-12 py-4 md:py-6 flex justify-between items-center sticky top-0 z-50 shadow-md">
         <div className="flex items-center gap-3 md:gap-4">
           <img src={LOGO_URL} className="w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl shadow-sm" />
           <div className="text-left">
@@ -375,9 +375,6 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={() => setView('profile')} className="bg-violet-50 p-2 md:p-2.5 rounded-xl text-violet-600 hover:bg-violet-600 hover:text-white border border-violet-100 transition-all active:scale-95">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-          </button>
-          <button onClick={() => { localStorage.removeItem('pe_cbt_session'); window.location.reload(); }} className="bg-slate-50 p-2 md:p-2.5 rounded-xl text-slate-400 hover:text-red-500 border border-slate-100 transition-all active:scale-95">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
           </button>
         </div>
       </header>
@@ -690,7 +687,14 @@ const ProfileView: React.FC<{ user: User, onBack: () => void }> = ({ user, onBac
           </div>
         </div>
 
-        <div className="bg-slate-50 p-6 md:p-8 flex justify-center">
+        <div className="bg-slate-50 p-8 md:p-12 flex flex-col items-center gap-6 border-t border-slate-100">
+          <button
+            onClick={() => { localStorage.removeItem('pe_cbt_session'); window.location.reload(); }}
+            className="w-full max-w-xs py-4 bg-white border-2 border-red-50 text-red-500 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500 transition-all active:scale-95 flex items-center justify-center gap-3"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            Sign Out Account
+          </button>
           <img src={LOGO_URL} className="w-12 h-12 grayscale opacity-10" />
         </div>
       </div>
