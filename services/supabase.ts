@@ -128,16 +128,27 @@ export const fetchLeaderboard = async (subject: string, paperId: string) => {
   } catch (err) { return []; }
 };
 
-export const verifyStudent = async (name: string, identifier: string) => {
+export const verifyStudent = async (name: string, identifier: string, password?: string) => {
   try {
-    const { data, error } = await supabase
+    const query = supabase
       .from('students')
-      .select('id, name, student_id, email')
+      .select('id, name, student_id, email, password')
       .ilike('name', name.trim())
-      .or(`student_id.eq.${identifier.trim()},email.eq.${identifier.trim()}`)
-      .maybeSingle();
+      .or(`student_id.eq.${identifier.trim()},email.eq.${identifier.trim()}`);
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) throw error;
+    if (!data) return null;
+
+    // Direct password match (Note: In a real app, use bcrypt/argon2 hashing)
+    if (data.password && data.password !== password) {
+      throw new Error('Incorrect password');
+    }
+
     return data;
-  } catch (err) { return null; }
+  } catch (err) {
+    if ((err as any).message === 'Incorrect password') throw err;
+    return null;
+  }
 };
