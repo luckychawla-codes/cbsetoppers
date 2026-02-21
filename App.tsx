@@ -80,6 +80,7 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void }> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [showLegal, setShowLegal] = useState<null | 'privacy' | 'terms'>(null);
 
   const handleLogin = async () => {
@@ -141,7 +142,29 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void }> = ({ onLogin }) => {
             <div className="space-y-4 text-left w-full mt-2">
               <input type="text" placeholder="Email or Student ID" className="w-full p-4 rounded-2xl bg-slate-50 font-bold text-sm outline-none focus:ring-2 focus:ring-violet-100" value={roll} onChange={(e) => setRoll(e.target.value)} />
               <input type="password" placeholder="Password" className="w-full p-4 rounded-2xl bg-slate-50 font-bold text-sm outline-none focus:ring-2 focus:ring-violet-100" value={password} onChange={(e) => setPassword(e.target.value)} />
-              {error && <p className="text-red-500 text-[10px] font-black uppercase py-2 bg-red-50 rounded-xl text-center border border-red-100">{error}</p>}
+              {error && (
+                <div className="space-y-3">
+                  <p className="text-red-500 text-[10px] font-black uppercase py-2 bg-red-50 rounded-xl text-center border border-red-100">{error}</p>
+                  {error.toLowerCase().includes('verification') && resendCooldown === 0 && (
+                    <button 
+                      onClick={() => {
+                        setResendCooldown(60);
+                        const timer = setInterval(() => setResendCooldown(c => {
+                          if (c <= 1) { clearInterval(timer); return 0; }
+                          return c - 1;
+                        }), 1000);
+                        alert('Verification link resent to your email!');
+                      }}
+                      className="w-full text-violet-600 font-black uppercase text-[9px] tracking-widest py-1 underline decoration-2 underline-offset-4"
+                    >
+                      Resend Verification Link
+                    </button>
+                  )}
+                  {resendCooldown > 0 && (
+                    <p className="text-slate-400 font-bold uppercase text-[8px] tracking-widest text-center">Wait {resendCooldown}s to resend again</p>
+                  )}
+                </div>
+              )}
               <button onClick={handleLogin} disabled={isVerifying} className="w-full bg-violet-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 disabled:opacity-50">
                 {isVerifying ? 'Verifying...' : 'Enter Dashboard'}
               </button>
