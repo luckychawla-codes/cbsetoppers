@@ -63,7 +63,7 @@ const TypingPartnershipText: React.FC = () => {
   );
 };
 
-const AuthScreen: React.FC<{ onLogin: (u: User) => void }> = ({ onLogin }) => {
+const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => void }> = ({ onLogin, setView }) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [regStep, setRegStep] = useState(1);
   const [hasJoinedTG, setHasJoinedTG] = useState(false);
@@ -146,19 +146,27 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void }> = ({ onLogin }) => {
                 <div className="space-y-3">
                   <p className="text-red-500 text-[10px] font-black uppercase py-2 bg-red-50 rounded-xl text-center border border-red-100">{error}</p>
                   {error.toLowerCase().includes('verification') && resendCooldown === 0 && (
-                    <button 
-                      onClick={() => {
-                        setResendCooldown(60);
-                        const timer = setInterval(() => setResendCooldown(c => {
-                          if (c <= 1) { clearInterval(timer); return 0; }
-                          return c - 1;
-                        }), 1000);
-                        alert('Verification link resent to your email!');
-                      }}
-                      className="w-full text-violet-600 font-black uppercase text-[9px] tracking-widest py-1 underline decoration-2 underline-offset-4"
-                    >
-                      Resend Verification Link
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => {
+                          setResendCooldown(60);
+                          const timer = setInterval(() => setResendCooldown(c => {
+                            if (c <= 1) { clearInterval(timer); return 0; }
+                            return c - 1;
+                          }), 1000);
+                          alert('Verification link resent to your email!');
+                        }}
+                        className="w-full text-violet-600 font-black uppercase text-[9px] tracking-widest py-1 underline decoration-2 underline-offset-4"
+                      >
+                        Resend Verification Link
+                      </button>
+                      <button
+                        onClick={() => setView('verify')}
+                        className="w-full text-slate-400 font-black uppercase text-[9px] tracking-widest py-1 border border-slate-100 rounded-xl"
+                      >
+                        Try Verification Bypass
+                      </button>
+                    </div>
                   )}
                   {resendCooldown > 0 && (
                     <p className="text-slate-400 font-bold uppercase text-[8px] tracking-widest text-center">Wait {resendCooldown}s to resend again</p>
@@ -603,7 +611,61 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
   </div>
 );
 
-type View = 'auth' | 'dashboard' | 'exam' | 'result' | 'profile';
+type View = 'auth' | 'dashboard' | 'exam' | 'result' | 'profile' | 'verify';
+
+const VerificationPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const [email, setEmail] = useState('');
+  const [step, setStep] = useState<'input' | 'processing' | 'success'>('input');
+  const [error, setError] = useState('');
+
+  const handleVerify = async () => {
+    if (!email.trim() || !email.includes('@')) return setError('Please enter a valid email address');
+    setStep('processing'); setError('');
+    try {
+      const { data, error: updateError } = await (window as any).supabase
+        .from('students')
+        .update({ is_verified: true })
+        .eq('email', email.trim())
+        .select();
+      if (updateError) throw updateError;
+      if (!data || data.length === 0) { setStep('input'); return setError('Registration record not found'); }
+      setStep('success');
+    } catch (err) { setStep('input'); setError('Verification service unavailable'); }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#fcfaff] flex flex-col items-center justify-center p-6 relative text-left">
+      <div className="max-w-md w-full bg-white rounded-[3rem] shadow-2xl p-10 md:p-14 border border-slate-50 text-center animate-in zoom-in duration-700">
+        <img src={LOGO_URL} className="w-20 h-20 mx-auto rounded-3xl mb-8 shadow-lg" />
+        {step === 'input' && (
+          <div className="space-y-6">
+            <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-tight mb-2">Identify Verification</h1>
+            <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.3em] mb-8">Confirm your email to activate portal</p>
+            <div className="space-y-4 text-left">
+              <input type="email" placeholder="Enter your email" className="w-full p-5 rounded-3xl bg-slate-50 border border-transparent focus:border-violet-200 outline-none font-bold text-sm" value={email} onChange={(e) => setEmail(e.target.value)} />
+              {error && <div className="bg-red-50 text-red-500 text-[10px] font-black uppercase py-4 px-6 rounded-2xl border border-red-100">{error}</div>}
+              <button onClick={handleVerify} className="w-full py-5 bg-violet-600 text-white rounded-3xl font-black uppercase text-[11px] tracking-widest shadow-xl">Apply Email Fix</button>
+              <button onClick={onBack} className="w-full text-slate-400 font-bold uppercase text-[9px] tracking-widest pt-2">Back to Login</button>
+            </div>
+          </div>
+        )}
+        {step === 'processing' && (
+          <div className="py-12 space-y-8 animate-in fade-in duration-500">
+            <div className="w-24 h-24 border-4 border-slate-100 border-t-violet-600 rounded-full animate-spin mx-auto" />
+            <h2 className="text-xl font-black text-slate-900 uppercase">Synchronizing...</h2>
+          </div>
+        )}
+        {step === 'success' && (
+          <div className="space-y-8 py-4 animate-in zoom-in duration-700">
+            <div className="w-28 h-28 bg-green-500 text-white rounded-full mx-auto flex items-center justify-center shadow-2xl"><svg className="w-14 h-14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg></div>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase mb-2">Email Confirmed!</h2>
+            <button onClick={onBack} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-[10px] tracking-widest">Go to Portal</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const ProfileView: React.FC<{ user: User, onBack: () => void }> = ({ user, onBack }) => (
   <div className="min-h-screen bg-white md:bg-slate-50 flex flex-col items-center p-4 md:p-12 animate-in fade-in duration-500 text-left">
@@ -667,6 +729,12 @@ const App: React.FC = () => {
   const [examConfig, setExamConfig] = useState<{ subj: string, pid: string } | null>(null);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verify') === 'true') {
+      setView('verify');
+      return;
+    }
+
     const saved = localStorage.getItem('pe_cbt_session');
     if (saved) {
       try { setUser(JSON.parse(saved).user); setView('dashboard'); } catch (e) { localStorage.removeItem('pe_cbt_session'); }
@@ -697,11 +765,12 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen-safe font-['Plus_Jakarta_Sans'] text-slate-900 selection:bg-violet-100 overflow-x-hidden antialiased text-left">
-      {view === 'auth' && <AuthScreen onLogin={handleLogin} />}
+      {view === 'auth' && <AuthScreen onLogin={handleLogin} setView={setView} />}
       {view === 'dashboard' && user && <Dashboard user={user} onStartExam={handleStartExam} setView={setView} />}
       {view === 'exam' && user && examConfig && <QuizEngine subject={examConfig.subj} paperId={examConfig.pid} onFinish={handleFinishExam} user={user} />}
       {view === 'result' && quizResult && <ResultView result={quizResult} onDone={handleDoneResult} />}
       {view === 'profile' && user && <ProfileView user={user} onBack={() => setView('dashboard')} />}
+      {view === 'verify' && <VerificationPortal onBack={() => setView('auth')} />}
     </div>
   );
 };
