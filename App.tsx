@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, User, QuizResult, Question } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2 } from './constants';
-import { saveResult, verifyStudent, fetchUserAttemptCount, fetchUserResults, registerStudent } from './services/supabase';
+import { saveResult, verifyStudent, fetchUserAttemptCount, fetchUserResults, registerStudent, supabase } from './services/supabase';
 
 const EXAM_DURATION = 90 * 60;
 const MAX_ATTEMPTS = 5;
@@ -622,7 +622,7 @@ const VerificationPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     if (!email.trim() || !email.includes('@')) return setError('Please enter a valid email address');
     setStep('processing'); setError('');
     try {
-      const { data, error: updateError } = await (window as any).supabase
+      const { data, error: updateError } = await supabase
         .from('students')
         .update({ is_verified: true })
         .eq('email', email.trim())

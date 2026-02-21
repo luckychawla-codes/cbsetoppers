@@ -132,7 +132,7 @@ export const verifyStudent = async (identifier: string, password?: string) => {
   try {
     const query = supabase
       .from('students')
-      .select('id, name, student_id, email, password, dob, class, stream, phone')
+      .select('id, name, student_id, email, password, dob, class, stream, phone, is_verified')
       .or(`student_id.eq.${identifier.trim()},email.eq.${identifier.trim()}`);
 
     const { data, error } = await query.maybeSingle();
@@ -143,6 +143,10 @@ export const verifyStudent = async (identifier: string, password?: string) => {
     // Direct password match (Note: In a real app, use bcrypt/argon2 hashing)
     if (data.password && data.password !== password) {
       throw new Error('Incorrect password');
+    }
+
+    if (data.is_verified === false) {
+      throw new Error('Verification required. Please confirm your email.');
     }
 
     return data;
