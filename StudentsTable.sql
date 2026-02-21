@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS students (
   email TEXT UNIQUE NOT NULL,
   phone TEXT,
   password TEXT,
-  student_id VARCHAR(10) UNIQUE NOT NULL
+  student_id VARCHAR(10) UNIQUE NOT NULL,
+  is_verified BOOLEAN DEFAULT TRUE
 );
 
 -- 2. Create the PE Results Table
