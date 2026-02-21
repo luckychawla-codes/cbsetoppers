@@ -382,8 +382,6 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
             <h2 className="text-[12px] md:text-lg font-black uppercase leading-tight text-slate-800 tracking-tighter">CBSE TOPPERS</h2>
             <div className="flex items-center gap-1.5 md:gap-2 mt-0.5">
               <span className="text-violet-600 font-black text-[9px] md:text-[12px] uppercase">{user.name}</span>
-              <span className="w-0.5 h-0.5 md:w-1 md:h-1 bg-slate-300 rounded-full"></span>
-              <span className="text-slate-400 font-bold text-[9px] md:text-[12px] uppercase">ID: {user.rollNumber}</span>
             </div>
           </div>
         </div>
@@ -464,6 +462,21 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
           </div>
         )}
       </main>
+
+      <footer className="max-w-6xl mx-auto p-12 pt-0">
+        <div className="border-t border-slate-100 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col items-center md:items-start transition-all">
+            <h4 className="text-[10px] font-black uppercase text-slate-800 tracking-widest mb-2">CBSE TOPPERS</h4>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">© {new Date().getFullYear()} All Rights Reserved</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-6 md:gap-10">
+            <button className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Privacy Policy</button>
+            <button className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Terms of Service</button>
+            <button className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Refund Policy</button>
+            <button className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Honor Code</button>
+          </div>
+        </div>
+      </footer>
 
       {/* Telegram Bottom Sheet Support */}
       {showTgMenu && (
