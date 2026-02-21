@@ -128,13 +128,13 @@ export const fetchLeaderboard = async (subject: string, paperId: string) => {
   } catch (err) { return []; }
 };
 
-export const verifyStudent = async (name: string, rollNumber: string) => {
+export const verifyStudent = async (name: string, identifier: string) => {
   try {
     const { data, error } = await supabase
       .from('students')
-      .select('id, name, student_id')
+      .select('id, name, student_id, email')
       .ilike('name', name.trim())
-      .eq('student_id', rollNumber.trim())
+      .or(`student_id.eq.${identifier.trim()},email.eq.${identifier.trim()}`)
       .maybeSingle();
 
     if (error) throw error;

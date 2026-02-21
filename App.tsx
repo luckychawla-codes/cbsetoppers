@@ -83,12 +83,12 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void }> = ({ onLogin }) => {
   const [showLegal, setShowLegal] = useState<null | 'privacy' | 'terms'>(null);
 
   const handleLogin = async () => {
-    if (!name.trim() || !roll.trim()) return setError('Required: Name and Roll Number');
+    if (!name.trim() || !roll.trim()) return setError('Required: Name and ID/Email');
     setIsVerifying(true); setError('');
     try {
       const student = await verifyStudent(name, roll);
       if (student) onLogin({ id: String(student.id), name: student.name, rollNumber: student.student_id });
-      else setError('Verification failed. Check your Student ID.');
+      else setError('Verification failed. Check your ID or Email.');
     } catch (e) { setError('Network error. Try again.'); } finally { setIsVerifying(false); }
   };
 
@@ -138,7 +138,7 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void }> = ({ onLogin }) => {
             <TypingPartnershipText />
             <div className="space-y-4 text-left w-full mt-2">
               <input type="text" placeholder="Full Name" className="w-full p-4 rounded-2xl bg-slate-50 font-bold text-sm outline-none focus:ring-2 focus:ring-violet-100" value={name} onChange={(e) => setName(e.target.value)} />
-              <input type="password" placeholder="10-Character Student ID" className="w-full p-4 rounded-2xl bg-slate-50 font-bold text-sm tracking-widest outline-none focus:ring-2 focus:ring-violet-100" value={roll} onChange={(e) => setRoll(e.target.value)} />
+              <input type="text" placeholder="Email or Student ID" className="w-full p-4 rounded-2xl bg-slate-50 font-bold text-sm tracking-widest outline-none focus:ring-2 focus:ring-violet-100" value={roll} onChange={(e) => setRoll(e.target.value)} />
               {error && <p className="text-red-500 text-[10px] font-black uppercase py-2 bg-red-50 rounded-xl text-center border border-red-100">{error}</p>}
               <button onClick={handleLogin} disabled={isVerifying} className="w-full bg-violet-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 disabled:opacity-50">
                 {isVerifying ? 'Verifying...' : 'Enter Dashboard'}
