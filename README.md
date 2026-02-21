@@ -2,15 +2,14 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# CBSE TOPPERS - CBT Portal
+A premium, high-performance mock assessment platform for board preparation.
 
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/drive/1Eq4iMYL17_k3CkVzhh5Gk-DMsBXUqO_W
-
-## Run Locally
-
-**Prerequisites:**  Node.js
+### ✨ Features
+- **Premium Light Theme**: Clean Violet & Blackish aesthetic.
+- **Student ID System**: Fast 10-character alphanumeric identification.
+- **Instant Access**: Zero-wait registration and dashboard entry.
+- **Supabase Integrated**: Real-time assessments and results.js
 
 
 1. Install dependencies:
