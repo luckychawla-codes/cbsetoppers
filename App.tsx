@@ -372,6 +372,42 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
 const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string) => void, setView: (v: View) => void }> = ({ user, onStartExam, setView }) => {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [showTgMenu, setShowTgMenu] = useState(false);
+  const [showLegalSide, setShowLegalSide] = useState<'privacy' | 'terms' | 'refund' | 'honor' | null>(null);
+
+  const LEGAL_DATA = {
+    privacy: {
+      title: "Privacy Policy",
+      content: [
+        { h: "1. Data Collection", p: "We collect your name, email, and academic details to provide a personalized assessment experience and valid result tracking." },
+        { h: "2. Data Usage", p: "Your information is used solely for identity verification within the portal and providing support via our official channels." },
+        { h: "3. Protection", p: "We use enterprise-grade encryption to protect your data. Your personal information is never shared with third-party advertisers." }
+      ]
+    },
+    terms: {
+      title: "Terms of Service",
+      content: [
+        { h: "1. Fair Use", p: "CBSE TOPPERS is an educational resource. Users are expected to use the platform for legitimate exam preparation only." },
+        { h: "2. Account Security", p: "You are responsible for maintaining the confidentiality of your Student ID and account access." },
+        { h: "3. Content Rights", p: "All assessment materials, questions, and branding are the intellectual property of CBSE TOPPERS." }
+      ]
+    },
+    refund: {
+      title: "Refund Policy",
+      content: [
+        { h: "1. Platform Nature", p: "CBSE TOPPERS currently provides assessment services. As a digital education platform, access is provided instantly." },
+        { h: "2. No Refunds", p: "Since our services are digital and consumed immediately, we generally do not offer refunds once access is granted." },
+        { h: "3. Support", p: "If you face any technical issues with your access, please contact our support team on Telegram for an immediate fix." }
+      ]
+    },
+    honor: {
+      title: "Honor Code",
+      content: [
+        { h: "1. Integrity", p: "Students must attempt mock tests honestly without external help to accurately gauge their board preparation." },
+        { h: "2. Collaboration", p: "While discussing topics is encouraged on Telegram, sharing specific mock test answers to cheat the system is prohibited." },
+        { h: "3. Goal", p: "The ultimate objective of this platform is your academic growth. Academic honesty is the first step towards board success." }
+      ]
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-20 relative text-left">
@@ -483,16 +519,16 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
         </main>
 
         <footer className="max-w-6xl mx-auto p-12 pt-0">
-          <div className="border-t border-slate-100 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="border-t-2 border-slate-100 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex flex-col items-center md:items-start transition-all">
               <h4 className="text-[10px] font-black uppercase text-slate-800 tracking-widest mb-2">CBSE TOPPERS</h4>
               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">© {new Date().getFullYear()} All Rights Reserved</p>
             </div>
             <div className="flex flex-wrap justify-center gap-6 md:gap-10">
-              <button className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Privacy Policy</button>
-              <button className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Terms of Service</button>
-              <button className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Refund Policy</button>
-              <button className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Honor Code</button>
+              <button onClick={() => setShowLegalSide('privacy')} className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Privacy Policy</button>
+              <button onClick={() => setShowLegalSide('terms')} className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Terms of Service</button>
+              <button onClick={() => setShowLegalSide('refund')} className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Refund Policy</button>
+              <button onClick={() => setShowLegalSide('honor')} className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Honor Code</button>
             </div>
           </div>
         </footer>
@@ -545,6 +581,40 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
                 className="w-full mt-8 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all"
               >
                 Close Support
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Legal Bottom Sheet */}
+        {showLegalSide && (
+          <div className="fixed inset-0 z-[400] flex items-end justify-center p-4">
+            <div
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300"
+              onClick={() => setShowLegalSide(null)}
+            />
+            <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl relative z-10 p-10 pb-12 animate-in slide-in-from-bottom-full duration-500 overflow-hidden">
+              <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-10" />
+
+              <div className="text-center mb-10">
+                <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">{LEGAL_DATA[showLegalSide].title}</h3>
+                <p className="text-[10px] font-bold text-violet-500 uppercase tracking-[0.3em] mt-2">Compliance & Security</p>
+              </div>
+
+              <div className="space-y-8 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+                {LEGAL_DATA[showLegalSide].content.map((item, idx) => (
+                  <div key={idx} className="space-y-2 text-left">
+                    <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest">{item.h}</h4>
+                    <p className="text-sm text-slate-500 font-medium leading-relaxed">{item.p}</p>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowLegalSide(null)}
+                className="w-full mt-12 py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all"
+              >
+                Accept & Close
               </button>
             </div>
           </div>
