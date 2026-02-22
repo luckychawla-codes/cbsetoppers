@@ -156,14 +156,16 @@ const AIChatWidget: React.FC<{
                                                 a: ({ node, ...props }) => <a className="text-violet-600 underline font-bold" target="_blank" rel="noopener noreferrer" {...props} />,
                                                 p: ({ node, ...props }) => {
                                                     const content = JSON.stringify(props.children);
-                                                    if (content.includes('QUIZ_GEN_START')) return null;
+                                                    const isQuizMeta = content.includes('QUIZ_GEN_START') || content.includes('QUIZ_GEN_END');
+                                                    if (isQuizMeta) return null;
                                                     return <p className="mb-2 last:mb-0" {...props} />
                                                 },
                                                 code: ({ node, inline, className, children, ...props }: any) => {
                                                     const match = /language-(\w+)/.exec(className || '');
                                                     const codeValue = String(children).replace(/\n$/, '');
 
-                                                    if (codeValue.includes('QUIZ_GEN_START')) return null;
+                                                    const isQuizJSON = codeValue.includes('QUIZ_GEN_START') || (codeValue.includes('"questions"') && codeValue.includes('"options"'));
+                                                    if (isQuizJSON) return null;
 
                                                     // Special handling for python-diag (Diagrams/Figures)
                                                     const isVisualIntent = match && match[1] === 'python' && (/^\s*#?\s*v-diag/i.test(codeValue) || codeValue.includes('# v-diag'));
