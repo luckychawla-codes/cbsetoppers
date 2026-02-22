@@ -176,8 +176,10 @@ const TG_GROUP = "https://t.me/CBSET0PPER";
 const TG_PHYSICS = "https://t.me/TusharPatelPHYSICSNEET";
 const CONTACT_FOUNDER = "https://t.me/seniiiorr";
 const CONTACT_OWNER = "https://t.me/tarun_kumar_in";
+const CONTACT_CEO = "https://t.me/war4ver";
 const EMAIL_FOUNDER = "luckychawla@zohomail.in";
 const EMAIL_OWNER = "tarun.in@zohomail.in";
+const EMAIL_CEO = "abhisekpani479@gmail.com";
 
 
 const formatTime = (seconds: number) => {
@@ -345,6 +347,21 @@ const MaintenancePage: React.FC<{ data: any }> = ({ data }) => {
                     <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-0.5">OWNER</p>
                     <p className="font-black text-slate-800 uppercase tracking-tight">Tarun Kumar</p>
                     <p className="text-[9px] font-bold text-slate-400 mt-1">{EMAIL_OWNER}</p>
+                  </div>
+                </div>
+                <div className="w-10 h-10 bg-violet-600 text-white rounded-full flex items-center justify-center shadow-lg group-hover:rotate-12 transition-all">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" /></svg>
+                </div>
+              </a>
+              <a href={CONTACT_CEO} target="_blank" className="flex items-center justify-between p-6 bg-slate-50 border border-slate-100 rounded-[2rem] hover:border-violet-500 transition-all group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <span className="text-xl">🚀</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-0.5">CEO</p>
+                    <p className="font-black text-slate-800 uppercase tracking-tight">Abhishek Pani</p>
+                    <p className="text-[9px] font-bold text-slate-400 mt-1">{EMAIL_CEO}</p>
                   </div>
                 </div>
                 <div className="w-10 h-10 bg-violet-600 text-white rounded-full flex items-center justify-center shadow-lg group-hover:rotate-12 transition-all">
@@ -1561,6 +1578,18 @@ const Dashboard: React.FC<{
                     <span className="text-[9px] w-5 h-5 flex items-center justify-center bg-sky-500 text-white rounded-full shadow-sm">O</span>
                   </h4>
                   <p className="text-[11px] font-bold text-slate-400 mt-2">{EMAIL_OWNER}</p>
+                </div>
+              </a>
+              <a href={CONTACT_CEO} target="_blank" onClick={() => setShowTgMenu(false)} className="flex items-center gap-5 p-6 bg-violet-50/50 rounded-[2rem] group border-2 border-transparent hover:border-indigo-200 hover:bg-white transition-all shadow-sm">
+                <div className="w-16 h-16 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" /></svg>
+                </div>
+                <div className="text-left">
+                  <h4 className="text-xl font-black text-slate-800 leading-none flex items-center gap-2">
+                    Abhishek Pani
+                    <span className="text-[9px] w-5 h-5 flex items-center justify-center bg-violet-600 text-white rounded-full shadow-sm">C</span>
+                  </h4>
+                  <p className="text-[11px] font-bold text-slate-400 mt-2">{EMAIL_CEO}</p>
                 </div>
               </a>
             </div>
