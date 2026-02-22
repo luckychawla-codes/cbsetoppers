@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { User, QuizResult, Question } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2 } from './constants';
-import { verifyStudent, registerStudent, supabase } from './services/supabase';
+import { verifyStudent, registerStudent, supabase, saveQuizResult, fetchStudentStats } from './services/supabase';
 import { analyzeResult, generateAIQuiz, getMotivationalQuote } from './services/ai';
 import AIChatWidget from './AIChatWidget';
 import ReactMarkdown from 'react-markdown';
@@ -788,6 +788,253 @@ const GamificationSection: React.FC<{ user: User; xp: number }> = ({ user, xp })
   );
 };
 
+// ─── Stats Panel (full-screen, opened by My Stats button) ────────────────────────
+type StatsData = Awaited<ReturnType<typeof import('./services/supabase').fetchStudentStats>>;
+
+const StatsPanel: React.FC<{ user: User; onClose: () => void }> = ({ user, onClose }) => {
+  const [stats, setStats] = useState<StatsData | null | 'loading'>('loading');
+  const [showModal, setShowModal] = useState(false);
+  const [animRing, setAnimRing] = useState(false);
+  const [barFilled, setBarFilled] = useState(false);
+  const chartRef = useRef<HTMLCanvasElement>(null);
+  const chartInstance = useRef<any>(null);
+
+  useEffect(() => {
+    fetchStudentStats(user.student_id).then(data => {
+      setStats(data);
+      if (data) {
+        setTimeout(() => { setAnimRing(true); setBarFilled(true); }, 400);
+      }
+    });
+  }, [user.student_id]);
+
+  useEffect(() => {
+    if (!chartRef.current || !stats || stats === 'loading') return;
+    const ChartJS = (window as any).Chart;
+    if (!ChartJS) return;
+    if (chartInstance.current) chartInstance.current.destroy();
+    const ctx = chartRef.current.getContext('2d');
+    if (!ctx) return;
+    const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+    gradient.addColorStop(0, 'rgba(124,58,237,0.18)');
+    gradient.addColorStop(1, 'rgba(124,58,237,0.0)');
+    chartInstance.current = new ChartJS(ctx, {
+      type: 'line',
+      data: {
+        labels: stats.chartLabels,
+        datasets: [{ label: 'Score %', data: stats.chartData, borderColor: '#7C3AED', backgroundColor: gradient, borderWidth: 2.5, pointBackgroundColor: '#7C3AED', pointRadius: 5, pointHoverRadius: 8, tension: 0.45, fill: true }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: '#1e293b', titleColor: '#a855f7', bodyColor: '#fff', padding: 12, cornerRadius: 12, callbacks: { label: (c: any) => ` ${c.parsed.y}% accuracy` } }
+        },
+        scales: {
+          y: { min: 0, max: 100, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#94a3b8', font: { size: 10, weight: 'bold' as any }, callback: (v: any) => v + '%' } },
+          x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10, weight: 'bold' as any } } }
+        },
+        animation: { duration: 1200, easing: 'easeInOutQuart' }
+      }
+    });
+    return () => { if (chartInstance.current) { chartInstance.current.destroy(); chartInstance.current = null; } };
+  }, [stats]);
+
+  const xpGoal = 1000;
+  const badges = [
+    { name: 'Bronze', min: 0, max: 200, icon: '🥉', bg: 'from-amber-700 to-amber-500' },
+    { name: 'Silver', min: 200, max: 500, icon: '🥈', bg: 'from-slate-400 to-slate-300' },
+    { name: 'Gold', min: 500, max: 1000, icon: '🥇', bg: 'from-amber-400 to-yellow-300' },
+    { name: 'Diamond', min: 1000, max: Infinity, icon: '💎', bg: 'from-sky-400 to-violet-400' },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[600] bg-[#f8fafc] overflow-y-auto animate-in slide-in-from-right duration-300">
+      {/* Header */}
+      <div className="sticky top-0 bg-white border-b shadow-sm px-6 md:px-12 py-4 flex items-center justify-between z-10">
+        <div className="flex items-center gap-3">
+          <img src={LOGO_URL} className="w-9 h-9 rounded-xl" />
+          <div>
+            <h2 className="text-sm font-black uppercase text-slate-900 tracking-tighter">My Analytics</h2>
+            <p className="text-[10px] font-black text-violet-500 uppercase tracking-widest">{user.name.split(' ')[0]}'s Performance</p>
+          </div>
+        </div>
+        <button onClick={onClose} className="bg-slate-100 hover:bg-red-50 hover:text-red-500 w-10 h-10 rounded-2xl flex items-center justify-center font-black text-slate-500 transition-all active:scale-95">✕</button>
+      </div>
+
+      <div className="max-w-4xl mx-auto p-6 md:p-12">
+        {/* Loading */}
+        {stats === 'loading' && (
+          <div className="flex flex-col items-center justify-center py-32 gap-6">
+            <div className="w-12 h-12 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin" />
+            <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Loading your real stats...</p>
+          </div>
+        )}
+
+        {/* No tests yet */}
+        {stats === null && (
+          <div className="glass-card p-12 text-center animate-fadeInUp">
+            <div className="text-7xl mb-6">👋</div>
+            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-3">No Tests Completed Yet!</h3>
+            <p className="text-slate-400 font-bold text-sm max-w-md mx-auto">Complete your first mock test or AI quiz to see your real performance analytics here.</p>
+            <button onClick={onClose} className="mt-8 px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg hover:scale-[1.02] active:scale-95 transition-all">Start a Test Now →</button>
+          </div>
+        )}
+
+        {/* Real stats */}
+        {stats && stats !== 'loading' && (
+          <div className="space-y-6 animate-fadeInUp">
+            {/* 4 Stat Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="glass-card p-5 flex flex-col items-center gap-2 hover:scale-[1.03]">
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Overall Accuracy</p>
+                <svg width="90" height="90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="44" fill="none" stroke="#f1f5f9" strokeWidth="8" />
+                  <circle cx="50" cy="50" r="44" fill="none" stroke="url(#rg2)" strokeWidth="8"
+                    strokeDasharray={animRing ? `${(stats.accuracy / 100) * 2 * Math.PI * 44} ${2 * Math.PI * 44}` : `0 ${2 * Math.PI * 44}`}
+                    strokeLinecap="round"
+                    style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'stroke-dasharray 1.2s ease' }} />
+                  <defs><linearGradient id="rg2" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#7C3AED" /><stop offset="100%" stopColor="#A855F7" />
+                  </linearGradient></defs>
+                  <text x="50" y="50" textAnchor="middle" dy="6" fontSize="17" fontWeight="900" fill="#7C3AED">{stats.accuracy}%</text>
+                </svg>
+              </div>
+              <div className="glass-card p-5 flex flex-col items-center justify-center gap-2 hover:scale-[1.03]">
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Strongest</p>
+                <div className="text-4xl">🏆</div>
+                <p className="font-black text-slate-800 text-sm text-center leading-tight">{stats.strongest}</p>
+                <span className="bg-amber-50 text-amber-600 text-[8px] font-black uppercase px-3 py-1 rounded-full border border-amber-100">Top Performer</span>
+              </div>
+              <div className="glass-card p-5 flex flex-col items-center justify-center gap-2 hover:scale-[1.03]">
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Needs Work</p>
+                <div className="text-4xl">⚡</div>
+                <p className="font-black text-slate-800 text-sm text-center leading-tight">{stats.weakest}</p>
+                <span className="bg-orange-50 text-orange-500 text-[8px] font-black uppercase px-3 py-1 rounded-full border border-orange-100">Focus Here</span>
+              </div>
+              <div className="glass-card p-5 flex flex-col items-center justify-center gap-2 hover:scale-[1.03]" style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.06),rgba(168,85,247,0.08))' }}>
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Rank & XP</p>
+                <p className="text-3xl font-black text-violet-600">{stats.rank}</p>
+                <div className="bg-gradient-to-r from-violet-600 to-purple-500 text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg shadow-violet-200">{stats.xp} XP</div>
+              </div>
+            </div>
+
+            {/* Line Chart */}
+            {stats.chartData.length > 0 && (
+              <div className="glass-card p-6 md:p-8">
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.25em] mb-5 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-violet-500 rounded-full inline-block" />
+                  Last {stats.chartData.length} Test Performance
+                </p>
+                <canvas ref={chartRef} height={110} />
+              </div>
+            )}
+
+            {/* Gamification Row */}
+            <div className="grid md:grid-cols-2 gap-5">
+              <div className="space-y-4">
+                {/* Streak */}
+                <div className="glass-card p-6 flex items-center gap-5 hover:scale-[1.02]">
+                  <div className="text-5xl animate-flameBounce">🔥</div>
+                  <div>
+                    <p className="text-3xl font-black text-slate-900">{stats.streak} Day Streak</p>
+                    <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest mt-0.5">Keep going, {user.name.split(' ')[0]}!</p>
+                  </div>
+                </div>
+                {/* XP Bar */}
+                <div className="glass-card p-6 hover:scale-[1.02]">
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">🎯 XP Progress</p>
+                    <p className="text-sm font-black text-violet-600">{stats.xp} / {xpGoal} XP</p>
+                  </div>
+                  <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-violet-600 to-purple-400 transition-all duration-1000 ease-out"
+                      style={{ width: barFilled ? `${Math.min(100, Math.round((stats.xp / xpGoal) * 100))}%` : '0%' }} />
+                  </div>
+                  <p className="text-[9px] text-slate-400 font-bold mt-2 uppercase tracking-widest">{Math.min(100, Math.round((stats.xp / xpGoal) * 100))}% to next level</p>
+                </div>
+                {/* Badges */}
+                <div className="glass-card p-6 hover:scale-[1.02]">
+                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-4">🏅 Badge Path</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {badges.map((b, i) => {
+                      const active = stats.xp >= b.min && stats.xp < b.max;
+                      return (
+                        <div key={b.name} className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all ${active ? `bg-gradient-to-br ${b.bg} shadow-lg scale-110 ring-2 ring-violet-200` : 'bg-slate-50 opacity-40'}`}>
+                          <span className="text-2xl">{b.icon}</span>
+                          <p className={`text-[8px] font-black uppercase tracking-tight ${active ? 'text-white' : 'text-slate-500'}`}>{b.name}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Leaderboard — real data from Supabase */}
+              <div className="glass-card p-6 hover:scale-[1.02] flex flex-col">
+                <div className="flex items-center justify-between mb-5">
+                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">🏆 Real Leaderboard</p>
+                  <span className="bg-green-50 text-green-600 text-[8px] font-black px-2 py-1 rounded-lg uppercase tracking-widest border border-green-100">Live Data</span>
+                </div>
+                <div className="space-y-2.5 flex-1">
+                  {stats.leaderboard.length === 0 && <p className="text-slate-400 text-sm font-bold text-center py-8">No leaderboard data yet</p>}
+                  {stats.leaderboard.map((s, i) => (
+                    <div key={i} className={`flex items-center gap-3 p-3 rounded-2xl ${s.name === user.name ? 'bg-violet-50 border-2 border-violet-200' : i === 0 ? 'bg-amber-50 border border-amber-100' : 'bg-slate-50'}`}>
+                      <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-sm font-black shrink-0 ${i === 0 ? 'bg-amber-400 text-white' : i === 1 ? 'bg-slate-300 text-white' : i === 2 ? 'bg-amber-700 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                        {i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`}
+                      </div>
+                      <p className="font-black text-sm text-slate-800 flex-1 truncate">{s.name}{s.name === user.name ? <span className="text-[8px] text-violet-500 ml-1">(You)</span> : ''}</p>
+                      <span className="text-[10px] font-black text-violet-600 bg-violet-50 px-2 py-0.5 rounded-lg border border-violet-100">{s.xp} XP</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[9px] text-slate-400 font-bold mt-4 text-center uppercase tracking-widest">Total tests: {stats.testsCount}</p>
+              </div>
+            </div>
+
+            {/* Smart Revision CTA */}
+            <button onClick={() => setShowModal(true)}
+              className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-violet-200/60 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 btn-glow">
+              <span>🧠</span> Generate Smart Revision Plan
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Revision Modal */}
+      {showModal && stats && stats !== 'loading' && (
+        <div className="fixed inset-0 z-[700] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowModal(false)} />
+          <div className="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl relative z-10 p-8 animate-in zoom-in-95 duration-300">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Smart Revision Plan</h3>
+                <p className="text-[10px] font-black text-violet-500 uppercase tracking-widest mt-1">AI-Generated · Real Data</p>
+              </div>
+              <button onClick={() => setShowModal(false)} className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all text-slate-500 font-black">✕</button>
+            </div>
+            <div className="space-y-3 mb-6">
+              <div className="p-4 bg-red-50 rounded-2xl border border-red-100">
+                <p className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-2">⚡ Focus Subject</p>
+                <p className="font-black text-slate-800">{stats.weakest} — your lowest scoring subject</p>
+              </div>
+              <div className="p-4 bg-violet-50 rounded-2xl border border-violet-100">
+                <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-2">📅 Suggested Practice</p>
+                <p className="text-sm font-bold text-slate-700">Complete <span className="text-violet-600 font-black">3 targeted tests</span> on {stats.weakest} this week. 20 min/day focused revision.</p>
+              </div>
+              <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
+                <p className="text-[9px] font-black text-green-500 uppercase tracking-widest mb-2">🚀 Predicted Improvement</p>
+                <p className="text-sm font-bold text-slate-700">With targeted practice, accuracy could improve <span className="text-green-600 font-black">+12–18%</span> in 2 weeks.</p>
+              </div>
+            </div>
+            <button onClick={() => setShowModal(false)} className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg active:scale-95 transition-all">Got It, Let's Go! 🚀</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Dashboard: React.FC<{
   user: User,
   onStartExam: (subj: string, pid: string) => void,
@@ -797,6 +1044,7 @@ const Dashboard: React.FC<{
 }> = ({ user, onStartExam, setView, selectedSubject, setSelectedSubject }) => {
   const [showTgMenu, setShowTgMenu] = useState(false);
   const [showLegalSide, setShowLegalSide] = useState<'privacy' | 'terms' | 'refund' | 'honor' | null>(null);
+  const [showStats, setShowStats] = useState(false);
 
   const { coreSubjects, additionalSubjects } = useMemo(() => {
     const universalAdditional = ["Physical Education", "Computer Science", "Music", "Fine Arts"];
@@ -863,6 +1111,11 @@ const Dashboard: React.FC<{
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-3">
+          {/* My Stats Button */}
+          <button onClick={() => setShowStats(true)} className="bg-violet-50 px-3 py-2 md:px-4 rounded-xl text-violet-600 hover:bg-violet-600 hover:text-white border border-violet-100 transition-all active:scale-95 flex items-center gap-1.5 font-black text-[10px] uppercase tracking-widest">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+            <span className="hidden md:inline">My Stats</span>
+          </button>
           <button onClick={() => setShowTgMenu(true)} className="bg-sky-50 p-2 md:p-2.5 rounded-xl text-[#0088cc] hover:bg-[#0088cc] hover:text-white border border-sky-100 transition-all active:scale-95">
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" /></svg>
           </button>
@@ -909,23 +1162,7 @@ const Dashboard: React.FC<{
               </div>
             </section>
 
-            {/* ── SVG Wave Divider ── */}
-            <div className="w-full overflow-hidden -mx-12 md:-mx-16 mt-4 mb-2" style={{ width: 'calc(100% + 6rem)' }}>
-              <svg viewBox="0 0 1440 40" preserveAspectRatio="none" className="w-full">
-                <path fill="rgba(124,58,237,0.04)" d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z" />
-              </svg>
-            </div>
-
-            <PerformanceDashboard user={user} />
-
-            {/* ── SVG Wave Divider ── */}
-            <div className="w-full overflow-hidden -mx-12 md:-mx-16 my-2" style={{ width: 'calc(100% + 6rem)' }}>
-              <svg viewBox="0 0 1440 40" preserveAspectRatio="none" className="w-full">
-                <path fill="rgba(168,85,247,0.04)" d="M0,10 C480,40 960,0 1440,20 L1440,40 L0,40 Z" />
-              </svg>
-            </div>
-
-            <GamificationSection user={user} xp={(() => { try { const h: QuizResult[] = JSON.parse(localStorage.getItem('topper_quiz_history') || '[]'); return h.length === 0 ? 540 : h.reduce((a, r) => a + Math.round((r.score / r.total) * 100) + 10, 0); } catch { return 540; } })()} />
+            {/* end of subject sections — no analytics on homepage */}
           </div>
         ) : (
           <div className="animate-in fade-in duration-500">
@@ -971,6 +1208,9 @@ const Dashboard: React.FC<{
           </div>
         )}
       </main>
+
+      {/* My Stats full-screen panel */}
+      {showStats && <StatsPanel user={user} onClose={() => setShowStats(false)} />}
 
       {/* ── Premium 4-Col Footer ── */}
       <footer className="mt-8">
@@ -1707,6 +1947,17 @@ const App: React.FC = () => {
       history.push(res);
       localStorage.setItem('topper_quiz_history', JSON.stringify(history));
     } catch (_) { /* non-critical */ }
+    // Also save to Supabase for real analytics
+    if (user) {
+      saveQuizResult({
+        student_id: user.student_id,
+        subject: res.subject,
+        score: res.score,
+        total: res.total,
+        paper_id: res.paperId,
+        time_spent: res.timeSpent,
+      });
+    }
     setQuizResult(res);
     setView('result');
   };

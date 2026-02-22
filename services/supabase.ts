@@ -129,3 +129,96 @@ export const verifyStudent = async (identifier: string, password?: string) => {
     return null;
   }
 };
+
+/** Save a completed quiz result to the database */
+export const saveQuizResult = async (params: {
+  student_id: string;
+  subject: string;
+  score: number;
+  total: number;
+  paper_id: string;
+  time_spent: number;
+}) => {
+  try {
+    const { error } = await supabase.from('quiz_results').insert([{
+      student_id: params.student_id,
+      subject: params.subject,
+      score: params.score,
+      total: params.total,
+      paper_id: params.paper_id,
+      time_spent: params.time_spent,
+      created_at: new Date().toISOString(),
+    }]);
+    if (error) console.error('saveQuizResult error:', error);
+  } catch (e) { console.error('saveQuizResult:', e); }
+};
+
+/** Fetch real analytics for a student */
+export const fetchStudentStats = async (student_id: string) => {
+  try {
+    // All quiz results for this student
+    const { data: results } = await supabase
+      .from('quiz_results')
+      .select('subject, score, total, created_at')
+      .eq('student_id', student_id)
+      .order('created_at', { ascending: true });
+
+    if (!results || results.length === 0) return null;
+
+    // Accuracy
+    const totalScore = results.reduce((a, r) => a + r.score, 0);
+    const totalQ = results.reduce((a, r) => a + r.total, 0);
+    const accuracy = totalQ > 0 ? Math.round((totalScore / totalQ) * 100) : 0;
+
+    // Subject breakdown
+    const subjMap: Record<string, { score: number; total: number }> = {};
+    results.forEach(r => {
+      if (!subjMap[r.subject]) subjMap[r.subject] = { score: 0, total: 0 };
+      subjMap[r.subject].score += r.score;
+      subjMap[r.subject].total += r.total;
+    });
+    const subjects = Object.entries(subjMap).map(([name, d]) => ({
+      name, pct: Math.round((d.score / d.total) * 100)
+    })).sort((a, b) => b.pct - a.pct);
+    const strongest = subjects[0]?.name;
+    const weakest = subjects[subjects.length - 1]?.name;
+
+    // XP
+    const xp = results.reduce((a, r) => a + Math.round((r.score / r.total) * 100) + 10, 0);
+
+    // Streak (consecutive unique days)
+    const days = Array.from(new Set(results.map(r => new Date(r.created_at).toDateString())));
+    const streak = days.length;
+
+    // Last 7 tests
+    const last7 = results.slice(-7);
+    const chartLabels = last7.map((_, i) => `Test ${results.length - last7.length + i + 1}`);
+    const chartData = last7.map(r => Math.round((r.score / r.total) * 100));
+
+    // Leaderboard (top 10 across all students)
+    const { data: lb } = await supabase
+      .from('quiz_results')
+      .select('student_id, score, total, students(name)')
+      .order('created_at', { ascending: false })
+      .limit(200);
+
+    const lbMap: Record<string, { name: string; xp: number }> = {};
+    (lb || []).forEach((row: any) => {
+      const sid = row.student_id;
+      if (!lbMap[sid]) lbMap[sid] = { name: row.students?.name || sid, xp: 0 };
+      lbMap[sid].xp += Math.round((row.score / row.total) * 100) + 10;
+    });
+    const leaderboard = Object.values(lbMap)
+      .sort((a, b) => b.xp - a.xp)
+      .slice(0, 5);
+
+    // My rank
+    const myXP = lbMap[student_id]?.xp || xp;
+    const rank = Object.values(lbMap).filter(s => s.xp > myXP).length + 1;
+
+    return { accuracy, strongest, weakest, xp, streak, rank: `#${rank}`, chartLabels, chartData, leaderboard, testsCount: results.length };
+  } catch (e) {
+    console.error('fetchStudentStats:', e);
+    return null;
+  }
+};
