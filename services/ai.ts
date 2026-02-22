@@ -156,6 +156,9 @@ export const chatWithAI = async (
             - Trigger ONLY for explicit evaluation requests.
             - Output JSON ONLY between 'QUIZ_GEN_START' and 'QUIZ_GEN_END'.
             - MCQ format, 4 options, one correct answer.
+            - SMART VISUALS (CRITICAL): Be high-level! For Physics, Maths, or Chemistry, include questions that require analyzing a graph, diagram, or table.
+              To do this, embed a standard python block starting with '# v-diag' DIRECTLY inside the "question" string of the JSON. 
+              Example: "question": "\`\`\`python\n# v-diag\n...\nplt.show()\n\`\`\`\nBased on the circuit diagram above, find the..."
             
             JSON FORMAT (strict):
             QUIZ_GEN_START

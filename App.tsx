@@ -34,15 +34,28 @@ const LatexRenderer: React.FC<{ content: string, className?: string }> = ({ cont
           const codeValue = String(children).replace(/\n$/, '');
           if (match && match[1] === 'python' && codeValue.includes('# v-diag')) {
             const diagId = `diag-${Math.random().toString(36).substr(2, 9)}`;
-            getPyodide().then(py => runPythonDiagram(py, codeValue, diagId));
+            getPyodide().then(py => {
+              if (py) runPythonDiagram(py, codeValue, diagId);
+            });
             return (
-              <div className="my-6 bg-white rounded-3xl p-4 border-2 border-dashed border-violet-100 flex flex-col items-center justify-center min-h-[200px] relative">
-                <img id={diagId} className="max-w-full h-auto rounded-xl" alt="TopperAI Visual Support" />
+              <div className="my-6 bg-white rounded-3xl p-4 border-2 border-dashed border-violet-100 flex flex-col items-center justify-center min-h-[240px] relative overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                <img id={diagId} className="max-w-full h-auto rounded-xl z-10" alt="TopperAI Visual Support" />
                 <p id={`${diagId}-err`} className="text-red-500 text-[9px] font-mono mt-2" />
               </div>
             );
           }
-          return inline ? <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono text-violet-600" {...props}>{children}</code> : <pre className="bg-slate-900 text-slate-400 p-4 rounded-xl text-[10px] overflow-x-auto my-4"><code>{children}</code></pre>;
+          return inline ? (
+            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-violet-600" {...props}>{children}</code>
+          ) : (
+            <div className="relative my-4 group">
+              <div className="bg-slate-950 rounded-2xl overflow-hidden border border-white/5 shadow-xl">
+                <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/5">
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{match ? match[1] : 'code'}</span>
+                </div>
+                <pre className="p-4 overflow-x-auto text-[11px] font-mono text-slate-400 leading-relaxed custom-scrollbar"><code>{children}</code></pre>
+              </div>
+            </div>
+          );
         }
       }}
     >
