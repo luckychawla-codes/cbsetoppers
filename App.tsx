@@ -1329,52 +1329,33 @@ const Dashboard: React.FC<{
       {/* My Stats full-screen panel */}
       {showStats && <StatsPanel user={user} onClose={() => setShowStats(false)} />}
 
-      {/* ── Premium 4-Col Footer ── */}
-      <footer className="mt-8">
-        <svg viewBox="0 0 1440 40" preserveAspectRatio="none" className="w-full -mb-px">
-          <defs><linearGradient id="fGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#7C3AED" stopOpacity="0.2" />
-            <stop offset="50%" stopColor="#A855F7" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#7C3AED" stopOpacity="0.2" />
-          </linearGradient></defs>
-          <path fill="url(#fGrad)" d="M0,15 C360,40 1080,0 1440,20 L1440,40 L0,40 Z" />
-        </svg>
-        <div className="bg-slate-900 px-6 md:px-16 pt-12 pb-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
-              <div>
-                <img src={LOGO_URL} className="w-12 h-12 rounded-2xl mb-4 shadow-lg" />
-                <h4 className="text-white font-black text-sm uppercase tracking-tight mb-2">CBSE Toppers</h4>
-                <p className="text-slate-400 text-[11px] font-medium leading-relaxed">AI-Powered Board Preparation Platform</p>
+      {/* ── Minimalist Light Footer ── */}
+      <footer className="mt-24 bg-white border-t border-slate-100 pt-16 pb-12">
+        <div className="max-w-6xl mx-auto px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-10">
+            <div className="flex flex-col items-center md:items-start gap-3">
+              <div className="flex items-center gap-3">
+                <img src={LOGO_URL} className="w-10 h-10 rounded-xl shadow-sm border border-slate-50" />
+                <h4 className="text-slate-900 font-black uppercase text-sm tracking-tight">CBSE Toppers</h4>
               </div>
-              <div>
-                <p className="text-[9px] font-black uppercase text-violet-400 tracking-widest mb-4">Quick Links</p>
-                <ul className="space-y-2.5">
-                  {['Home', 'Mock Tests', 'Performance', 'Leaderboard'].map(l => (
-                    <li key={l}><button className="text-slate-400 text-[11px] font-bold hover:text-white transition-colors">{l}</button></li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="text-[9px] font-black uppercase text-violet-400 tracking-widest mb-4">Resources</p>
-                <ul className="space-y-2.5">
-                  {([['Privacy Policy', 'privacy'], ['Terms of Service', 'terms'], ['Refund Policy', 'refund'], ['Honor Code', 'honor']] as [string, any][]).map(([l, k]) => (
-                    <li key={k}><button onClick={() => setShowLegalSide(k)} className="text-slate-400 text-[11px] font-bold hover:text-white transition-colors">{l}</button></li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="text-[9px] font-black uppercase text-violet-400 tracking-widest mb-4">Community</p>
-                <ul className="space-y-2.5">
-                  <li><a href={TG_CHANNEL} target="_blank" className="text-slate-400 text-[11px] font-bold hover:text-white transition-colors flex items-center gap-2">📱 Telegram</a></li>
-                  <li><a href="#" className="text-slate-400 text-[11px] font-bold hover:text-white transition-colors flex items-center gap-2">📸 Instagram</a></li>
-                  <li><a href="#" className="text-slate-400 text-[11px] font-bold hover:text-white transition-colors flex items-center gap-2">▶️ YouTube</a></li>
-                </ul>
-              </div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Excellence Redefined</p>
             </div>
-            <div className="border-t border-slate-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-2">
-              <p className="text-slate-500 text-[10px] font-bold">© {new Date().getFullYear()} CBSE Toppers · All Rights Reserved</p>
-              <p className="text-slate-600 text-[10px] font-bold tracking-wide">Built with AI for Future Toppers ✨</p>
+
+            <div className="flex flex-wrap justify-center gap-x-10 gap-y-4">
+              {([['Privacy Policy', 'privacy'], ['Terms of Service', 'terms'], ['Honor Code', 'honor']] as [string, any][]).map(([l, k]) => (
+                <button
+                  key={k}
+                  onClick={() => setShowLegalSide(k)}
+                  className="text-[10px] font-black text-slate-400 hover:text-violet-600 uppercase tracking-widest transition-all"
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-6">
+              <a href={TG_CHANNEL} target="_blank" className="text-slate-400 hover:text-[#0088cc] transition-colors"><svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" /></svg></a>
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">© {new Date().getFullYear()} CBSE TOPPERS</p>
             </div>
           </div>
         </div>
