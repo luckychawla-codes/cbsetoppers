@@ -32,7 +32,8 @@ const LatexRenderer: React.FC<{ content: string, className?: string }> = ({ cont
         code: ({ node, inline, className, children, ...props }: any) => {
           const match = /language-(\w+)/.exec(className || '');
           const codeValue = String(children).replace(/\n$/, '');
-          if (match && match[1] === 'python' && codeValue.includes('# v-diag')) {
+          const isVisualIntent = match && match[1] === 'python' && (/^\s*#?\s*v-diag/i.test(codeValue) || codeValue.includes('# v-diag'));
+          if (isVisualIntent) {
             const diagId = `diag-${Math.random().toString(36).substr(2, 9)}`;
             getPyodide().then(py => {
               if (py) runPythonDiagram(py, codeValue, diagId);

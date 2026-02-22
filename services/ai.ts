@@ -141,57 +141,38 @@ export const chatWithAI = async (
             Real Numbers | Polynomials | Pair of Linear Equations | Quadratic Equations | AP | Triangles | Coordinate Geometry | Trigonometry | Applications of Trigonometry | Circles | Constructions | Areas Related to Circles | Surface Areas & Volumes | Statistics | Probability.
 
             ══════════════════════════════════════════════
-            CRITICAL: INTENT RESOLUTION (MUST FOLLOW)
+            CRITICAL: INTENT & FORMATTING RULES
             ══════════════════════════════════════════════
-            1. VISUAL/EXPLANATION REQUEST (e.g., "Draw", "Show", "Graph", "Diagram", "Chart", "Table"): 
-               - ALWAYS use a Python block starting with '# v-diag' (using the v-diag tag).
-               - NEVER use 'QUIZ_GEN_START' JSON for visual requests.
-            2. TEST/QUIZ REQUEST (e.g., "Mock Test", "Quiz me", "Take a test"):
-               - ONLY use the 'QUIZ_GEN_START' JSON format.
-               - DO NOT start a quiz if the user just wants a diagram.
-
-            ══════════════════════════════════════════════
-            QUIZ GENERATION RULES:
-            ══════════════════════════════════════════════
-            - Trigger ONLY for explicit evaluation requests.
-            - Output JSON ONLY between 'QUIZ_GEN_START' and 'QUIZ_GEN_END'.
-            - MCQ format, 4 options, one correct answer.
-            - SMART VISUALS (CRITICAL): Be high-level! For Physics, Maths, or Chemistry, include questions that require analyzing a graph, diagram, or table.
-              To do this, embed a standard python block starting with '# v-diag' DIRECTLY inside the "question" string of the JSON. 
-              Example: "question": "\`\`\`python\n# v-diag\n...\nplt.show()\n\`\`\`\nBased on the circuit diagram above, find the..."
+            1. VISUAL REQUESTS (Draw, Show, Visual, Visuals, Image, Photo, Drawing, Sketch, Graph, Diagram, Structure, Table): 
+               - YOU MUST USE A MARKDOWN CODE BLOCK.
+               - Format: \`\`\`python [your code here] \`\`\`
+               - The VERY FIRST line inside the triple backticks must be: # v-diag
+               - DO NOT output the code as plain text. DO NOT omit the '#' symbol.
+               - Library: matplotlib.pyplot as plt, numpy as np.
             
-            JSON FORMAT (strict):
-            QUIZ_GEN_START
-            {
-              "subject": "Chemistry",
-              "questions": [{ "question": "...", "options": ["A. ...", "B. ...", "C. ...", "D. ..."], "answer": 0, "topic": "Name" }]
-            }
-            QUIZ_GEN_END
+            2. QUIZ REQUESTS (Test, Quiz, Mock):
+               - ONLY use 'QUIZ_GEN_START' and 'QUIZ_GEN_END'.
+               - For questions requiring a diagram, embed the Python block (with # v-diag) INSIDE the "question" string of the JSON.
 
             ══════════════════════════════════════════════
-            VISUAL DIAGRAMS, CHARTS & TABLES (PYTHON)
+            PYTHON VISUALIZATION GUIDE (# v-diag)
             ══════════════════════════════════════════════
-            Use this for ALL visual teaching requests.
-            - FIRST LINE MUST BE: '# v-diag'
-            - Library: matplotlib.pyplot (use plt.show() at end).
-            - For MATH: Plot functions.
-            - For CHEM: Draw structures with polygons or text.
-            - For TABLES: Use plt.table() for professional grids.
-            Example:
+            Example of correct formatting for a visual:
             \`\`\`python
             # v-diag
             import matplotlib.pyplot as plt
-            # ... coding logic ...
+            # ... draw something ...
             plt.show()
             \`\`\`
-            Note: This is your primary way to be a visual mentor.
+            Note: For Chemistry, use polygons for rings (Benzene, etc.). For Physics, use plt.plot().
+            This is MANDATORY for all visual requests. Do not just explain with text.`
 
             ══════════════════════════════════════════════
             YOUR PERSONA:
             ══════════════════════════════════════════════
-            - Friendly, professional, supportive mentor and close friend.
-            - MATH/SCIENCE: Always use LaTeX inline ($...$) or display ($$...$$) notation for equations.
-            - COMPETITIVE EXAMS: You are deeply aware of JEE (Mains/Adv), NEET, CUET, and NDA syllabus. Provide high-yield, conceptually deep explanations that bridge CBSE concepts with competitive logic.
+- Friendly, professional, supportive mentor and close friend.
+            - MATH / SCIENCE: Always use LaTeX inline($...$) or display($$...$$) notation for equations.
+            - COMPETITIVE EXAMS: You are deeply aware of JEE(Mains / Adv), NEET, CUET, and NDA syllabus.Provide high - yield, conceptually deep explanations that bridge CBSE concepts with competitive logic.
             - AI launches 'Quiz Mode' automatically from the JSON – do NOT ask students to submit answers in chat.`
                     },
                     ...messages
@@ -216,13 +197,13 @@ export const getMotivationalQuote = async (user: User) => {
     const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
 
     try {
-        const prompt = `Student: ${user.name}, Class ${user.class}, Stream ${user.stream || 'General'}. 2026 Boards. 
-        Task: Create a powerful, soulful, 1-sentence quote that feels like a warm hug and a push forward. Use 1 emoji. No quotes around the text.`;
+        const prompt = `Student: ${ user.name }, Class ${ user.class }, Stream ${ user.stream || 'General' } .2026 Boards.
+    Task: Create a powerful, soulful, 1 - sentence quote that feels like a warm hug and a push forward.Use 1 emoji.No quotes around the text.`;
 
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                "Authorization": `Bearer ${ OPENROUTER_API_KEY } `,
                 "Content-Type": "application/json",
                 "HTTP-Referer": window.location.origin,
                 "X-Title": "CBSE TOPPERS"

@@ -166,7 +166,8 @@ const AIChatWidget: React.FC<{
                                                     if (codeValue.includes('QUIZ_GEN_START')) return null;
 
                                                     // Special handling for python-diag (Diagrams/Figures)
-                                                    if (match && match[1] === 'python' && codeValue.includes('# v-diag')) {
+                                                    const isVisualIntent = match && match[1] === 'python' && (/^\s*#?\s*v-diag/i.test(codeValue) || codeValue.includes('# v-diag'));
+                                                    if (isVisualIntent) {
                                                         const diagId = `diag-${Math.random().toString(36).substr(2, 9)}`;
                                                         setTimeout(() => runPythonForDiagram(codeValue, diagId), 100);
                                                         return (
