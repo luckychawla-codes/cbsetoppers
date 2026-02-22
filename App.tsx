@@ -334,7 +334,7 @@ const MaintenancePage: React.FC<{ data: any }> = ({ data }) => {
                     <span className="text-xl">🛡️</span>
                   </div>
                   <div className="text-left">
-                    <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-0.5">Co-Founder</p>
+                    <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-0.5">OWNER</p>
                     <p className="font-black text-slate-800 uppercase tracking-tight">Tarun Chaudhary</p>
                   </div>
                 </div>
