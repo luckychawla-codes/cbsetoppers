@@ -177,7 +177,7 @@ const TG_PHYSICS = "https://t.me/TusharPatelPHYSICSNEET";
 const CONTACT_FOUNDER = "https://t.me/seniiiorr";
 const CONTACT_OWNER = "https://t.me/tarun_kumar_in";
 const EMAIL_FOUNDER = "luckychawla@zohomail.in";
-const EMAIL_OWNER = "tarun.pncml123@gmail.com";
+const EMAIL_OWNER = "tarun.in@zohomail.in";
 
 
 const formatTime = (seconds: number) => {
