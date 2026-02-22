@@ -32,16 +32,27 @@ const LatexRenderer: React.FC<{ content: string, className?: string }> = ({ cont
         code: ({ node, inline, className, children, ...props }: any) => {
           const match = /language-(\w+)/.exec(className || '');
           const codeValue = String(children).replace(/\n$/, '');
-          const isVisualIntent = match && match[1] === 'python' && (/^\s*#?\s*v-diag/i.test(codeValue) || codeValue.includes('# v-diag'));
+          // Permissive check: look for v-diag with or without #, and handle missing language tag if contents look like matplotlib
+          const hasVDiag = /^\s*#?\s*v-diag/i.test(codeValue) || codeValue.includes('# v-diag') || codeValue.includes('v-diag');
+          const isPython = match && match[1] === 'python';
+          const isVisualIntent = hasVDiag && (isPython || codeValue.includes('import matplotlib') || !match);
+
           if (isVisualIntent) {
             const diagId = `diag-${Math.random().toString(36).substr(2, 9)}`;
             getPyodide().then(py => {
               if (py) runPythonDiagram(py, codeValue, diagId);
             });
             return (
-              <div className="my-6 bg-white rounded-3xl p-4 border-2 border-dashed border-violet-100 flex flex-col items-center justify-center min-h-[240px] relative overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                <img id={diagId} className="max-w-full h-auto rounded-xl z-10" alt="TopperAI Visual Support" />
-                <p id={`${diagId}-err`} className="text-red-500 text-[9px] font-mono mt-2" />
+              <div
+                onClick={() => {
+                  const img = document.getElementById(diagId) as HTMLImageElement;
+                  if (img && img.src) window.dispatchEvent(new CustomEvent('topper-zoom', { detail: img.src }));
+                }}
+                className="my-4 bg-white rounded-2xl p-3 border border-slate-100 flex flex-col items-center justify-center max-h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all cursor-zoom-in group"
+              >
+                <img id={diagId} className="max-w-full max-h-full object-contain rounded-lg z-10 transition-transform group-hover:scale-[1.02]" alt="TopperAI Visual Support" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors z-20" />
+                <p id={`${diagId}-err`} className="text-red-500 text-[8px] font-mono mt-1 absolute bottom-1" />
               </div>
             );
           }
@@ -75,16 +86,26 @@ const SimpleLatex: React.FC<{ content: string, className?: string }> = ({ conten
         code: ({ node, inline, className, children, ...props }: any) => {
           const match = /language-(\w+)/.exec(className || '');
           const codeValue = String(children).replace(/\n$/, '');
-          const isVisualIntent = match && match[1] === 'python' && (/^\s*#?\s*v-diag/i.test(codeValue) || codeValue.includes('# v-diag'));
+          const hasVDiag = /^\s*#?\s*v-diag/i.test(codeValue) || codeValue.includes('# v-diag') || codeValue.includes('v-diag');
+          const isPython = match && match[1] === 'python';
+          const isVisualIntent = hasVDiag && (isPython || codeValue.includes('import matplotlib') || !match);
+
           if (isVisualIntent) {
             const diagId = `diag-${Math.random().toString(36).substr(2, 9)}`;
             getPyodide().then(py => {
               if (py) runPythonDiagram(py, codeValue, diagId);
             });
             return (
-              <div className="my-6 bg-white rounded-3xl p-4 border-2 border-dashed border-violet-100 flex flex-col items-center justify-center min-h-[240px] relative overflow-hidden shadow-sm">
-                <img id={diagId} className="max-w-full h-auto rounded-xl z-10" alt="TopperAI Visual Support" />
-                <p id={`${diagId}-err`} className="text-red-500 text-[9px] font-mono mt-2" />
+              <div
+                onClick={() => {
+                  const img = document.getElementById(diagId) as HTMLImageElement;
+                  if (img && img.src) window.dispatchEvent(new CustomEvent('topper-zoom', { detail: img.src }));
+                }}
+                className="my-3 bg-white rounded-xl p-2 border border-slate-100 flex flex-col items-center justify-center max-h-[140px] relative overflow-hidden shadow-sm hover:shadow-md transition-all cursor-zoom-in group"
+              >
+                <img id={diagId} className="max-w-full max-h-full object-contain rounded-lg z-10" alt="TopperAI Visual Support" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors z-20" />
+                <p id={`${diagId}-err`} className="text-red-500 text-[7px] font-mono absolute bottom-0" />
               </div>
             );
           }
@@ -2056,6 +2077,13 @@ const App: React.FC = () => {
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   const [examConfig, setExamConfig] = useState<{ subj: string, pid: string } | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [zoomedImg, setZoomedImg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleZoom = (e: any) => setZoomedImg(e.detail);
+    window.addEventListener('topper-zoom', handleZoom);
+    return () => window.removeEventListener('topper-zoom', handleZoom);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -2167,6 +2195,23 @@ const App: React.FC = () => {
           setView('exam');
         }}
       />
+
+      {/* ── Global Zoom Modal ── */}
+      {zoomedImg && (
+        <div
+          className="fixed inset-0 z-[1000] bg-slate-900/90 backdrop-blur-xl flex items-center justify-center p-4 md:p-20 animate-in fade-in zoom-in duration-300 pointer-events-auto"
+          onClick={() => setZoomedImg(null)}
+        >
+          <button className="absolute top-10 right-10 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all shadow-2xl border border-white/10">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+          <img
+            src={zoomedImg}
+            className="max-w-full max-h-full object-contain rounded-3xl shadow-[0_0_80px_rgba(0,0,0,0.5)] border-4 border-white/5 animate-in slide-in-from-bottom-10 duration-500"
+            alt="Zoomed Visual"
+          />
+        </div>
+      )}
     </div>
   );
 };

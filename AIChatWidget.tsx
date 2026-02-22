@@ -19,7 +19,6 @@ const AIChatWidget: React.FC<{
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [pyodide, setPyodide] = useState<any>(null);
-    const [isPyLoading, setIsPyLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     // Initialize Pyodide
@@ -32,7 +31,7 @@ const AIChatWidget: React.FC<{
         if (py) runPythonDiagram(py, code, elementId);
     };
 
-    // Initialize first message when user is available
+    // Initialize first message
     useEffect(() => {
         if (user && messages.length === 0) {
             setMessages([
@@ -54,15 +53,11 @@ const AIChatWidget: React.FC<{
     useEffect(() => {
         const handleOpen = (e: any) => {
             setIsOpen(true);
-            if (e.detail?.message) {
-                setInput(e.detail.message);
-            }
+            if (e.detail?.message) setInput(e.detail.message);
         };
         window.addEventListener('open-topper-chat', handleOpen);
         return () => window.removeEventListener('open-topper-chat', handleOpen);
     }, []);
-
-    const [pendingQuiz, setPendingQuiz] = useState<{ subject: string, questions: any[] } | null>(null);
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
@@ -78,38 +73,27 @@ const AIChatWidget: React.FC<{
         setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
         setIsLoading(false);
 
-        // Check for Quiz Generation JSON in response
+        // Check for Quiz Generation JSON
         if (aiResponse.includes("QUIZ_GEN_START")) {
             try {
                 let jsonStr = aiResponse.split("QUIZ_GEN_START")[1].split("QUIZ_GEN_END")[0];
-                // Clean markdown code blocks if present
                 jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
                 const quizData = JSON.parse(jsonStr);
 
                 if (quizData && quizData.questions && quizData.questions.length > 0) {
-                    setPendingQuiz(quizData);
-                    // Auto-start quiz
                     localStorage.setItem('topper_ai_quiz', JSON.stringify(quizData.questions));
                     if (onStartAIQuiz) onStartAIQuiz({ subject: quizData.subject });
-                    setPendingQuiz(null);
                     setIsOpen(false);
                 }
             } catch (e) {
                 console.error("Quiz Parse Error", e);
-                // If it fails, we keep the message as is, 
-                // but with the updated prompt it should work.
             }
         }
     };
 
-    const startQuiz = () => {
-        if (pendingQuiz) {
-            localStorage.setItem('topper_ai_quiz', JSON.stringify(pendingQuiz.questions));
-            if (onStartAIQuiz) onStartAIQuiz({ subject: pendingQuiz.subject });
-            setPendingQuiz(null);
-            setIsOpen(false);
-        }
-    };
+    useEffect(() => {
+        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }, [messages, isLoading]);
 
     return (
         <>
@@ -167,55 +151,39 @@ const AIChatWidget: React.FC<{
                                                     const isQuizJSON = codeValue.includes('QUIZ_GEN_START') || (codeValue.includes('"questions"') && codeValue.includes('"options"'));
                                                     if (isQuizJSON) return null;
 
-                                                    // Special handling for python-diag (Diagrams/Figures)
-                                                    const isVisualIntent = match && match[1] === 'python' && (/^\s*#?\s*v-diag/i.test(codeValue) || codeValue.includes('# v-diag'));
+                                                    const hasVDiag = /^\s*#?\s*v-diag/i.test(codeValue) || codeValue.includes('# v-diag') || codeValue.includes('v-diag');
+                                                    const isVisualIntent = hasVDiag && (match?.[1] === 'python' || codeValue.includes('import matplotlib') || !match);
+
                                                     if (isVisualIntent) {
                                                         const diagId = `diag-${Math.random().toString(36).substr(2, 9)}`;
                                                         setTimeout(() => runPythonForDiagram(codeValue, diagId), 100);
                                                         return (
-                                                            <div className="my-6">
-                                                                <div className="bg-white rounded-3xl p-4 border-2 border-dashed border-violet-100 flex flex-col items-center justify-center min-h-[240px] relative overflow-hidden group shadow-lg">
-                                                                    <img id={diagId} className="max-w-full h-auto rounded-xl z-10" alt="Generating AI Diagram..." />
-                                                                    {!pyodide && <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-20">
-                                                                        <div className="w-8 h-8 border-3 border-violet-600 border-t-transparent rounded-full animate-spin mb-2" />
-                                                                        <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest">Generating Visual...</p>
-                                                                    </div>}
-                                                                    <p id={`${diagId}-err`} className="text-red-500 text-[9px] font-mono mt-2" />
-                                                                </div>
+                                                            <div
+                                                                onClick={() => {
+                                                                    const img = document.getElementById(diagId) as HTMLImageElement;
+                                                                    if (img && img.src) window.dispatchEvent(new CustomEvent('topper-zoom', { detail: img.src }));
+                                                                }}
+                                                                className="my-3 bg-white rounded-2xl p-2 border border-slate-100 flex flex-col items-center justify-center max-h-[160px] relative overflow-hidden group shadow-md cursor-zoom-in"
+                                                            >
+                                                                <img id={diagId} className="max-w-full max-h-full object-contain rounded-lg z-10 transition-transform group-hover:scale-[1.02]" alt="Generating AI Diagram..." />
+                                                                {!pyodide && <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-20">
+                                                                    <div className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mb-1" />
+                                                                    <p className="text-[8px] font-black text-violet-600 uppercase tracking-widest">Rendering...</p>
+                                                                </div>}
+                                                                <p id={`${diagId}-err`} className="text-red-500 text-[8px] font-mono absolute bottom-0" />
                                                             </div>
                                                         );
                                                     }
 
-                                                    if (inline) {
-                                                        return <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-violet-600" {...props}>{children}</code>;
-                                                    }
+                                                    if (inline) return <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-violet-600" {...props}>{children}</code>;
 
                                                     return (
                                                         <div className="relative my-4 group">
-                                                            <div className="absolute right-3 top-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button
-                                                                    onClick={() => {
-                                                                        navigator.clipboard.writeText(codeValue);
-                                                                        alert('Code copied to clipboard!');
-                                                                    }}
-                                                                    className="p-2 bg-slate-900/80 backdrop-blur-md text-white rounded-lg hover:bg-slate-900 transition-all border border-white/10 flex items-center gap-1.5 shadow-xl"
-                                                                >
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                                                                    <span className="text-[8px] font-black uppercase tracking-widest">Copy</span>
-                                                                </button>
-                                                            </div>
                                                             <div className="bg-slate-950 rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
                                                                 <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/5">
                                                                     <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{match ? match[1] : 'code'}</span>
-                                                                    <div className="flex gap-1">
-                                                                        <div className="w-1.5 h-1.5 rounded-full bg-red-500/50" />
-                                                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500/50" />
-                                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500/50" />
-                                                                    </div>
                                                                 </div>
-                                                                <pre className="p-4 overflow-x-auto text-[11px] font-mono text-slate-300 leading-relaxed custom-scrollbar">
-                                                                    <code>{children}</code>
-                                                                </pre>
+                                                                <pre className="p-4 overflow-x-auto text-[11px] font-mono text-slate-300 leading-relaxed custom-scrollbar"><code>{children}</code></pre>
                                                             </div>
                                                         </div>
                                                     );
