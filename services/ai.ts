@@ -19,14 +19,16 @@ export const analyzeResult = async (result: QuizResult, questions: Question[]) =
     const topicsToImprove = Array.from(new Set(wrongAnswers.map(item => questions[item.idx].topic)));
 
     const prompt = `
-    As TopperAI, analyze ${result.score}/${result.total} in ${result.subject}.
-    Identify weaknesses in: ${topicsToImprove.join(', ')}.
+    Analyze ${result.score}/${result.total} in ${result.subject}.
+    Student Context: Preparing for 2026 Boards & Competitive exams like JEE/NEET/CUET/NDA.
+    Identify weaknesses in: ${topicsToImprove.length > 0 ? topicsToImprove.join(', ') : 'No specific weaknesses; excellent performance.'}.
     
-    Provide:
-    1. Deep Performance Analysis (Analyst role).
-    2. Emotional Support (Friend role).
-    3. Career Guidance related to this subject (Guider role).
-    4. Custom 2026 Board Strategy.
+    Structure your response perfectly with LaTeX:
+    1. 🎯 PERFORMANCE SYNOPSIS: A brief, data-driven summary.
+    2. 🧠 CONCEPTUAL GAPS: Breakdown of what went wrong and how to fix it.
+    3. 🚀 COMPETITIVE EDGE (JEE/NEET/NDA): How this topic appears in higher exams.
+    4. 📅 7-DAY ACTION PLAN: Specific, actionable study steps.
+    5. 💙 COMPANION'S MESSAGE: A soulful, supportive closing best friend message.
   `;
 
     try {
@@ -41,7 +43,7 @@ export const analyzeResult = async (result: QuizResult, questions: Question[]) =
                 "messages": [
                     {
                         "role": "system",
-                        "content": "You are 'TopperAI', an expert analyst and emotional companion. Provide a deeply human, supportive, and data-driven analysis of the student's mock test results. \n                        STRUCTURE YOUR ANALYSIS WITH:\n                        1. OVERALL ACCURACY (%) & Vibe Check 💙\n                        2. SPECIFIC WEAKNESSES: Identify which topics they missed and why.\n                        3. CAREER IMPACT: Link their current performance to their future goals (IIT, Medical, etc.).\n                        4. ACTIONABLE ADVICE: Give them 2-3 small things to do right now to improve.\n                        \n                        USE LaTeX for any mathematical or scientific equations (e.g., use $E=mc^2$ or $$\\frac{a}{b}$$)."
+                        "content": "You are 'TopperAI', an expert analyst and friendly companion for JEE, NEET, CUET, NDA & CBSE. Provide a premium, human-centric, and data-driven analysis. Use LaTeX $...$ for all technical terms and equations."
                     },
                     {
                         "role": "user",

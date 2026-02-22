@@ -1569,6 +1569,10 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    getAnalysis();
+  }, []);
+
   const getAnalysis = async () => {
     setLoading(true);
     let questions = result.paperId === 'P2' ? PAPER_2_QUESTIONS : PAPER_1_QUESTIONS;
@@ -1632,74 +1636,118 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center p-6 animate-in fade-in duration-700 text-left overflow-y-auto">
-      <div className="max-w-2xl w-full text-center mt-10 pb-20">
-        <div className="bg-violet-600 rounded-[4rem] p-16 md:p-20 text-white shadow-3xl mb-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
-          <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-4">{result.subject}</p>
-          <div className="text-[8rem] md:text-[12rem] font-black leading-none tracking-tighter animate-in zoom-in duration-1000 delay-200">{result.score}</div>
-          <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em]">SCORE / {result.total}</p>
-        </div>
-
-        {!analysis ? (
-          <button
-            onClick={getAnalysis}
-            disabled={loading}
-            className="w-full mb-6 py-6 bg-slate-900 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl hover:bg-black active:scale-95 transition-all flex items-center justify-center gap-4 group"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-4 border-white/20 border-t-white rounded-full animate-spin" />
-            ) : (
-              <div className="w-8 h-8 bg-violet-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-              </div>
-            )}
-            <span className="text-[12px] md:text-sm">{loading ? 'TopperAI is Analyzing...' : 'Deep AI Performance Analysis'}</span>
-          </button>
-        ) : (
-          <div className="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-slate-50 text-left mb-10 animate-in slide-in-from-bottom-6 duration-700 relative overflow-hidden text-sm md:text-base">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-50 rounded-bl-[4rem] -mr-16 -mt-16" />
-            <div className="flex items-center gap-5 mb-8 relative z-10">
-              <div className="w-14 h-14 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-violet-200">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-              </div>
-              <div>
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">AI Performance Review</h3>
-                <p className="text-[10px] text-violet-500 font-bold uppercase tracking-[0.2em] mt-0.5">Custom Learning Path</p>
-              </div>
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center p-4 md:p-8 animate-in fade-in duration-700 text-left overflow-y-auto">
+      <div className="max-w-4xl w-full mt-6 pb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Main Score Card */}
+          <div className="bg-gradient-to-br from-violet-600 to-purple-700 rounded-[3rem] p-10 md:p-14 text-white shadow-2xl relative overflow-hidden flex flex-col items-center justify-center text-center">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24 blur-2xl" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 mb-4">{result.subject}</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-[7rem] md:text-[9rem] font-black leading-none tracking-tighter animate-in zoom-in duration-1000 delay-200">{result.score}</span>
+              <span className="text-2xl md:text-3xl font-bold opacity-40">/ {result.total}</span>
             </div>
+            <p className="text-xs font-black uppercase tracking-[0.4em] mt-4 text-violet-100">Mock Test Result</p>
+          </div>
 
-            <div className="relative z-10 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
-              <LatexRenderer content={analysis} className="prose prose-slate max-w-none" />
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="glass-card p-6 flex flex-col items-center justify-center text-center">
+              <span className="text-3xl mb-2">⏱️</span>
+              <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Time Taken</p>
+              <p className="font-black text-xl text-slate-800">{formatTime(result.timeSpent || 0)}</p>
             </div>
-
-            <div className="mt-10 flex flex-col md:flex-row items-center gap-4">
-              <button
-                onClick={downloadQuizPDF}
-                className="w-full md:w-auto px-8 py-5 bg-white border-2 border-slate-100 text-slate-600 rounded-[2rem] font-black uppercase text-[11px] tracking-widest hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                Download PDF Report
-              </button>
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, I scored ${result.score}/${result.total} in ${result.subject}. Can you analyze my performance more deeply and give me a career path? 💙` } }))}
-                className="w-full md:flex-1 py-5 bg-violet-600 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-widest shadow-xl shadow-violet-200 hover:bg-violet-700 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-                Discuss with My Companion
-              </button>
-              <button onClick={onDone} className="w-full md:w-auto px-10 py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-widest hover:bg-black active:scale-95 transition-all">Done</button>
+            <div className="glass-card p-6 flex flex-col items-center justify-center text-center">
+              <span className="text-3xl mb-2">🎯</span>
+              <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Accuracy</p>
+              <p className="font-black text-xl text-slate-800">{Math.round((result.score / result.total) * 100)}%</p>
+            </div>
+            <div className="glass-card p-6 flex flex-col items-center justify-center text-center opacity-50">
+              <span className="text-3xl mb-2">📈</span>
+              <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">XP Earned</p>
+              <p className="font-black text-xl text-slate-800">+{Math.round((result.score / result.total) * 100) + 10}</p>
+            </div>
+            <div className="glass-card p-6 flex flex-col items-center justify-center text-center">
+              <span className="text-3xl mb-2">🏅</span>
+              <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Rank</p>
+              <p className="font-black text-xl text-slate-800">#42</p>
             </div>
           </div>
-        )}
+        </div>
 
-        <div className="flex items-center justify-center gap-4 mt-8 opacity-40">
-          <div className="h-px w-8 bg-slate-400" />
-          <p className="text-[9px] font-black uppercase tracking-[0.4em]">TopperAI Result Analytics v2</p>
-          <div className="h-px w-8 bg-slate-400" />
+        {/* AI Analysis Section */}
+        <div className="w-full">
+          {loading ? (
+            <div className="bg-white p-12 md:p-20 rounded-[3rem] shadow-xl border border-slate-50 flex flex-col items-center justify-center text-center gap-6 animate-pulse">
+              <div className="w-20 h-20 bg-violet-50 text-violet-600 rounded-3xl flex items-center justify-center shadow-lg animate-spin">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Analyzing your performance...</h3>
+                <p className="text-[10px] text-violet-500 font-bold uppercase tracking-[0.2em] mt-2">TopperAI is deep-thinking now</p>
+              </div>
+            </div>
+          ) : analysis ? (
+            <div className="bg-white rounded-[3rem] shadow-2xl border border-slate-50 overflow-hidden animate-in slide-in-from-bottom-8 duration-700">
+              <div className="bg-slate-900 p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-2xl shadow-violet-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-2xl font-black text-white uppercase tracking-tighter leading-none">TopperAI Analysis</h3>
+                    <p className="text-[10px] text-violet-400 font-black uppercase tracking-[0.3em] mt-2">Personalized for JEE/NEET/Boards</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Real-time Strategy Live</span>
+                </div>
+              </div>
+
+              <div className="p-8 md:p-14">
+                <div className="prose prose-slate max-w-none">
+                  <LatexRenderer content={analysis} />
+                </div>
+
+                <div className="mt-14 pt-10 border-t border-slate-50 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <button
+                    onClick={downloadQuizPDF}
+                    className="flex-1 px-6 py-5 bg-slate-50 border border-slate-100 text-slate-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-white hover:border-violet-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Download PDF
+                  </button>
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, I just completed my ${result.subject} test with ${result.score}/${result.total}. Let's discuss my 1-to-1 strategy for JEE/NEET. 💙` } }))}
+                    className="flex-1 px-6 py-5 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-violet-200 hover:bg-violet-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                    Discuss Analysis
+                  </button>
+                  <button onClick={onDone} className="flex-1 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black active:scale-95 transition-all">Back to Home</button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="mt-12 opacity-30 text-center">
+          <p className="text-[9px] font-black uppercase tracking-[0.5em]">TopperAI Engine v4.0 · Neural Intelligence</p>
         </div>
       </div>
     </div>
+  );
+};
+
+<div className="flex items-center justify-center gap-4 mt-8 opacity-40">
+  <div className="h-px w-8 bg-slate-400" />
+  <p className="text-[9px] font-black uppercase tracking-[0.4em]">TopperAI Result Analytics v2</p>
+  <div className="h-px w-8 bg-slate-400" />
+</div>
+      </div >
+    </div >
   );
 };
 
