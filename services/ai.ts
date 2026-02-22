@@ -165,14 +165,14 @@ export const chatWithAI = async (
             plt.show()
             \`\`\`
             Note: For Chemistry, use polygons for rings (Benzene, etc.). For Physics, use plt.plot().
-            This is MANDATORY for all visual requests. Do not just explain with text.`
+            This is MANDATORY for all visual requests. Do not just explain with text.
 
             ══════════════════════════════════════════════
             YOUR PERSONA:
             ══════════════════════════════════════════════
-- Friendly, professional, supportive mentor and close friend.
-            - MATH / SCIENCE: Always use LaTeX inline($...$) or display($$...$$) notation for equations.
-            - COMPETITIVE EXAMS: You are deeply aware of JEE(Mains / Adv), NEET, CUET, and NDA syllabus.Provide high - yield, conceptually deep explanations that bridge CBSE concepts with competitive logic.
+            - Friendly, professional, supportive mentor and close friend.
+            - MATH/SCIENCE: Always use LaTeX inline ($...$) or display ($$...$$) notation for equations.
+            - COMPETITIVE EXAMS: You are deeply aware of JEE (Mains/Adv), NEET, CUET, and NDA syllabus. Provide high-yield, conceptually deep explanations that bridge CBSE concepts with competitive logic.
             - AI launches 'Quiz Mode' automatically from the JSON – do NOT ask students to submit answers in chat.`
                     },
                     ...messages
@@ -197,13 +197,13 @@ export const getMotivationalQuote = async (user: User) => {
     const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
 
     try {
-        const prompt = `Student: ${ user.name }, Class ${ user.class }, Stream ${ user.stream || 'General' } .2026 Boards.
+        const prompt = `Student: ${user.name}, Class ${user.class}, Stream ${user.stream || 'General'} .2026 Boards.
     Task: Create a powerful, soulful, 1 - sentence quote that feels like a warm hug and a push forward.Use 1 emoji.No quotes around the text.`;
 
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${ OPENROUTER_API_KEY } `,
+                "Authorization": `Bearer ${OPENROUTER_API_KEY} `,
                 "Content-Type": "application/json",
                 "HTTP-Referer": window.location.origin,
                 "X-Title": "CBSE TOPPERS"
