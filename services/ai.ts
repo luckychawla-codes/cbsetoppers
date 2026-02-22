@@ -166,7 +166,27 @@ export const chatWithAI = async (
             ══════════════════════════════════════════════
             - Friendly, professional, supportive mentor and close friend.
             - MATH/SCIENCE: Always use LaTeX inline ($...$) or display ($$...$$) notation for equations.
-            - AI launches 'Quiz Mode' automatically from the JSON – do NOT ask students to submit answers in chat.`
+            - AI launches 'Quiz Mode' automatically from the JSON – do NOT ask students to submit answers in chat.
+
+            ══════════════════════════════════════════════
+            NEW FEATURE: VISUAL DIAGRAMS (PYTHON)
+            ══════════════════════════════════════════════
+            You can now generate high-quality visual diagrams, math plots, and chemical structures using Python! 
+            Whenever you need to show an organic structure, a math graph, or a physics diagram:
+            1. Use a standard \`python\` code block.
+            2. The VERY FIRST LINE of the block MUST BE: \`# v-diag\`
+            3. Use \`matplotlib.pyplot\` to create the drawing. 
+            Example for a simple graph:
+            \`\`\`python
+            # v-diag
+            import matplotlib.pyplot as plt
+            import numpy as np
+            x = np.linspace(0, 10, 100)
+            plt.plot(x, np.sin(x))
+            plt.title("Sine Wave Diagram")
+            plt.show() # This is required
+            \`\`\`
+            Note: For organic chemistry, draw them using polygons/lines in matplotlib if needed, or simple path-based drawings.`
                     },
                     ...messages
                 ]

@@ -12,6 +12,7 @@ import autoTable from 'jspdf-autotable';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
+import { getPyodide, runPythonDiagram } from './services/python';
 
 const LatexRenderer: React.FC<{ content: string, className?: string }> = ({ content, className }) => {
   return (
@@ -28,6 +29,21 @@ const LatexRenderer: React.FC<{ content: string, className?: string }> = ({ cont
         ol: ({ node, ...props }) => <ol className="list-decimal ml-4 space-y-2 mb-4" {...props} />,
         li: ({ node, ...props }) => <li className="text-slate-600" {...props} />,
         strong: ({ node, ...props }) => <strong className="font-black text-violet-600" {...props} />,
+        code: ({ node, inline, className, children, ...props }: any) => {
+          const match = /language-(\w+)/.exec(className || '');
+          const codeValue = String(children).replace(/\n$/, '');
+          if (match && match[1] === 'python' && codeValue.includes('# v-diag')) {
+            const diagId = `diag-${Math.random().toString(36).substr(2, 9)}`;
+            getPyodide().then(py => runPythonDiagram(py, codeValue, diagId));
+            return (
+              <div className="my-6 bg-white rounded-3xl p-4 border-2 border-dashed border-violet-100 flex flex-col items-center justify-center min-h-[200px] relative">
+                <img id={diagId} className="max-w-full h-auto rounded-xl" alt="TopperAI Visual Support" />
+                <p id={`${diagId}-err`} className="text-red-500 text-[9px] font-mono mt-2" />
+              </div>
+            );
+          }
+          return inline ? <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono text-violet-600" {...props}>{children}</code> : <pre className="bg-slate-900 text-slate-400 p-4 rounded-xl text-[10px] overflow-x-auto my-4"><code>{children}</code></pre>;
+        }
       }}
     >
       {content}
@@ -42,6 +58,21 @@ const SimpleLatex: React.FC<{ content: string, className?: string }> = ({ conten
       rehypePlugins={[rehypeKatex]}
       components={{
         p: ({ node, ...props }) => <span {...props} />,
+        code: ({ node, inline, className, children, ...props }: any) => {
+          const match = /language-(\w+)/.exec(className || '');
+          const codeValue = String(children).replace(/\n$/, '');
+          if (match && match[1] === 'python' && codeValue.includes('# v-diag')) {
+            const diagId = `diag-${Math.random().toString(36).substr(2, 9)}`;
+            getPyodide().then(py => runPythonDiagram(py, codeValue, diagId));
+            return (
+              <div className="my-6 bg-white rounded-3xl p-4 border-2 border-dashed border-violet-100 flex flex-col items-center justify-center min-h-[200px] relative">
+                <img id={diagId} className="max-w-full h-auto rounded-xl" alt="TopperAI Visual Support" />
+                <p id={`${diagId}-err`} className="text-red-500 text-[9px] font-mono mt-2" />
+              </div>
+            );
+          }
+          return inline ? <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono text-violet-600" {...props}>{children}</code> : <pre className="bg-slate-900 text-slate-400 p-4 rounded-xl text-[10px] overflow-x-auto my-4"><code>{children}</code></pre>;
+        }
       }}
     >
       {content}

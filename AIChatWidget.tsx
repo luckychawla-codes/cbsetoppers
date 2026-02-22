@@ -6,6 +6,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { chatWithAI } from './services/ai';
 import { User } from './types';
+import { getPyodide, runPythonDiagram } from './services/python';
 
 const AIChatWidget: React.FC<{
     user?: User | null,
@@ -17,7 +18,19 @@ const AIChatWidget: React.FC<{
     const [messages, setMessages] = useState<{ role: string, content: string }[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [pyodide, setPyodide] = useState<any>(null);
+    const [isPyLoading, setIsPyLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Initialize Pyodide
+    useEffect(() => {
+        if (isOpen) getPyodide().then(setPyodide).catch(console.error);
+    }, [isOpen]);
+
+    const runPythonForDiagram = async (code: string, elementId: string) => {
+        const py = await getPyodide();
+        if (py) runPythonDiagram(py, code, elementId);
+    };
 
     // Initialize first message when user is available
     useEffect(() => {
@@ -150,6 +163,33 @@ const AIChatWidget: React.FC<{
                                                 const codeValue = String(children).replace(/\n$/, '');
 
                                                 if (codeValue.includes('QUIZ_GEN_START')) return null;
+
+                                                // Special handling for python-diag (Diagrams/Figures)
+                                                if (match && match[1] === 'python' && codeValue.includes('# v-diag')) {
+                                                    const diagId = `diag-${Math.random().toString(36).substr(2, 9)}`;
+                                                    setTimeout(() => runPythonForDiagram(codeValue, diagId), 100);
+                                                    return (
+                                                        <div className="my-6 space-y-3">
+                                                            <div className="bg-white rounded-3xl p-4 border-2 border-dashed border-violet-100 flex flex-col items-center justify-center min-h-[200px] relative overflow-hidden group">
+                                                                <img id={diagId} className="max-w-full h-auto rounded-xl shadow-sm z-10" alt="Generating AI Diagram..." />
+                                                                {!pyodide && <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-20">
+                                                                    <div className="w-8 h-8 border-3 border-violet-600 border-t-transparent rounded-full animate-spin mb-2" />
+                                                                    <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest">Waking up Python Engine...</p>
+                                                                </div>}
+                                                                <p id={`${diagId}-err`} className="text-red-500 text-[9px] font-mono mt-2" />
+                                                            </div>
+                                                            <div className="bg-slate-900 rounded-2xl p-4 overflow-hidden">
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Internal Logic (Python)</span>
+                                                                    <div className="flex gap-1">
+                                                                        <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                                                                    </div>
+                                                                </div>
+                                                                <pre className="text-[10px] font-mono text-slate-400 overflow-x-auto custom-scrollbar"><code>{codeValue}</code></pre>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
 
                                                 if (inline) {
                                                     return <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-violet-600" {...props}>{children}</code>;
