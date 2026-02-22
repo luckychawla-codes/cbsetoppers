@@ -397,55 +397,28 @@ const MotivationalQuote: React.FC<{ user: User }> = ({ user }) => {
   }, [fetchQuote]);
 
   return (
-    <div className="max-w-6xl mx-auto px-6 md:px-8 mt-6 animate-in zoom-in duration-1000">
-      <div className="bg-gradient-to-r from-violet-600 to-indigo-700 p-8 md:p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group border border-white/10">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:scale-110 transition-transform duration-1000" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full -ml-16 -mb-16 blur-2xl" />
-
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
-          <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center shrink-0 border border-white/30 shadow-xl animate-bounce-slow">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+    <div className="max-w-6xl mx-auto px-6 md:px-8 mt-6 animate-in slide-in-from-top-4 duration-1000">
+      <div className="bg-violet-50/50 backdrop-blur-sm p-4 md:p-6 rounded-3xl border border-violet-100/50 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left transition-all hover:bg-white hover:shadow-xl hover:shadow-violet-500/5 group shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-violet-600/10 text-violet-600 rounded-xl flex items-center justify-center shrink-0 border border-violet-100 shadow-sm group-hover:bg-violet-600 group-hover:text-white transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
-
-          <div className="flex-1 text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-4 mb-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-60">TopperAI Morning Guidance</p>
-              <div className="h-px w-12 bg-white/20 hidden md:block" />
-            </div>
-
-            <h3 className="text-xl md:text-3xl font-black leading-tight italic tracking-tight mb-4 min-h-[1.5em] transition-all">
+          <div>
+            <p className="text-[8px] font-black uppercase tracking-[0.3em] text-violet-500/60 mb-0.5">Today's Guidance</p>
+            <h3 className="text-sm md:text-base font-bold text-slate-800 tracking-tight italic">
               {loading ? (
-                <span className="opacity-40 animate-pulse">Consulting the experts for your daily dose...</span>
+                <span className="opacity-40 animate-pulse text-violet-400">Tuning into your frequency...</span>
               ) : error ? (
-                <span className="text-indigo-200">Consistency is the key to board success. Keep pushing! 🚀</span>
+                <span className="text-slate-400">Push yourself, because no one else is going to do it for you. 🚀</span>
               ) : (
                 `"${quote}"`
               )}
             </h3>
-
-            <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
-              <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                <span className="w-4 h-0.5 bg-white/40" />
-                Specialized Mentor for Class {user.class}
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={fetchQuote}
-                  disabled={loading}
-                  className="flex items-center gap-2 px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl border border-white/10 transition-all text-[9px] font-black uppercase tracking-widest active:scale-95 disabled:opacity-50"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                  Regenerate
-                </button>
-                <button
-                  onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, can you expand on that quote: "${quote}"? I need some motivation for my ${user.stream || 'board'} exams.` } }))}
-                  className="flex items-center gap-2 px-6 py-2 bg-violet-400 text-white rounded-xl border border-violet-300 transition-all text-[9px] font-black uppercase tracking-widest active:scale-95 shadow-lg shadow-indigo-600/20"
-                >
-                  Discuss with TopperAI
-                </button>
-              </div>
-            </div>
           </div>
+        </div>
+        <div className="hidden md:flex items-center gap-3">
+          <span className="h-1 w-1 rounded-full bg-violet-300" />
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Mentor: TopperAI</p>
         </div>
       </div>
     </div>
