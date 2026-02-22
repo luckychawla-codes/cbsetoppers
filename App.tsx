@@ -610,21 +610,21 @@ const Dashboard: React.FC<{
               Back to Portal
             </button>
             <div className="flex flex-col items-center md:items-start text-center md:text-left mb-12">
-              <h3 className="text-4xl md:text-7xl font-black text-slate-900 uppercase tracking-tighter leading-none">{selectedSubject}</h3>
+              <h3 className="text-3xl md:text-6xl font-black text-slate-900 uppercase tracking-tighter leading-none">{selectedSubject}</h3>
               {selectedSubject === "Physics" && <TypingPartnershipText />}
             </div>
-            <div className="bg-white p-8 md:p-20 rounded-[3rem] md:rounded-[5rem] shadow-2xl border border-violet-100 relative overflow-hidden text-center md:text-left animate-in zoom-in duration-500">
+            <div className="bg-white p-6 md:p-14 rounded-[2.5rem] md:rounded-[4rem] shadow-2xl border border-violet-100 relative overflow-hidden text-center md:text-left animate-in zoom-in duration-500">
               <div className="absolute top-0 right-0 w-96 h-96 bg-violet-100/30 rounded-full -mr-48 -mt-48 blur-3xl opacity-50" />
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-50/50 rounded-full -ml-32 -mb-32 blur-3xl opacity-50" />
 
               <div className="relative z-10">
-                <div className="w-20 h-20 md:w-32 md:h-32 bg-violet-600 rounded-[2.5rem] md:rounded-[4rem] flex items-center justify-center mb-8 md:mb-12 shadow-2xl shadow-violet-200 mx-auto md:mx-0 animate-bounce-slow">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 md:h-16 md:w-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div className="w-16 h-16 md:w-24 md:h-24 bg-violet-600 rounded-[2rem] md:rounded-[3rem] flex items-center justify-center mb-6 md:mb-10 shadow-2xl shadow-violet-200 mx-auto md:mx-0 animate-bounce-slow">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-12 md:w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
 
                 <div className="space-y-4 md:space-y-6">
-                  <h4 className="text-3xl md:text-7xl font-black text-slate-900 uppercase tracking-tighter leading-tight max-w-4xl">NO QUIzes are avaible right now.</h4>
-                  <p className="text-base md:text-2xl font-bold text-slate-500 uppercase tracking-widest leading-relaxed max-w-3xl">
+                  <h4 className="text-2xl md:text-5xl font-black text-slate-900 uppercase tracking-tighter leading-tight max-w-4xl">NO QUIzes are avaible right now.</h4>
+                  <p className="text-sm md:text-xl font-bold text-slate-500 uppercase tracking-widest leading-relaxed max-w-3xl">
                     Stay updated we will add quize soon. Meanwhile you can create a <span className="text-violet-600">custom AI test</span> by chatting with our AI mentor below.
                   </p>
                 </div>
@@ -632,7 +632,7 @@ const Dashboard: React.FC<{
                 <div className="mt-12 md:mt-20 flex flex-col md:flex-row items-center gap-6">
                   <button
                     onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, since there are no pre-built quizzes for ${selectedSubject}, can you create a custom 10-question mock test for me on this subject?` } }))}
-                    className="w-full md:w-auto px-12 py-6 md:py-8 bg-violet-600 text-white rounded-[2rem] md:rounded-[2.5rem] font-black uppercase text-xs md:text-base tracking-widest shadow-2xl shadow-violet-200 hover:bg-violet-700 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 group"
+                    className="w-full md:w-auto px-10 py-5 md:py-6 bg-violet-600 text-white rounded-[1.5rem] md:rounded-[2rem] font-black uppercase text-xs md:text-sm tracking-widest shadow-2xl shadow-violet-200 hover:bg-violet-700 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 group"
                   >
                     Create Custom AI Quiz
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
