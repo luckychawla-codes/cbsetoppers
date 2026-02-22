@@ -5,6 +5,8 @@ import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2 
 import { verifyStudent, registerStudent, supabase } from './services/supabase';
 import { analyzeResult, generateAIQuiz } from './services/ai';
 import AIChatWidget from './AIChatWidget';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const EXAM_DURATION = 90 * 60;
 const MAX_ATTEMPTS = 5;
@@ -742,10 +744,10 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
               </div>
             )}
-            <span className="text-[12px] md:text-sm">{loading ? 'TopperBot is Analyzing...' : 'Deep AI Performance Analysis'}</span>
+            <span className="text-[12px] md:text-sm">{loading ? 'TopperAI is Analyzing...' : 'Deep AI Performance Analysis'}</span>
           </button>
         ) : (
-          <div className="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-slate-50 text-left mb-10 animate-in slide-in-from-bottom-6 duration-700 relative overflow-hidden">
+          <div className="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-slate-50 text-left mb-10 animate-in slide-in-from-bottom-6 duration-700 relative overflow-hidden text-sm md:text-base">
             <div className="absolute top-0 right-0 w-32 h-32 bg-violet-50 rounded-bl-[4rem] -mr-16 -mt-16" />
             <div className="flex items-center gap-5 mb-8 relative z-10">
               <div className="w-14 h-14 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-violet-200">
@@ -756,9 +758,23 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
                 <p className="text-[10px] text-violet-500 font-bold uppercase tracking-[0.2em] mt-0.5">Custom Learning Path</p>
               </div>
             </div>
-            <div className="text-slate-700 font-medium leading-relaxed whitespace-pre-wrap text-sm md:text-base relative z-10 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
-              {analysis}
+
+            <div className="relative z-10 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: ({ node, ...props }) => <h1 className="text-lg font-black uppercase mb-3 text-slate-900" {...props} />,
+                  h2: ({ node, ...props }) => <h2 className="text-md font-black uppercase mb-2 text-slate-800" {...props} />,
+                  p: ({ node, ...props }) => <p className="mb-4 last:mb-0 leading-relaxed text-slate-600 font-medium" {...props} />,
+                  ul: ({ node, ...props }) => <ul className="list-disc ml-4 space-y-2 mb-4" {...props} />,
+                  li: ({ node, ...props }) => <li className="text-slate-600" {...props} />,
+                  strong: ({ node, ...props }) => <strong className="font-black text-violet-600" {...props} />
+                }}
+              >
+                {analysis}
+              </ReactMarkdown>
             </div>
+
             <div className="mt-8 flex items-center gap-3 px-2">
               <div className="flex -space-x-2">
                 {[1, 2, 3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200" />)}

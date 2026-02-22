@@ -12,11 +12,7 @@ const AIChatWidget: React.FC<{ onStartAIQuiz?: (config: { subject: string }) => 
     const [isLoading, setIsLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-    }, [messages]);
+    const [pendingQuiz, setPendingQuiz] = useState<{ subject: string, questions: any[] } | null>(null);
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
@@ -37,16 +33,22 @@ const AIChatWidget: React.FC<{ onStartAIQuiz?: (config: { subject: string }) => 
             try {
                 const jsonStr = aiResponse.split("QUIZ_GEN_START")[1].split("QUIZ_GEN_END")[0];
                 const quizData = JSON.parse(jsonStr);
-                localStorage.setItem('topper_ai_quiz', JSON.stringify(quizData.questions));
-                if (onStartAIQuiz) onStartAIQuiz({ subject: quizData.subject });
-                setIsOpen(false);
+                setPendingQuiz(quizData);
             } catch (e) { console.error("Quiz Parse Error", e); }
+        }
+    };
+
+    const startQuiz = () => {
+        if (pendingQuiz) {
+            localStorage.setItem('topper_ai_quiz', JSON.stringify(pendingQuiz.questions));
+            if (onStartAIQuiz) onStartAIQuiz({ subject: pendingQuiz.subject });
+            setPendingQuiz(null);
+            setIsOpen(false);
         }
     };
 
     return (
         <>
-            {/* Floating Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`fixed bottom-8 right-8 w-14 h-14 bg-violet-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all z-[350] border-4 border-white ${isOpen ? 'rotate-90' : ''}`}
@@ -58,7 +60,6 @@ const AIChatWidget: React.FC<{ onStartAIQuiz?: (config: { subject: string }) => 
                 )}
             </button>
 
-            {/* Chat Window */}
             {isOpen && (
                 <div className="fixed inset-0 md:inset-auto md:bottom-28 md:right-8 w-full md:w-[400px] h-full md:h-[600px] bg-white rounded-none md:rounded-[2.5rem] shadow-3xl border-none md:border border-slate-100 flex flex-col overflow-hidden z-[400] animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-4 duration-500">
                     <div className="bg-violet-600 p-6 text-white flex items-center gap-4">
@@ -87,8 +88,32 @@ const AIChatWidget: React.FC<{ onStartAIQuiz?: (config: { subject: string }) => 
                                             ul: ({ node, ...props }) => <ul className="list-disc ml-4 space-y-1 mb-2" {...props} />,
                                             ol: ({ node, ...props }) => <ol className="list-decimal ml-4 space-y-1 mb-2" {...props} />,
                                             a: ({ node, ...props }) => <a className="text-violet-600 underline font-bold" target="_blank" rel="noopener noreferrer" {...props} />,
-                                            p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
-                                            code: ({ node, ...props }) => <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono" {...props} />
+                                            p: ({ node, ...props }) => {
+                                                const containsQuiz = JSON.stringify(props.children).includes('QUIZ_GEN_START');
+                                                if (containsQuiz) {
+                                                    return (
+                                                        <div className="mt-4 p-5 bg-violet-50 rounded-2xl border-2 border-violet-100 text-center shadow-xl animate-in zoom-in duration-500">
+                                                            <div className="w-12 h-12 bg-violet-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                                                            </div>
+                                                            <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-1">Interactive Quiz Loaded</h4>
+                                                            <p className="text-[9px] font-bold text-violet-500 uppercase tracking-widest mb-4">Personalized by TopperAI</p>
+                                                            <button
+                                                                onClick={startQuiz}
+                                                                className="w-full py-4 bg-violet-600 text-white rounded-xl font-black uppercase text-[11px] tracking-widest shadow-lg shadow-violet-200 hover:bg-violet-700 active:scale-95 transition-all text-center flex items-center justify-center gap-2"
+                                                            >
+                                                                Start Test Now
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                                            </button>
+                                                        </div>
+                                                    )
+                                                }
+                                                return <p className="mb-2 last:mb-0" {...props} />
+                                            },
+                                            code: ({ node, ...props }) => {
+                                                if (props.children && String(props.children).includes('QUIZ_GEN_START')) return null;
+                                                return <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono" {...props} />
+                                            }
                                         }}
                                     >
                                         {msg.content}
