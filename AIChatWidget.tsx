@@ -49,15 +49,18 @@ const AIChatWidget: React.FC = () => {
 
             {/* Chat Window */}
             {isOpen && (
-                <div className="fixed bottom-28 right-8 w-[350px] md:w-[400px] h-[500px] bg-white rounded-[2.5rem] shadow-3xl border border-slate-100 flex flex-col overflow-hidden z-[400] animate-in slide-in-from-bottom-10 duration-500">
+                <div className="fixed inset-0 md:inset-auto md:bottom-28 md:right-8 w-full md:w-[400px] h-full md:h-[600px] bg-white rounded-none md:rounded-[2.5rem] shadow-3xl border-none md:border border-slate-100 flex flex-col overflow-hidden z-[400] animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-4 duration-500">
                     <div className="bg-violet-600 p-6 text-white flex items-center gap-4">
                         <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-lg border border-white/20">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
                         </div>
-                        <div>
+                        <div className="flex-1">
                             <h3 className="font-black uppercase text-xs tracking-widest">TopperAI</h3>
                             <p className="text-[10px] opacity-70 font-bold uppercase tracking-tighter">Online | Expert Tutor</p>
                         </div>
+                        <button onClick={() => setIsOpen(false)} className="md:hidden p-2 hover:bg-white/10 rounded-xl transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                     </div>
 
                     <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50 custom-scrollbar">
