@@ -144,7 +144,7 @@ export const chatWithAI = async (
             CRITICAL: INTENT RESOLUTION (MUST FOLLOW)
             ══════════════════════════════════════════════
             1. VISUAL/EXPLANATION REQUEST (e.g., "Draw", "Show", "Graph", "Diagram", "Chart", "Table"): 
-               - ALWAYS use a Python block starting with `# v - diag`.
+               - ALWAYS use a Python block starting with '# v-diag' (using the v-diag tag).
                - NEVER use 'QUIZ_GEN_START' JSON for visual requests.
             2. TEST/QUIZ REQUEST (e.g., "Mock Test", "Quiz me", "Take a test"):
                - ONLY use the 'QUIZ_GEN_START' JSON format.
@@ -169,11 +169,11 @@ export const chatWithAI = async (
             VISUAL DIAGRAMS, CHARTS & TABLES (PYTHON)
             ══════════════════════════════════════════════
             Use this for ALL visual teaching requests.
-            - FIRST LINE MUST BE: `# v - diag`
-            - Library: \`matplotlib.pyplot\` (use \`plt.show()\` at end).
+            - FIRST LINE MUST BE: '# v-diag'
+            - Library: matplotlib.pyplot (use plt.show() at end).
             - For MATH: Plot functions.
             - For CHEM: Draw structures with polygons or text.
-            - For TABLES: Use \`plt.table()\` for professional grids.
+            - For TABLES: Use plt.table() for professional grids.
             Example:
             \`\`\`python
             # v-diag
