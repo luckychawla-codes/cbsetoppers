@@ -20,6 +20,7 @@ export const registerStudent = async (params: {
   password?: string;
   rollNumber: string;
   gender: string;
+  competitiveExams?: string[];
 }) => {
   try {
     // 1. Create user in Supabase Authentication
@@ -47,6 +48,7 @@ export const registerStudent = async (params: {
         phone: params.phone?.trim() || null,
         student_id: params.rollNumber.trim(),
         gender: params.gender,
+        competitive_exams: params.competitiveExams || [],
         is_verified: true
       }])
       .select()
@@ -116,7 +118,7 @@ export const verifyStudent = async (identifier: string, password?: string) => {
     // 3. Fetch full profile from 'students' table
     const { data: profile, error: profileError } = await supabase
       .from('students')
-      .select('id, name, student_id, email, dob, class, stream, phone, gender, is_verified')
+      .select('id, name, student_id, email, dob, class, stream, phone, gender, is_verified, competitive_exams')
       .eq('email', email)
       .maybeSingle();
 

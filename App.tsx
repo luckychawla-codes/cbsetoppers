@@ -170,6 +170,7 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
   const [roll, setRoll] = useState('');
   const [password, setPassword] = useState('');
   const [regGender, setRegGender] = useState('');
+  const [regCompetitions, setRegCompetitions] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -180,7 +181,7 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
     setIsVerifying(true); setError('');
     try {
       const student = await verifyStudent(roll, password);
-      if (student) onLogin({ id: String(student.id), name: student.name, student_id: student.student_id, dob: student.dob, email: student.email, class: student.class, stream: student.stream, phone: student.phone, gender: student.gender });
+      if (student) onLogin({ id: String(student.id), name: student.name, student_id: student.student_id, dob: student.dob, email: student.email, class: student.class, stream: student.stream, phone: student.phone, gender: student.gender, competitive_exams: student.competitive_exams });
       else setError('Verification failed. Check ID or Email.');
     } catch (e: any) {
       setError(e.message === 'Incorrect password' ? 'Incorrect Password' : 'Network error. Try again.');
@@ -213,10 +214,11 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
         phone: regPhone || undefined,
         password: regPassword,
         rollNumber: newID,
-        gender: regGender
+        gender: regGender,
+        competitiveExams: regCompetitions
       });
       if (student) {
-        onLogin({ id: String(student.id), name: student.name, student_id: student.student_id, dob: student.dob, email: student.email, class: student.class, stream: student.stream, phone: student.phone, gender: student.gender });
+        onLogin({ id: String(student.id), name: student.name, student_id: student.student_id, dob: student.dob, email: student.email, class: student.class, stream: student.stream, phone: student.phone, gender: student.gender, competitive_exams: student.competitive_exams });
       }
     } catch (e: any) {
       setError(e.message || 'Registration failed. Try a different email.');
@@ -346,12 +348,23 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
                   ))}
                 </div>
                 {regClass === 'XIIth' && (
-                  <div className="grid grid-cols-2 gap-2 animate-in fade-in duration-300">
-                    {['PCB', 'PCM', 'Commerce', 'Humanities'].map(s => (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 animate-in fade-in duration-300">
+                    {['PCB', 'PCM', 'PCBM', 'Commerce', 'Humanities'].map(s => (
                       <button key={s} onClick={() => setRegStream(s)} className={`py-3 rounded-xl font-black text-[9px] uppercase tracking-tighter border-2 transition-all ${regStream === s ? 'bg-violet-50 border-violet-200 text-violet-600' : 'bg-slate-50 border-transparent text-slate-400'}`}>{s}</button>
                     ))}
                   </div>
                 )}
+                <div className="space-y-1 mt-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase ml-4">Target Competitive Exams</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {['JEE', 'NEET', 'CUET', 'NDA'].map(exam => {
+                      const isActive = regCompetitions.includes(exam);
+                      return (
+                        <button key={exam} onClick={() => setRegCompetitions(prev => isActive ? prev.filter(e => e !== exam) : [...prev, exam])} className={`py-3 rounded-xl font-black text-[8px] uppercase tracking-tighter border-2 transition-all ${isActive ? 'bg-violet-50 border-violet-200 text-violet-600' : 'bg-slate-50 border-transparent text-slate-400'}`}>{exam}</button>
+                      );
+                    })}
+                  </div>
+                </div>
                 <div className="space-y-1 mt-2">
                   <p className="text-[10px] font-black text-slate-400 uppercase ml-4">Select Gender</p>
                   <div className="grid grid-cols-3 gap-2">
@@ -2024,7 +2037,19 @@ const App: React.FC = () => {
 
     const saved = localStorage.getItem('pe_cbt_session');
     if (saved) {
-      try { setUser(JSON.parse(saved).user); setView('dashboard'); } catch (e) { localStorage.removeItem('pe_cbt_session'); }
+      try {
+        const parsed = JSON.parse(saved);
+        // Robust check: it could be { user: { ... } } or just { ... }
+        const restoredUser = parsed.user || parsed;
+        if (restoredUser && restoredUser.student_id) {
+          setUser(restoredUser);
+          setView('dashboard');
+        } else {
+          localStorage.removeItem('pe_cbt_session');
+        }
+      } catch (e) {
+        localStorage.removeItem('pe_cbt_session');
+      }
     }
   }, []);
 
@@ -2074,7 +2099,7 @@ const App: React.FC = () => {
 
   return (
     <div className="App selection:bg-violet-100 selection:text-violet-600">
-      {view === 'auth' && <AuthScreen onLogin={(u) => { setUser(u); setView('dashboard'); localStorage.setItem('pe_cbt_session', JSON.stringify(u)); }} setView={setView} />}
+      {view === 'auth' && <AuthScreen onLogin={handleLogin} setView={setView} />}
       {view === 'verify' && <VerificationPortal onBack={() => setView('auth')} />}
       {view === 'dashboard' && user && (
         <Dashboard

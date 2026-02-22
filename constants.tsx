@@ -17,6 +17,7 @@ export const TOPICS = {
 export const STREAM_SUBJECTS: Record<string, string[]> = {
   "PCM": ["Physics", "Chemistry", "Mathematics", "English Core"],
   "PCB": ["Physics", "Chemistry", "Biology", "English Core"],
+  "PCBM": ["Physics", "Chemistry", "Biology", "Mathematics", "English Core"],
   "Commerce": ["Accountancy", "Economics", "Business Studies", "English Core"],
   "Humanities": ["History", "Political Science", "Geography", "Economics", "English Core"],
   "X": ["Mathematics", "Science", "Social Science", "English"],

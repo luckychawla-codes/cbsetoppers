@@ -39,6 +39,7 @@ export interface User {
   phone?: string;
   gender?: 'MALE' | 'FEMALE' | 'PREFER_NOT_SAY';
   is_verified?: boolean;
+  competitive_exams?: string[];
 }
 
 export interface QuizResult {
