@@ -752,7 +752,7 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
               <img src={LOGO_URL} className="w-6 h-6 rounded" />
             </div>
             <div>
-              <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter">Assessment</h1>
+              <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter">AI Mock Test</h1>
               <p className="text-[10px] font-bold text-violet-500 uppercase tracking-widest leading-none">{subject}</p>
             </div>
           </div>
