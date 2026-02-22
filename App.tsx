@@ -3,6 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, User, QuizResult, Question } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2 } from './constants';
 import { verifyStudent, registerStudent, supabase } from './services/supabase';
+import { analyzeResult } from './services/ai';
+import AIChatWidget from './AIChatWidget';
 
 const EXAM_DURATION = 90 * 60;
 const MAX_ATTEMPTS = 5;
@@ -23,7 +25,8 @@ const SUBJECTS = [
   "Chemistry",
   "Maths Core",
   "English Core",
-  "Biology"
+  "Biology",
+  "AI & Concepts"
 ];
 
 const formatTime = (seconds: number) => {
@@ -689,19 +692,72 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
   );
 };
 
-const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ result, onDone }) => (
-  <div className="min-h-screen bg-slate-50 flex flex-col items-center p-6 animate-in fade-in duration-700 text-left">
-    <div className="max-w-xl w-full text-center mt-20">
-      <div className="bg-violet-600 rounded-[4rem] p-20 text-white shadow-3xl mb-12 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
-        <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-4">{result.subject}</p>
-        <div className="text-[12rem] font-black leading-none tracking-tighter animate-in zoom-in duration-1000 delay-200">{result.score}</div>
-        <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em]">SCORE / 100</p>
+const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ result, onDone }) => {
+  const [analysis, setAnalysis] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const getAnalysis = async () => {
+    setLoading(true);
+    const questions = result.paperId === 'P2' ? PAPER_2_QUESTIONS : PAPER_1_QUESTIONS;
+    const res = await analyzeResult(result, questions);
+    setAnalysis(res);
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center p-6 animate-in fade-in duration-700 text-left overflow-y-auto">
+      <div className="max-w-2xl w-full text-center mt-10 pb-20">
+        <div className="bg-violet-600 rounded-[4rem] p-16 md:p-20 text-white shadow-3xl mb-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-4">{result.subject}</p>
+          <div className="text-[8rem] md:text-[12rem] font-black leading-none tracking-tighter animate-in zoom-in duration-1000 delay-200">{result.score}</div>
+          <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em]">SCORE / 100</p>
+        </div>
+
+        {!analysis ? (
+          <button
+            onClick={getAnalysis}
+            disabled={loading}
+            className="w-full mb-6 py-6 bg-slate-900 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl hover:bg-black active:scale-95 transition-all flex items-center justify-center gap-4 group"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+            ) : (
+              <div className="w-8 h-8 bg-violet-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+              </div>
+            )}
+            <span className="text-[12px] md:text-sm">{loading ? 'TopperBot is Analyzing...' : 'Deep AI Performance Analysis'}</span>
+          </button>
+        ) : (
+          <div className="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-slate-50 text-left mb-10 animate-in slide-in-from-bottom-6 duration-700 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-50 rounded-bl-[4rem] -mr-16 -mt-16" />
+            <div className="flex items-center gap-5 mb-8 relative z-10">
+              <div className="w-14 h-14 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-violet-200">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">AI Performance Review</h3>
+                <p className="text-[10px] text-violet-500 font-bold uppercase tracking-[0.2em] mt-0.5">Custom Learning Path</p>
+              </div>
+            </div>
+            <div className="text-slate-700 font-medium leading-relaxed whitespace-pre-wrap text-sm md:text-base relative z-10 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+              {analysis}
+            </div>
+            <div className="mt-8 flex items-center gap-3 px-2">
+              <div className="flex -space-x-2">
+                {[1, 2, 3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200" />)}
+              </div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Joined by 10k+ Toppers</p>
+            </div>
+          </div>
+        )}
+
+        <button onClick={onDone} className="w-full py-6 bg-violet-600 rounded-[2.5rem] font-black text-white uppercase tracking-widest shadow-xl hover:bg-violet-700 active:scale-95 transition-all text-sm">Return to Portal</button>
       </div>
-      <button onClick={onDone} className="w-full py-6 bg-violet-600 rounded-[2rem] font-black text-white uppercase tracking-widest shadow-xl hover:bg-violet-700 active:scale-95 transition-all">Back to Portal</button>
     </div>
-  </div>
-);
+  );
+};
 
 type View = 'auth' | 'dashboard' | 'exam' | 'result' | 'profile' | 'verify';
 
@@ -870,6 +926,7 @@ const App: React.FC = () => {
       {view === 'result' && quizResult && <ResultView result={quizResult} onDone={handleDoneResult} />}
       {view === 'profile' && user && <ProfileView user={user} onBack={() => setView('dashboard')} />}
       {view === 'verify' && <VerificationPortal onBack={() => setView('auth')} />}
+      <AIChatWidget />
     </div>
   );
 };

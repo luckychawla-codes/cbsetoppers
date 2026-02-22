@@ -27,6 +27,19 @@
       min-height: 100vh;
       min-height: -webkit-fill-available;
     }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #cbd5e1;
+    }
     button {
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
