@@ -59,7 +59,11 @@ export const analyzeResult = async (result: QuizResult, questions: Question[]) =
     }
 };
 
-export const chatWithAI = async (messages: { role: string, content: string }[], userContext?: User) => {
+export const chatWithAI = async (
+    messages: { role: string, content: string }[],
+    userContext?: User,
+    websiteContext?: { currentView?: string, selectedSubject?: string | null }
+) => {
     const contextPrompt = userContext ? `
     STUENT PROFILE:
     Name: ${userContext.name}
@@ -67,6 +71,10 @@ export const chatWithAI = async (messages: { role: string, content: string }[], 
     Stream: ${userContext.stream || 'General'}
     DOB: ${userContext.dob}
     
+    WEBSITE CONTEXT:
+    Current View: ${websiteContext?.currentView || 'Home/Dashboard'}
+    Selected Subject: ${websiteContext?.selectedSubject || 'None'}
+
     Treat them like a close friend. You know their upcoming 2026 Board Exam is critical.
   ` : '';
 

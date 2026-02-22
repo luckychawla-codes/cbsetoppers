@@ -5,8 +5,10 @@ import { chatWithAI } from './services/ai';
 
 const AIChatWidget: React.FC<{
     user?: User | null,
+    currentView?: string,
+    selectedSubject?: string | null,
     onStartAIQuiz?: (config: { subject: string }) => void
-}> = ({ user, onStartAIQuiz }) => {
+}> = ({ user, currentView, selectedSubject, onStartAIQuiz }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<{ role: string, content: string }[]>([]);
     const [input, setInput] = useState('');
@@ -54,7 +56,7 @@ const AIChatWidget: React.FC<{
         setIsLoading(true);
 
         const chatHistory = [...messages, { role: 'user', content: userMsg }];
-        const aiResponse = await chatWithAI(chatHistory, user || undefined);
+        const aiResponse = await chatWithAI(chatHistory, user || undefined, { currentView, selectedSubject });
 
         setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
         setIsLoading(false);
