@@ -19,17 +19,6 @@ const CONTACT_OWNER = "https://t.me/tarun_kumar_in";
 const EMAIL_FOUNDER = "luckychawla@zohomail.in";
 const EMAIL_OWNER = "tarun.pncml123@gmail.com";
 
-const SUBJECTS = [
-  "Music",
-  "Physical Education",
-  "Physics",
-  "Fine Arts",
-  "Chemistry",
-  "Maths Core",
-  "English Core",
-  "Biology",
-  "AI & Concepts"
-];
 
 const formatTime = (seconds: number) => {
   const h = Math.floor(seconds / 3600);
@@ -98,6 +87,7 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
   const [generatedID, setGeneratedID] = useState('');
   const [roll, setRoll] = useState('');
   const [password, setPassword] = useState('');
+  const [regGender, setRegGender] = useState('');
   const [error, setError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -108,7 +98,7 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
     setIsVerifying(true); setError('');
     try {
       const student = await verifyStudent(roll, password);
-      if (student) onLogin({ id: String(student.id), name: student.name, rollNumber: student.student_id, dob: student.dob, email: student.email, class: student.class, stream: student.stream, phone: student.phone });
+      if (student) onLogin({ id: String(student.id), name: student.name, student_id: student.student_id, dob: student.dob, email: student.email, class: student.class, stream: student.stream, phone: student.phone, gender: student.gender });
       else setError('Verification failed. Check ID or Email.');
     } catch (e: any) {
       setError(e.message === 'Incorrect password' ? 'Incorrect Password' : 'Network error. Try again.');
@@ -116,7 +106,7 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
   };
 
   const handleRegistration = async () => {
-    if (!regName.trim() || !regDOB || !regClass || !regEmail.trim() || !regPassword || !regConfirmPassword) {
+    if (!regName.trim() || !regDOB || !regClass || !regEmail.trim() || !regPassword || !regConfirmPassword || !regGender) {
       return setError('Please fill all required fields.');
     }
     if (regClass === 'XIIth' && !regStream) {
@@ -140,10 +130,11 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
         email: regEmail,
         phone: regPhone || undefined,
         password: regPassword,
-        rollNumber: newID
+        rollNumber: newID,
+        gender: regGender
       });
       if (student) {
-        onLogin({ id: String(student.id), name: student.name, rollNumber: student.student_id, dob: student.dob, email: student.email, class: student.class, stream: student.stream, phone: student.phone });
+        onLogin({ id: String(student.id), name: student.name, student_id: student.student_id, dob: student.dob, email: student.email, class: student.class, stream: student.stream, phone: student.phone, gender: student.gender });
       }
     } catch (e: any) {
       setError(e.message || 'Registration failed. Try a different email.');
@@ -279,10 +270,18 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
                     ))}
                   </div>
                 )}
+                <div className="space-y-1 mt-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase ml-4">Select Gender</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['MALE', 'FEMALE', 'PREFER_NOT_SAY'].map(g => (
+                      <button key={g} onClick={() => setRegGender(g)} className={`py-3 rounded-xl font-black text-[8px] uppercase tracking-tighter border-2 transition-all ${regGender === g ? 'bg-violet-600 border-violet-600 text-white shadow-md' : 'bg-slate-50 border-transparent text-slate-400'}`}>{g.replace(/_/g, ' ')}</button>
+                    ))}
+                  </div>
+                </div>
                 {error && <p className="text-red-500 text-[10px] font-black uppercase py-2 bg-red-50 rounded-xl text-center border border-red-100">{error}</p>}
                 <div className="flex gap-2">
                   <button onClick={() => setRegStep(1)} className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest">Back</button>
-                  <button onClick={() => { if (!regName || !regDOB || !regClass) return setError('Fill all details'); if (regClass === 'XIIth' && !regStream) return setError('Select stream'); setError(''); setRegStep(3); }} className="flex-[2] py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg">Next Step</button>
+                  <button onClick={() => { if (!regName || !regDOB || !regClass || !regGender) return setError('Fill all details'); if (regClass === 'XIIth' && !regStream) return setError('Select stream'); setError(''); setRegStep(3); }} className="flex-[2] py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg">Next Step</button>
                 </div>
               </div>
             )}
@@ -379,40 +378,50 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
   const [showTgMenu, setShowTgMenu] = useState(false);
   const [showLegalSide, setShowLegalSide] = useState<'privacy' | 'terms' | 'refund' | 'honor' | null>(null);
 
-  const LEGAL_DATA = {
-    privacy: {
-      title: "Privacy Policy",
-      content: [
-        { h: "1. Data Collection", p: "We collect your name, email, and academic details to provide a personalized assessment experience and valid result tracking." },
-        { h: "2. Data Usage", p: "Your information is used solely for identity verification within the portal and providing support via our official channels." },
-        { h: "3. Protection", p: "We use enterprise-grade encryption to protect your data. Your personal information is never shared with third-party advertisers." }
-      ]
-    },
-    terms: {
-      title: "Terms of Service",
-      content: [
-        { h: "1. Fair Use", p: "CBSE TOPPERS is an educational resource. Users are expected to use the platform for legitimate exam preparation only." },
-        { h: "2. Account Security", p: "You are responsible for maintaining the confidentiality of your Student ID and account access." },
-        { h: "3. Content Rights", p: "All assessment materials, questions, and branding are the intellectual property of CBSE TOPPERS." }
-      ]
-    },
-    refund: {
-      title: "Refund Policy",
-      content: [
-        { h: "1. Platform Nature", p: "CBSE TOPPERS currently provides assessment services. As a digital education platform, access is provided instantly." },
-        { h: "2. No Refunds", p: "Since our services are digital and consumed immediately, we generally do not offer refunds once access is granted." },
-        { h: "3. Support", p: "If you face any technical issues with your access, please contact our support team on Telegram for an immediate fix." }
-      ]
-    },
-    honor: {
-      title: "Honor Code",
-      content: [
-        { h: "1. Integrity", p: "Students must attempt mock tests honestly without external help to accurately gauge their board preparation." },
-        { h: "2. Collaboration", p: "While discussing topics is encouraged on Telegram, sharing specific mock test answers to cheat the system is prohibited." },
-        { h: "3. Goal", p: "The ultimate objective of this platform is your academic growth. Academic honesty is the first step towards board success." }
-      ]
+  const { coreSubjects, additionalSubjects } = useMemo(() => {
+    if (user.class === 'Xth') {
+      return {
+        coreSubjects: ["Science", "Mathematics", "Social Science", "English"],
+        additionalSubjects: ["Hindi", "AI & Concepts"]
+      };
     }
-  };
+
+    if (user.class === 'XIIth') {
+      switch (user.stream) {
+        case 'PCM':
+          return {
+            coreSubjects: ["Physics", "Chemistry", "Mathematics", "English Core"],
+            additionalSubjects: ["Computer Science", "Physical Education", "Economics", "Fine Arts", "AI & Concepts"]
+          };
+        case 'PCB':
+          return {
+            coreSubjects: ["Physics", "Chemistry", "Biology", "English Core"],
+            additionalSubjects: ["Psychology", "Biotechnology", "Physical Education", "Fine Arts", "AI & Concepts"]
+          };
+        case 'Commerce':
+          return {
+            coreSubjects: ["Accountancy", "Business Studies", "Economics", "English Core"],
+            additionalSubjects: ["Mathematics", "Informatics Practices", "Physical Education", "Fine Arts", "AI & Concepts"]
+          };
+        case 'Humanities':
+          return {
+            coreSubjects: ["History", "Political Science", "Geography", "English Core"],
+            additionalSubjects: ["Psychology", "Sociology", "Fine Arts", "AI & Concepts"]
+          };
+      }
+    }
+    return { coreSubjects: ["English Core"], additionalSubjects: ["Physical Education", "AI & Concepts"] };
+  }, [user.class, user.stream]);
+
+  const renderSubjectCard = (subj: string, isCore: boolean) => (
+    <button key={subj} onClick={() => setSelectedSubject(subj)} className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:border-violet-400 hover:shadow-2xl transition-all text-center flex flex-col items-center gap-4 group animate-in slide-in-from-bottom-4 relative overflow-hidden">
+      {isCore && <div className="absolute top-0 right-0 px-3 py-1 bg-violet-600 text-[8px] font-black text-white uppercase rounded-bl-xl tracking-widest z-10">Core</div>}
+      <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+      </div>
+      <span className="text-[11px] md:text-[13px] font-black uppercase text-slate-800 tracking-tight leading-tight">{subj}</span>
+    </button>
+  );
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-20 relative text-left">
@@ -469,16 +478,27 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-              {SUBJECTS.map((subj) => (
-                <button key={subj} onClick={() => setSelectedSubject(subj)} className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-100 hover:border-violet-400 hover:shadow-2xl transition-all text-center flex flex-col items-center gap-5 group animate-in slide-in-from-bottom-4">
-                  <div className="w-14 h-14 md:w-20 md:h-20 rounded-[1.5rem] bg-violet-50 text-violet-600 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-                  </div>
-                  <span className="text-[12px] md:text-[14px] font-black uppercase text-slate-800 tracking-tight leading-none">{subj}</span>
-                </button>
-              ))}
-            </div>
+            <section className="mb-16">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-px flex-1 bg-slate-100" />
+                <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Core Subjects</h3>
+                <div className="h-px flex-1 bg-slate-100" />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                {coreSubjects.map(subj => renderSubjectCard(subj, true))}
+              </div>
+            </section>
+
+            <section className="mb-16">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-px flex-1 bg-slate-100" />
+                <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Additional Subjects</h3>
+                <div className="h-px flex-1 bg-slate-100" />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                {additionalSubjects.map(subj => renderSubjectCard(subj, false))}
+              </div>
+            </section>
 
             <div className="mt-16 md:mt-24 text-center pb-24 relative overflow-hidden">
               <div className="relative z-10">
@@ -846,67 +866,154 @@ const VerificationPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   );
 };
 
-const ProfileView: React.FC<{ user: User, onBack: () => void }> = ({ user, onBack }) => (
-  <div className="min-h-screen bg-white md:bg-slate-50 flex flex-col items-center p-4 md:p-12 animate-in fade-in duration-500 text-left">
-    <div className="max-w-2xl w-full">
-      <div className="flex items-center justify-between mb-8">
-        <button onClick={onBack} className="flex items-center gap-2 text-violet-600 font-black uppercase text-[10px] tracking-widest bg-violet-50 px-5 py-3 rounded-xl hover:bg-violet-600 hover:text-white transition-all shadow-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
-          Back to Dashboard
-        </button>
-        <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Student Profile</span>
-      </div>
+const ProfileView: React.FC<{ user: User, onBack: () => void, onUpdate: (u: User) => void }> = ({ user, onBack, onUpdate }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState(user.name);
+  const [editedGender, setEditedGender] = useState(user.gender || '');
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
 
-      <div className="bg-white rounded-[2.5rem] shadow-xl md:shadow-2xl overflow-hidden border border-slate-50">
-        <div className="bg-violet-600 p-8 md:p-14 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
-          <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
-            <div className="w-24 h-24 md:w-32 md:h-32 bg-white/20 backdrop-blur-md rounded-[2.5rem] flex items-center justify-center text-4xl md:text-5xl font-black border-4 border-white/30 shadow-2xl">
-              {user.name.charAt(0)}
-            </div>
-            <div className="text-center md:text-left">
-              <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter leading-tight">{user.name}</h2>
-              <div className="flex items-center justify-center md:justify-start gap-3 mt-2">
-                <span className="px-4 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest border border-white/20">Class {user.class}</span>
-                {user.stream && <span className="px-4 py-1.5 bg-violet-400/30 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest border border-white/10">{user.stream}</span>}
+  const handleSave = async () => {
+    if (!editedName.trim()) return setError('Name cannot be empty');
+    if (!editedGender) return setError('Please select your gender');
+
+    setIsSaving(true);
+    setError('');
+    try {
+      const updated = await updateStudentProfile(user.id, {
+        name: editedName,
+        gender: editedGender
+      });
+      if (updated) {
+        onUpdate({
+          ...user,
+          name: updated.name,
+          gender: updated.gender
+        });
+        setIsEditing(false);
+      }
+    } catch (e: any) {
+      setError('Failed to update profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white md:bg-slate-50 flex flex-col items-center p-4 md:p-12 animate-in fade-in duration-500 text-left overflow-y-auto w-full">
+      <div className="max-w-2xl w-full">
+        <div className="flex items-center justify-between mb-8">
+          <button onClick={onBack} className="flex items-center gap-2 text-violet-600 font-black uppercase text-[10px] tracking-widest bg-violet-50 px-5 py-3 rounded-xl hover:bg-violet-600 hover:text-white transition-all shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
+            Back to Dashboard
+          </button>
+          {!isEditing && (
+            <button onClick={() => setIsEditing(true)} className="text-[10px] font-black text-violet-600 uppercase tracking-widest bg-white border border-violet-100 px-5 py-3 rounded-xl hover:bg-violet-50 transition-all shadow-sm">
+              Edit Profile
+            </button>
+          )}
+        </div>
+
+        {(!user.gender && !isEditing) && (
+          <div className="mb-8 p-6 bg-red-50 border-2 border-red-100 rounded-[2rem] animate-bounce-slow">
+            <h3 className="text-red-600 font-black uppercase text-xs tracking-widest mb-2 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+              Profile Incomplete
+            </h3>
+            <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-4">Please set your gender and update your profile to proceed smoothly.</p>
+            <button onClick={() => setIsEditing(true)} className="px-6 py-3 bg-red-600 text-white rounded-xl font-black uppercase text-[9px] tracking-widest shadow-lg shadow-red-200">Update Now</button>
+          </div>
+        )}
+
+        <div className="bg-white rounded-[2.5rem] shadow-xl md:shadow-2xl overflow-hidden border border-slate-50 relative pb-10">
+          <div className="bg-violet-600 p-8 md:p-14 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+              <div className="w-24 h-24 md:w-32 md:h-32 bg-white/20 backdrop-blur-md rounded-[2.5rem] flex items-center justify-center text-4xl md:text-5xl font-black border-4 border-white/30 shadow-2xl">
+                {user.name.charAt(0)}
+              </div>
+              <div className="text-center md:text-left">
+                {isEditing ? (
+                  <input
+                    type="text"
+                    className="bg-white/10 border-2 border-white/20 rounded-xl px-4 py-2 text-2xl md:text-3xl font-black uppercase tracking-tighter w-full focus:outline-none focus:border-white ring-0"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                  />
+                ) : (
+                  <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter leading-tight">{user.name}</h2>
+                )}
+                <div className="flex items-center justify-center md:justify-start gap-3 mt-4">
+                  <span className="px-4 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest border border-white/20">Class {user.class}</span>
+                  {user.stream && <span className="px-4 py-1.5 bg-white/20 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest border border-white/10">{user.stream}</span>}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="p-8 md:p-14 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
-          <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pl-1">Student Identifier</p>
-            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 font-mono text-base font-black text-slate-800 tracking-widest">{user.rollNumber}</div>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pl-1">Email Address</p>
-            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-slate-700">{user.email || 'Not provided'}</div>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pl-1">Date of Birth</p>
-            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-slate-700">{user.dob || 'Not provided'}</div>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pl-1">Phone Number</p>
-            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-slate-700">{user.phone || 'Not provided'}</div>
-          </div>
-        </div>
+          <div className="p-8 md:p-14 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pl-1">Gender</p>
+              {isEditing ? (
+                <div className="flex gap-2">
+                  {['MALE', 'FEMALE', 'PREFER_NOT_SAY'].map(g => (
+                    <button key={g} onClick={() => setEditedGender(g)} className={`flex-1 py-4 rounded-xl text-[9px] font-black uppercase transition-all ${editedGender === g ? 'bg-violet-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400'}`}>
+                      {g.split('_')[0]}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 font-black text-slate-800 uppercase text-[11px] tracking-widest">
+                  {user.gender?.replace(/_/g, ' ') || 'None Set'}
+                </div>
+              )}
+            </div>
 
-        <div className="bg-slate-50 p-8 md:p-12 flex flex-col items-center gap-6 border-t border-slate-100">
-          <button
-            onClick={() => { localStorage.removeItem('pe_cbt_session'); window.location.reload(); }}
-            className="w-full max-w-xs py-4 bg-white border-2 border-red-50 text-red-500 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500 transition-all active:scale-95 flex items-center justify-center gap-3"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-            Sign Out Account
-          </button>
-          <img src={LOGO_URL} className="w-12 h-12 grayscale opacity-10" />
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pl-1">Student Identifier</p>
+              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 font-mono text-base font-black text-slate-800 tracking-widest opacity-60 pointer-events-none">
+                {user.student_id}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pl-1">Email Address</p>
+              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-slate-700 opacity-60 pointer-events-none">{user.email || 'Not provided'}</div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pl-1">Date of Birth</p>
+              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-slate-700 opacity-60 pointer-events-none">{user.dob || 'Not provided'}</div>
+            </div>
+          </div>
+
+          {isEditing && (
+            <div className="px-8 md:px-14 pb-8 space-y-4">
+              {error && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest text-center py-3 bg-red-50 rounded-xl">{error}</p>}
+              <div className="flex gap-4">
+                <button onClick={() => { setIsEditing(false); setEditedName(user.name); setEditedGender(user.gender || ''); }} className="flex-1 py-5 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-[10px] tracking-widest">Cancel</button>
+                <button onClick={handleSave} disabled={isSaving} className="flex-[2] py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl flex items-center justify-center gap-3">
+                  {isSaving ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-slate-50 p-8 md:p-12 flex flex-col items-center gap-6 border-t border-slate-100 mt-10">
+            <button
+              onClick={() => { localStorage.removeItem('pe_cbt_session'); window.location.reload(); }}
+              className="w-full max-w-xs py-4 bg-white border-2 border-red-50 text-red-500 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500 transition-all active:scale-95 flex items-center justify-center gap-3"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+              Sign Out Account
+            </button>
+            <img src={LOGO_URL} className="w-12 h-12 grayscale opacity-10" />
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('auth');
@@ -949,15 +1056,45 @@ const App: React.FC = () => {
     setExamConfig(null);
   };
 
+  const handleUpdateProfile = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem('pe_cbt_session', JSON.stringify(updatedUser));
+  };
+
   return (
-    <div className="min-h-screen-safe font-['Plus_Jakarta_Sans'] text-slate-900 selection:bg-violet-100 overflow-x-hidden antialiased text-left">
-      {view === 'auth' && <AuthScreen onLogin={handleLogin} setView={setView} />}
-      {view === 'dashboard' && user && <Dashboard user={user} onStartExam={handleStartExam} setView={setView} />}
-      {view === 'exam' && user && examConfig && <QuizEngine subject={examConfig.subj} paperId={examConfig.pid} onFinish={handleFinishExam} user={user} />}
-      {view === 'result' && quizResult && <ResultView result={quizResult} onDone={handleDoneResult} />}
-      {view === 'profile' && user && <ProfileView user={user} onBack={() => setView('dashboard')} />}
+    <div className="App selection:bg-violet-100 selection:text-violet-600">
+      {view === 'auth' && <AuthScreen onLogin={(u) => { setUser(u); setView('dashboard'); localStorage.setItem('pe_cbt_session', JSON.stringify(u)); }} setView={setView} />}
       {view === 'verify' && <VerificationPortal onBack={() => setView('auth')} />}
-      <AIChatWidget onStartAIQuiz={(config) => handleStartExam(config.subject, 'AI_DYNAMIC')} />
+      {view === 'dashboard' && user && (
+        <Dashboard
+          user={user}
+          onStartExam={(subj, pid) => { setExamConfig({ subj, pid }); setView('exam'); }}
+          setView={setView}
+        />
+      )}
+      {view === 'exam' && user && examConfig && (
+        <QuizEngine
+          user={user}
+          subject={examConfig.subj}
+          paperId={examConfig.pid}
+          onFinish={(res) => { setQuizResult(res); setView('result'); }}
+        />
+      )}
+      {view === 'result' && quizResult && (
+        <ResultView result={quizResult} onDone={() => { setView('dashboard'); setQuizResult(null); setExamConfig(null); }} />
+      )}
+      {view === 'profile' && user && (
+        <ProfileView
+          user={user}
+          onBack={() => setView('dashboard')}
+          onUpdate={handleUpdateProfile}
+        />
+      )}
+
+      <AIChatWidget onStartAIQuiz={(config) => {
+        setExamConfig({ subj: config.subject, pid: 'AI_DYNAMIC' });
+        setView('exam');
+      }} />
     </div>
   );
 };

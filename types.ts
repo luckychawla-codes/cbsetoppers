@@ -31,7 +31,14 @@ export interface CaseStudy {
 export interface User {
   id: string;
   name: string;
-  rollNumber: string;
+  student_id: string;
+  email: string;
+  dob: string;
+  class: string;
+  stream?: string;
+  phone?: string;
+  gender?: 'MALE' | 'FEMALE' | 'PREFER_NOT_SAY';
+  is_verified?: boolean;
 }
 
 export interface QuizResult {

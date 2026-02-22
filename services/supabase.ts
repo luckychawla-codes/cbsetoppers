@@ -19,9 +19,10 @@ export const registerStudent = async (params: {
   phone?: string;
   password?: string;
   rollNumber: string;
+  gender: string;
 }) => {
   try {
-    // 1. Create user in Supabase Authentication (Handles secure hashing)
+    // 1. Create user in Supabase Authentication
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: params.email.trim(),
       password: params.password || '',
@@ -45,23 +46,41 @@ export const registerStudent = async (params: {
         email: params.email.trim(),
         phone: params.phone?.trim() || null,
         student_id: params.rollNumber.trim(),
-        is_verified: true // Set to true by default as requested
+        gender: params.gender,
+        is_verified: true
       }])
       .select()
       .single();
 
-    if (profileError) {
-      // Cleanup auth user if profile creation fails
-      // Note: Supabase doesn't easily allow client-side deletion, usually handled by triggers
-      throw profileError;
-    }
-
+    if (profileError) throw profileError;
     return profileData;
   } catch (err) {
     if ((err as any).code === '23505') {
       throw new Error('This email or Student ID is already registered.');
     }
     console.error('Registration error:', err);
+    throw err;
+  }
+};
+
+export const updateStudentProfile = async (id: string, updates: {
+  name?: string;
+  gender?: string;
+  class?: string;
+  stream?: string;
+}) => {
+  try {
+    const { data, error } = await supabase
+      .from('students')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.error('Update profile error:', err);
     throw err;
   }
 };
