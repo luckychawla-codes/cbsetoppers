@@ -1183,10 +1183,10 @@ const Dashboard: React.FC<{
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-12 md:w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
 
-                <div className="space-y-4 md:space-y-6">
-                  <h4 className="text-2xl md:text-5xl font-black text-slate-900 uppercase tracking-tighter leading-tight max-w-4xl">NO QUIzes are avaible right now.</h4>
-                  <p className="text-sm md:text-xl font-bold text-slate-500 uppercase tracking-widest leading-relaxed max-w-3xl">
-                    Stay updated we will add quize soon. Meanwhile you can create a <span className="text-violet-600">custom AI test</span> by chatting with our AI mentor below.
+                <div className="space-y-3 md:space-y-4">
+                  <h4 className="text-xl md:text-3xl font-black text-slate-900 uppercase tracking-tighter leading-tight max-w-4xl">No Quizzes Available Right Now</h4>
+                  <p className="text-xs md:text-base font-bold text-slate-500 uppercase tracking-widest leading-relaxed max-w-3xl">
+                    Stay updated, we will add more quizzes soon. Meanwhile you can create a <span className="text-violet-600">custom AI test</span> by chatting with our AI mentor below.
                   </p>
                 </div>
 
