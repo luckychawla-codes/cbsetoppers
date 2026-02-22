@@ -291,6 +291,18 @@ const MaintenancePage: React.FC<{ data: any }> = ({ data }) => {
           Sign Out & Return Home
         </button>
       </div>
+
+      {/* Floating Telegram Icon for Maintenance Mode */}
+      <a
+        href={TG_CHANNEL}
+        target="_blank"
+        className="fixed bottom-8 right-8 w-16 h-16 bg-[#229ED9] text-white rounded-2xl shadow-2xl shadow-blue-200 flex items-center justify-center hover:scale-110 active:scale-95 transition-all animate-in zoom-in slide-in-from-bottom-10 duration-700 z-[100] group"
+      >
+        <svg className="w-8 h-8 group-hover:rotate-12 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" />
+        </svg>
+        <div className="absolute -top-2 -left-2 bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase">Update</div>
+      </a>
     </div>
   );
 };
@@ -2286,15 +2298,17 @@ const App: React.FC = () => {
         )
       )}
 
-      <AIChatWidget
-        user={user}
-        currentView={view}
-        selectedSubject={selectedSubject}
-        onStartAIQuiz={(config) => {
-          setExamConfig({ subj: config.subject, pid: 'AI_DYNAMIC' });
-          setView('exam');
-        }}
-      />
+      {!isMaintenance && (
+        <AIChatWidget
+          user={user}
+          currentView={view}
+          selectedSubject={selectedSubject}
+          onStartAIQuiz={(config) => {
+            setExamConfig({ subj: config.subject, pid: 'AI_DYNAMIC' });
+            setView('exam');
+          }}
+        />
+      )}
 
       {/* ── Global Zoom Modal ── */}
       {zoomedImg && (
