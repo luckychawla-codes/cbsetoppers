@@ -1,8 +1,8 @@
 // CBSE TOPPERS - Premium Education Platform
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { User, QuizResult, Question } from './types';
-import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2 } from './constants';
-import { verifyStudent, registerStudent, supabase, saveQuizResult, fetchStudentStats } from './services/supabase';
+import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2, STREAM_SUBJECTS } from './constants';
+import { verifyStudent, registerStudent, supabase, saveQuizResult, fetchStudentStats, updateStudentProfile } from './services/supabase';
 import { analyzeResult, generateAIQuiz, getMotivationalQuote } from './services/ai';
 import AIChatWidget from './AIChatWidget';
 import ReactMarkdown from 'react-markdown';
@@ -514,6 +514,56 @@ const MOCK_LEADERBOARD = [
   { name: 'Kavya Nair', xp: 1980 },
   { name: 'Rohan Verma', xp: 1750 },
 ];
+
+// ─── Syllabus Tracker Section ──────────────────────────────────────────────────
+const SyllabusTrackerSection: React.FC<{ user: User }> = ({ user }) => {
+  const [completed, setCompleted] = useState<Record<string, number>>(() => {
+    try { return JSON.parse(localStorage.getItem(`syllabus_prog_v1_${user.student_id}`) || '{}'); }
+    catch { return {}; }
+  });
+
+  const streamKey = user.stream && user.class === 'XIIth' ? user.stream : user.class === 'Xth' ? 'X' : (user.stream || 'PCM');
+  const subjects = STREAM_SUBJECTS[streamKey] || STREAM_SUBJECTS['PCM'];
+
+  const toggleSubject = (subj: string) => {
+    const newProgress = { ...completed };
+    const current = newProgress[subj] || 0;
+    newProgress[subj] = current >= 100 ? 0 : current + 25; // Simple toggle for demo
+    setCompleted(newProgress);
+    localStorage.setItem(`syllabus_prog_v1_${user.student_id}`, JSON.stringify(newProgress));
+  };
+
+  return (
+    <section className="mb-12 animate-fadeInUp" style={{ animationDelay: '0.05s' }}>
+      <div className="flex items-center gap-4 mb-8">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-violet-100" />
+        <h3 className="text-[10px] font-black text-violet-500 uppercase tracking-[0.3em] flex items-center gap-2"><span>📂</span> {user.stream || user.class} Syllabus Tracker</h3>
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-violet-100" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {subjects.map(subj => {
+          const progress = completed[subj] || 0;
+          return (
+            <div key={subj} className="glass-card p-6 flex flex-col gap-4 group hover:border-violet-200 transition-all cursor-pointer" onClick={() => toggleSubject(subj)}>
+              <div className="flex items-center justify-between">
+                <p className="font-black text-slate-800 text-sm">{subj}</p>
+                <span className="text-xl group-hover:scale-125 transition-transform">📚</span>
+              </div>
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-violet-600 rounded-full transition-all duration-700" style={{ width: `${progress}%` }} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{progress}% Complete</span>
+                <span className="text-[9px] font-black text-violet-500 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Track Progress</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
 
 // ─── Performance Analytics Dashboard ────────────────────────────────────────
 const PerformanceDashboard: React.FC<{ user: User }> = ({ user }) => {
@@ -1137,7 +1187,17 @@ const Dashboard: React.FC<{
               <p className="text-slate-400 font-bold text-[10px] md:text-xs uppercase tracking-[0.3em]">
                 Select a Subject to start MOCK TEST
               </p>
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, I'm a Class ${user.class}${user.stream ? ' ' + user.stream : ''} student. Can you analyze my syllabus and create a personalized 30-day preparation plan? 📅` } }))}
+                  className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center gap-3"
+                >
+                  <span className="text-lg">🗓️</span> AI Syllabus Planner
+                </button>
+              </div>
             </div>
+
+            <SyllabusTrackerSection user={user} />
 
             <section className="mb-16">
               <div className="flex items-center gap-4 mb-8">
@@ -2017,7 +2077,7 @@ const App: React.FC = () => {
 
   const handleUpdateProfile = (updatedUser: User) => {
     setUser(updatedUser);
-    localStorage.setItem('pe_cbt_session', JSON.stringify(updatedUser));
+    localStorage.setItem('pe_cbt_session', JSON.stringify({ user: updatedUser }));
   };
 
   return (
