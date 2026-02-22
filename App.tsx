@@ -320,7 +320,7 @@ const MaintenancePage: React.FC<{ data: any }> = ({ data }) => {
             <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-8 shrink-0" />
             <div className="text-center mb-8">
               <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">Technical Support</h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Connect with the Founders</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Connect with the OWNER, FOUNDER & CEO directly</p>
             </div>
             <div className="space-y-4 mb-4">
               <a href={CONTACT_FOUNDER} target="_blank" className="flex items-center justify-between p-6 bg-slate-50 border border-slate-100 rounded-[2rem] hover:border-violet-500 transition-all group">
@@ -1551,7 +1551,7 @@ const Dashboard: React.FC<{
 
             <div className="text-center mb-8">
               <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Support Center</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Connect with our administration</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Connect with the OWNER, FOUNDER & CEO directly</p>
             </div>
 
             <div className="space-y-4">
