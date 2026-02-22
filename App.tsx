@@ -49,7 +49,8 @@ const SimpleLatex: React.FC<{ content: string, className?: string }> = ({ conten
   );
 };
 
-const EXAM_DURATION = 90 * 60;
+// Timer: 90 seconds (1.5 min) per MCQ question — e.g. 10 Qs = 15 min, 20 Qs = 30 min
+const SECONDS_PER_QUESTION = 90;
 const MAX_ATTEMPTS = 5;
 const LOGO_URL = "https://i.ibb.co/vC4MYFFk/1770137585956.png";
 const TG_CHANNEL = "https://t.me/CBSET0PPERS";
@@ -759,7 +760,6 @@ const Dashboard: React.FC<{
 const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: QuizResult) => void, user: User }> = ({ subject, paperId, onFinish, user }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
-  const [timeLeft, setTimeLeft] = useState(EXAM_DURATION);
 
   const questions = useMemo(() => {
     if (paperId === 'AI_DYNAMIC') {
@@ -769,15 +769,21 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
     return paperId === 'P2' ? PAPER_2_QUESTIONS : PAPER_1_QUESTIONS;
   }, [paperId]);
 
+  // Calculate exam duration dynamically: 90 seconds per question
+  const examDuration = useMemo(() => questions.length * SECONDS_PER_QUESTION, [questions]);
+  const [timeLeft, setTimeLeft] = useState(examDuration);
+
   useEffect(() => {
+    // Reset answers AND timer whenever questions change (new quiz loaded)
     setAnswers(new Array(questions.length).fill(null));
+    setTimeLeft(questions.length * SECONDS_PER_QUESTION);
     const timer = setInterval(() => setTimeLeft(prev => prev > 0 ? prev - 1 : 0), 1000);
     return () => clearInterval(timer);
   }, [questions]);
 
   const handleFinish = () => {
     const score = answers.reduce((acc, ans, idx) => (ans === questions[idx].answer ? acc + 1 : acc), 0);
-    onFinish({ score, total: questions.length, paperId, subject, answers, timestamp: Date.now(), timeSpent: EXAM_DURATION - timeLeft });
+    onFinish({ score, total: questions.length, paperId, subject, answers, timestamp: Date.now(), timeSpent: examDuration - timeLeft });
   };
 
   const downloadPaperPDF = () => {
