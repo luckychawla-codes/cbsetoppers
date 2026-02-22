@@ -21,3 +21,9 @@ export const STREAM_SUBJECTS: Record<string, string[]> = {
   "Humanities": ["History", "Political Science", "Geography", "Economics", "English Core"],
   "X": ["Mathematics", "Science", "Social Science", "English"],
 };
+
+export const CASE_STUDIES_P1: CaseStudy[] = [];
+export const CASE_STUDIES_P2: CaseStudy[] = [];
+export const PAPER_1_QUESTIONS: Question[] = [];
+export const PAPER_2_QUESTIONS: Question[] = [];
+
