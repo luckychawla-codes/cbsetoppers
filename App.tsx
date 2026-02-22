@@ -500,7 +500,6 @@ const MotivationalQuote: React.FC<{ user: User }> = ({ user }) => {
         </div>
         <div className="hidden md:flex items-center gap-3">
           <span className="h-1 w-1 rounded-full bg-violet-300" />
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Mentor: TopperAI</p>
         </div>
       </div>
     </div>
