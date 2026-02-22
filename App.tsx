@@ -274,13 +274,20 @@ const MaintenancePage: React.FC<{ data: any }> = ({ data }) => {
           </div>
         )}
 
-        <div className="flex justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <a href={TG_CHANNEL} target="_blank" className="w-full p-6 bg-slate-50 rounded-[2rem] border border-slate-100 hover:border-violet-200 transition-all group flex flex-col items-center">
             <div className="w-10 h-10 bg-violet-100 text-violet-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" /></svg>
             </div>
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Official Updates</p>
-            <p className="text-sm font-black text-slate-700 group-hover:text-violet-600 uppercase tracking-tight">Join Telegram Channel</p>
+            <p className="text-[11px] font-black text-slate-700 group-hover:text-violet-600 uppercase tracking-tight text-center">Join Channel</p>
+          </a>
+          <a href={TG_GROUP} target="_blank" className="w-full p-6 bg-slate-50 rounded-[2rem] border border-slate-100 hover:border-violet-200 transition-all group flex flex-col items-center">
+            <div className="w-10 h-10 bg-violet-100 text-violet-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" /></svg>
+            </div>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Community Hub</p>
+            <p className="text-[11px] font-black text-slate-700 group-hover:text-violet-600 uppercase tracking-tight text-center">Discussion Group</p>
           </a>
         </div>
 
