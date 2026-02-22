@@ -1801,15 +1801,7 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
   );
 };
 
-<div className="flex items-center justify-center gap-4 mt-8 opacity-40">
-  <div className="h-px w-8 bg-slate-400" />
-  <p className="text-[9px] font-black uppercase tracking-[0.4em]">TopperAI Result Analytics v2</p>
-  <div className="h-px w-8 bg-slate-400" />
-</div>
-      </div >
-    </div >
-  );
-};
+
 
 type View = 'auth' | 'dashboard' | 'exam' | 'result' | 'profile' | 'verify';
 
