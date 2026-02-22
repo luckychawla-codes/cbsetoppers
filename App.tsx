@@ -1,5 +1,5 @@
 // CBSE TOPPERS - Premium Education Platform
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { User, QuizResult, Question } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2 } from './constants';
 import { verifyStudent, registerStudent, supabase } from './services/supabase';
@@ -507,6 +507,287 @@ const MotivationalQuote: React.FC<{ user: User }> = ({ user }) => {
   );
 };
 
+// ─── Mock data ───────────────────────────────────────────────────────────────
+const MOCK_LEADERBOARD = [
+  { name: 'Priya Sharma', xp: 2840 },
+  { name: 'Arjun Mehta', xp: 2510 },
+  { name: 'Sneha Patel', xp: 2200 },
+  { name: 'Kavya Nair', xp: 1980 },
+  { name: 'Rohan Verma', xp: 1750 },
+];
+
+// ─── Performance Analytics Dashboard ────────────────────────────────────────
+const PerformanceDashboard: React.FC<{ user: User }> = ({ user }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [animRing, setAnimRing] = useState(false);
+  const chartRef = useRef<HTMLCanvasElement>(null);
+  const chartInstance = useRef<any>(null);
+
+  const history: QuizResult[] = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('topper_quiz_history') || '[]'); }
+    catch { return []; }
+  }, []);
+
+  const stats = useMemo(() => {
+    if (history.length === 0) return { accuracy: 78, strongest: 'Biology', weakest: 'Chemistry', xp: 540, rank: '#12' };
+    const subjectMap: Record<string, { total: number; score: number }> = {};
+    let totalScore = 0, totalQ = 0;
+    history.forEach(r => {
+      totalScore += r.score; totalQ += r.total;
+      if (!subjectMap[r.subject]) subjectMap[r.subject] = { total: 0, score: 0 };
+      subjectMap[r.subject].total += r.total;
+      subjectMap[r.subject].score += r.score;
+    });
+    const accuracy = totalQ > 0 ? Math.round((totalScore / totalQ) * 100) : 0;
+    const subjects = Object.entries(subjectMap).map(([name, d]) => ({ name, pct: Math.round((d.score / d.total) * 100) }));
+    subjects.sort((a, b) => b.pct - a.pct);
+    const xp = history.reduce((acc, r) => acc + Math.round((r.score / r.total) * 100) + 10, 0);
+    return { accuracy, strongest: subjects[0]?.name || 'Biology', weakest: subjects[subjects.length - 1]?.name || 'Chemistry', xp, rank: '#' + Math.max(1, 50 - history.length) };
+  }, [history]);
+
+  const last7 = useMemo(() => {
+    const recent = [...history].sort((a, b) => b.timestamp - a.timestamp).slice(0, 7).reverse();
+    if (recent.length === 0) return { labels: ['Test 1', 'Test 2', 'Test 3', 'Test 4', 'Test 5', 'Test 6', 'Test 7'], data: [45, 52, 60, 58, 67, 72, 81] };
+    return { labels: recent.map((_, i) => `Test ${i + 1}`), data: recent.map(r => Math.round((r.score / r.total) * 100)) };
+  }, [history]);
+
+  const weakTopics = useMemo(() => {
+    if (history.length === 0) return ['Genetics & Evolution (Chapter 6)', 'Chemical Kinetics (Unit III)', 'Electromagnetic Induction'];
+    return [`Focus on ${stats.weakest} — your lowest scoring subject`, 'Practice 5 MCQs daily on weak chapters', 'Attempt one full AI mock test every 3 days'];
+  }, [history, stats.weakest]);
+
+  const circumference = 2 * Math.PI * 44;
+
+  useEffect(() => { const t = setTimeout(() => setAnimRing(true), 300); return () => clearTimeout(t); }, []);
+
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const ChartJS = (window as any).Chart;
+    if (!ChartJS) return;
+    if (chartInstance.current) { chartInstance.current.destroy(); }
+    const ctx = chartRef.current.getContext('2d');
+    if (!ctx) return;
+    const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+    gradient.addColorStop(0, 'rgba(124,58,237,0.18)');
+    gradient.addColorStop(1, 'rgba(124,58,237,0.0)');
+    chartInstance.current = new ChartJS(ctx, {
+      type: 'line',
+      data: {
+        labels: last7.labels,
+        datasets: [{ label: 'Score %', data: last7.data, borderColor: '#7C3AED', backgroundColor: gradient, borderWidth: 2.5, pointBackgroundColor: '#7C3AED', pointRadius: 5, pointHoverRadius: 8, tension: 0.45, fill: true }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: '#1e293b', titleColor: '#a855f7', bodyColor: '#fff', padding: 12, cornerRadius: 12, callbacks: { label: (c: any) => ` ${c.parsed.y}% accuracy` } }
+        },
+        scales: {
+          y: { min: 0, max: 100, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#94a3b8', font: { size: 10, weight: 'bold' as any }, callback: (v: any) => v + '%' } },
+          x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10, weight: 'bold' as any } } }
+        },
+        animation: { duration: 1200, easing: 'easeInOutQuart' }
+      }
+    });
+    return () => { if (chartInstance.current) { chartInstance.current.destroy(); chartInstance.current = null; } };
+  }, [last7]);
+
+  const strokeDash = `${(stats.accuracy / 100) * circumference} ${circumference}`;
+
+  return (
+    <section className="mb-12 animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
+      {/* Section Header */}
+      <div className="flex items-center gap-4 mb-8">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-violet-100" />
+        <h3 className="text-[10px] font-black text-violet-500 uppercase tracking-[0.3em] flex items-center gap-2"><span>📊</span> Your Performance Analytics</h3>
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-violet-100" />
+      </div>
+
+      {/* 4 Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {/* Overall Accuracy */}
+        <div className="glass-card p-5 flex flex-col items-center gap-2 hover:scale-[1.03] cursor-default">
+          <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Overall Accuracy</p>
+          <svg width="96" height="96" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="44" fill="none" stroke="#f1f5f9" strokeWidth="8" />
+            <circle cx="50" cy="50" r="44" fill="none" stroke="url(#ringGrad)" strokeWidth="8"
+              strokeDasharray={animRing ? strokeDash : `0 ${circumference}`}
+              strokeLinecap="round"
+              style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'stroke-dasharray 1.2s ease' }} />
+            <defs><linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7C3AED" /><stop offset="100%" stopColor="#A855F7" />
+            </linearGradient></defs>
+            <text x="50" y="50" textAnchor="middle" dy="6" fontSize="18" fontWeight="900" fill="#7C3AED">{stats.accuracy}%</text>
+          </svg>
+        </div>
+        {/* Strongest */}
+        <div className="glass-card p-5 flex flex-col items-center justify-center gap-2 hover:scale-[1.03] cursor-default">
+          <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Strongest</p>
+          <div className="text-4xl">🏆</div>
+          <p className="font-black text-slate-800 text-sm text-center leading-tight">{stats.strongest}</p>
+          <span className="bg-amber-50 text-amber-600 text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-amber-100">Top Performer</span>
+        </div>
+        {/* Weakest */}
+        <div className="glass-card p-5 flex flex-col items-center justify-center gap-2 hover:scale-[1.03] cursor-default">
+          <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Needs Work</p>
+          <div className="text-4xl">⚡</div>
+          <p className="font-black text-slate-800 text-sm text-center leading-tight">{stats.weakest}</p>
+          <span className="bg-orange-50 text-orange-500 text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-orange-100">Focus Here</span>
+        </div>
+        {/* Rank & XP */}
+        <div className="glass-card p-5 flex flex-col items-center justify-center gap-2 hover:scale-[1.03] cursor-default" style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.06),rgba(168,85,247,0.08))' }}>
+          <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Rank & XP</p>
+          <p className="text-4xl font-black text-violet-600">{stats.rank}</p>
+          <div className="bg-gradient-to-r from-violet-600 to-purple-500 text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg shadow-violet-200">{stats.xp} XP</div>
+        </div>
+      </div>
+
+      {/* Line Chart */}
+      <div className="glass-card p-6 md:p-8 mb-5">
+        <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.25em] mb-5 flex items-center gap-2">
+          <span className="w-2 h-2 bg-violet-500 rounded-full inline-block" />
+          Last 7 Test Performance
+        </p>
+        <canvas ref={chartRef} height={120} />
+      </div>
+
+      {/* Smart Revision CTA */}
+      <button onClick={() => setShowModal(true)}
+        className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-violet-200/60 hover:shadow-violet-400/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 btn-glow">
+        <span>🧠</span> Generate Smart Revision Plan
+      </button>
+
+      {/* Revision Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowModal(false)} />
+          <div className="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl shadow-violet-200/40 relative z-10 p-8 animate-in zoom-in-95 duration-300">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Smart Revision Plan</h3>
+                <p className="text-[10px] font-black text-violet-500 uppercase tracking-widest mt-1">AI-Generated · Personalized for {user.name.split(' ')[0]}</p>
+              </div>
+              <button onClick={() => setShowModal(false)} className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all text-slate-500 font-black">✕</button>
+            </div>
+            <div className="space-y-3 mb-6">
+              <div className="p-4 bg-red-50 rounded-2xl border border-red-100">
+                <p className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-2">⚡ Weak Topics to Revise</p>
+                <ul className="space-y-1.5">
+                  {weakTopics.map((t, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                      <span className="w-1.5 h-1.5 bg-red-400 rounded-full shrink-0" />{t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="p-4 bg-violet-50 rounded-2xl border border-violet-100">
+                <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-2">📅 Suggested Practice</p>
+                <p className="text-sm font-bold text-slate-700">Complete <span className="text-violet-600 font-black">3 targeted tests</span> on weak topics this week. Aim for <span className="text-violet-600 font-black">20 min/day</span> of focused revision.</p>
+              </div>
+              <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
+                <p className="text-[9px] font-black text-green-500 uppercase tracking-widest mb-2">🚀 Predicted Improvement</p>
+                <p className="text-sm font-bold text-slate-700">Following this plan could improve your accuracy by <span className="text-green-600 font-black">+12–18%</span> within 2 weeks.</p>
+              </div>
+            </div>
+            <button onClick={() => setShowModal(false)} className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg active:scale-95 transition-all">Got It, Let's Go! 🚀</button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+};
+
+// ─── Gamification Section ─────────────────────────────────────────────────────
+const GamificationSection: React.FC<{ user: User; xp: number }> = ({ user, xp }) => {
+  const [barFilled, setBarFilled] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setBarFilled(true), 600); return () => clearTimeout(t); }, []);
+
+  const streak = useMemo(() => {
+    try {
+      const h: QuizResult[] = JSON.parse(localStorage.getItem('topper_quiz_history') || '[]');
+      if (h.length === 0) return 5;
+      const days = new Set(h.map(r => new Date(r.timestamp).toDateString()));
+      return days.size;
+    } catch { return 5; }
+  }, []);
+
+  const xpGoal = 1000;
+  const pct = Math.min(100, Math.round((xp / xpGoal) * 100));
+  const badges = [
+    { name: 'Bronze', min: 0, max: 200, icon: '🥉', bg: 'from-amber-700 to-amber-500' },
+    { name: 'Silver', min: 200, max: 500, icon: '🥈', bg: 'from-slate-400 to-slate-300' },
+    { name: 'Gold', min: 500, max: 1000, icon: '🥇', bg: 'from-amber-400 to-yellow-300' },
+    { name: 'Diamond', min: 1000, max: Infinity, icon: '💎', bg: 'from-sky-400 to-violet-400' },
+  ];
+  const currentBadge = badges.findIndex(b => xp >= b.min && xp < b.max);
+
+  return (
+    <section className="mb-12 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
+      <div className="flex items-center gap-4 mb-8">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-violet-100" />
+        <h3 className="text-[10px] font-black text-violet-500 uppercase tracking-[0.3em] flex items-center gap-2"><span>🎮</span> Level Up Your Preparation</h3>
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-violet-100" />
+      </div>
+      <div className="grid md:grid-cols-2 gap-5">
+        {/* Left: Streak + XP + Badges */}
+        <div className="space-y-4">
+          <div className="glass-card p-6 flex items-center gap-5 hover:scale-[1.02]">
+            <div className="text-5xl animate-flameBounce">🔥</div>
+            <div>
+              <p className="text-3xl font-black text-slate-900">{streak} Day Streak</p>
+              <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest mt-0.5">Keep going, {user.name.split(' ')[0]}!</p>
+            </div>
+          </div>
+          <div className="glass-card p-6 hover:scale-[1.02]">
+            <div className="flex justify-between items-center mb-3">
+              <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">🎯 XP Progress</p>
+              <p className="text-sm font-black text-violet-600">{xp} / {xpGoal} XP</p>
+            </div>
+            <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-full rounded-full bg-gradient-to-r from-violet-600 to-purple-400 transition-all duration-1000 ease-out shadow-sm shadow-violet-300"
+                style={{ width: barFilled ? `${pct}%` : '0%' }} />
+            </div>
+            <p className="text-[9px] text-slate-400 font-bold mt-2 uppercase tracking-widest">{pct}% to next level</p>
+          </div>
+          <div className="glass-card p-6 hover:scale-[1.02]">
+            <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-4">🏅 Badge Path</p>
+            <div className="grid grid-cols-4 gap-2">
+              {badges.map((b, i) => (
+                <div key={b.name} className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all ${i === currentBadge ? `bg-gradient-to-br ${b.bg} shadow-lg scale-110 ring-2 ring-violet-200` : 'bg-slate-50 opacity-50'
+                  }`}>
+                  <span className="text-2xl">{b.icon}</span>
+                  <p className={`text-[8px] font-black uppercase tracking-tight ${i === currentBadge ? 'text-white' : 'text-slate-500'}`}>{b.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Right: Leaderboard */}
+        <div className="glass-card p-6 hover:scale-[1.02] flex flex-col">
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">🏆 Top Performers</p>
+            <span className="bg-violet-50 text-violet-600 text-[8px] font-black px-2 py-1 rounded-lg uppercase tracking-widest border border-violet-100">Leaderboard</span>
+          </div>
+          <div className="space-y-2.5 flex-1">
+            {MOCK_LEADERBOARD.map((s, i) => (
+              <div key={s.name} className={`flex items-center gap-3 p-3 rounded-2xl transition-all hover:scale-[1.01] ${i === 0 ? 'bg-amber-50 border border-amber-100' : i === 1 ? 'bg-slate-50 border border-slate-100' : 'bg-slate-50'
+                }`}>
+                <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-sm font-black shrink-0 ${i === 0 ? 'bg-amber-400 text-white' : i === 1 ? 'bg-slate-300 text-white' : i === 2 ? 'bg-amber-700 text-white' : 'bg-slate-100 text-slate-400'
+                  }`}>{i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`}</div>
+                <p className="font-black text-sm text-slate-800 flex-1 truncate">{s.name}</p>
+                <span className="text-[10px] font-black text-violet-600 bg-violet-50 px-2 py-0.5 rounded-lg border border-violet-100">{s.xp} XP</span>
+              </div>
+            ))}
+          </div>
+          <button className="mt-5 w-full py-3 border-2 border-violet-100 text-violet-600 font-black uppercase text-[9px] tracking-widest rounded-2xl hover:bg-violet-600 hover:text-white hover:border-violet-600 transition-all active:scale-95">
+            View Full Leaderboard →
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const Dashboard: React.FC<{
   user: User,
   onStartExam: (subj: string, pid: string) => void,
@@ -628,21 +909,23 @@ const Dashboard: React.FC<{
               </div>
             </section>
 
-            <div className="mt-16 md:mt-24 text-center pb-24 relative overflow-hidden">
-              <div className="relative z-10">
-                <h2 className="text-5xl md:text-[10rem] font-black text-slate-900/5 uppercase tracking-tighter leading-none absolute inset-x-0 top-1/2 -translate-y-1/2 -z-10 select-none pointer-events-none">GO CONQUER</h2>
-                <p className="text-violet-500 font-black text-[10px] md:text-sm uppercase tracking-[0.8em] mb-6">ULTIMATE BOARD PREPARATION</p>
-                <h3 className="text-4xl md:text-[6rem] font-black text-slate-900 uppercase tracking-tighter leading-[0.85] mb-10">CHASE YOUR DREAMS, <br /><span className="text-violet-600">{user.name.split(' ')[0]}!</span></h3>
-                <div className="max-w-2xl mx-auto border-t-2 border-violet-50 pt-10 mt-2">
-                  <p className="text-slate-400 font-black text-xl md:text-4xl uppercase tracking-[0.2em] opacity-90 leading-tight">ALL THE BEST FOR YOUR EXAM</p>
-                  <div className="flex items-center justify-center gap-4 mt-6">
-                    <div className="h-[2px] w-8 bg-slate-200"></div>
-                    <p className="text-slate-300 font-bold text-[9px] md:text-[11px] uppercase tracking-[0.5em]">BELIEVE IN YOURSELF</p>
-                    <div className="h-[2px] w-8 bg-slate-200"></div>
-                  </div>
-                </div>
-              </div>
+            {/* ── SVG Wave Divider ── */}
+            <div className="w-full overflow-hidden -mx-12 md:-mx-16 mt-4 mb-2" style={{ width: 'calc(100% + 6rem)' }}>
+              <svg viewBox="0 0 1440 40" preserveAspectRatio="none" className="w-full">
+                <path fill="rgba(124,58,237,0.04)" d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z" />
+              </svg>
             </div>
+
+            <PerformanceDashboard user={user} />
+
+            {/* ── SVG Wave Divider ── */}
+            <div className="w-full overflow-hidden -mx-12 md:-mx-16 my-2" style={{ width: 'calc(100% + 6rem)' }}>
+              <svg viewBox="0 0 1440 40" preserveAspectRatio="none" className="w-full">
+                <path fill="rgba(168,85,247,0.04)" d="M0,10 C480,40 960,0 1440,20 L1440,40 L0,40 Z" />
+              </svg>
+            </div>
+
+            <GamificationSection user={user} xp={(() => { try { const h: QuizResult[] = JSON.parse(localStorage.getItem('topper_quiz_history') || '[]'); return h.length === 0 ? 540 : h.reduce((a, r) => a + Math.round((r.score / r.total) * 100) + 10, 0); } catch { return 540; } })()} />
           </div>
         ) : (
           <div className="animate-in fade-in duration-500">
@@ -689,17 +972,53 @@ const Dashboard: React.FC<{
         )}
       </main>
 
-      <footer className="max-w-6xl mx-auto p-12 pt-0">
-        <div className="border-t-2 border-slate-100 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-col items-center md:items-start transition-all">
-            <h4 className="text-[10px] font-black uppercase text-slate-800 tracking-widest mb-2">CBSE TOPPERS</h4>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">© {new Date().getFullYear()} All Rights Reserved</p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-6 md:gap-10">
-            <button onClick={() => setShowLegalSide('privacy')} className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Privacy Policy</button>
-            <button onClick={() => setShowLegalSide('terms')} className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Terms of Service</button>
-            <button onClick={() => setShowLegalSide('refund')} className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Refund Policy</button>
-            <button onClick={() => setShowLegalSide('honor')} className="text-[9px] font-black uppercase text-slate-400 hover:text-violet-600 tracking-widest transition-colors">Honor Code</button>
+      {/* ── Premium 4-Col Footer ── */}
+      <footer className="mt-8">
+        <svg viewBox="0 0 1440 40" preserveAspectRatio="none" className="w-full -mb-px">
+          <defs><linearGradient id="fGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#7C3AED" stopOpacity="0.2" />
+            <stop offset="50%" stopColor="#A855F7" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#7C3AED" stopOpacity="0.2" />
+          </linearGradient></defs>
+          <path fill="url(#fGrad)" d="M0,15 C360,40 1080,0 1440,20 L1440,40 L0,40 Z" />
+        </svg>
+        <div className="bg-slate-900 px-6 md:px-16 pt-12 pb-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+              <div>
+                <img src={LOGO_URL} className="w-12 h-12 rounded-2xl mb-4 shadow-lg" />
+                <h4 className="text-white font-black text-sm uppercase tracking-tight mb-2">CBSE Toppers</h4>
+                <p className="text-slate-400 text-[11px] font-medium leading-relaxed">AI-Powered Board Preparation Platform</p>
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase text-violet-400 tracking-widest mb-4">Quick Links</p>
+                <ul className="space-y-2.5">
+                  {['Home', 'Mock Tests', 'Performance', 'Leaderboard'].map(l => (
+                    <li key={l}><button className="text-slate-400 text-[11px] font-bold hover:text-white transition-colors">{l}</button></li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase text-violet-400 tracking-widest mb-4">Resources</p>
+                <ul className="space-y-2.5">
+                  {([['Privacy Policy', 'privacy'], ['Terms of Service', 'terms'], ['Refund Policy', 'refund'], ['Honor Code', 'honor']] as [string, any][]).map(([l, k]) => (
+                    <li key={k}><button onClick={() => setShowLegalSide(k)} className="text-slate-400 text-[11px] font-bold hover:text-white transition-colors">{l}</button></li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase text-violet-400 tracking-widest mb-4">Community</p>
+                <ul className="space-y-2.5">
+                  <li><a href={TG_CHANNEL} target="_blank" className="text-slate-400 text-[11px] font-bold hover:text-white transition-colors flex items-center gap-2">📱 Telegram</a></li>
+                  <li><a href="#" className="text-slate-400 text-[11px] font-bold hover:text-white transition-colors flex items-center gap-2">📸 Instagram</a></li>
+                  <li><a href="#" className="text-slate-400 text-[11px] font-bold hover:text-white transition-colors flex items-center gap-2">▶️ YouTube</a></li>
+                </ul>
+              </div>
+            </div>
+            <div className="border-t border-slate-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-2">
+              <p className="text-slate-500 text-[10px] font-bold">© {new Date().getFullYear()} CBSE Toppers · All Rights Reserved</p>
+              <p className="text-slate-600 text-[10px] font-bold tracking-wide">Built with AI for Future Toppers ✨</p>
+            </div>
           </div>
         </div>
       </footer>
@@ -1382,6 +1701,12 @@ const App: React.FC = () => {
   };
 
   const handleFinishExam = (res: QuizResult) => {
+    // Persist quiz result for analytics
+    try {
+      const history: QuizResult[] = JSON.parse(localStorage.getItem('topper_quiz_history') || '[]');
+      history.push(res);
+      localStorage.setItem('topper_quiz_history', JSON.stringify(history));
+    } catch (_) { /* non-critical */ }
     setQuizResult(res);
     setView('result');
   };
