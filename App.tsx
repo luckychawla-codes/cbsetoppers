@@ -51,6 +51,46 @@ const SimpleLatex: React.FC<{ content: string, className?: string }> = ({ conten
 
 // Timer: 90 seconds (1.5 min) per MCQ question — e.g. 10 Qs = 15 min, 20 Qs = 30 min
 const SECONDS_PER_QUESTION = 90;
+// Logo used for PDF watermark — served from /public/favicon.png on the deployed site
+const PDF_LOGO_URL = "/favicon.png";
+
+// Helper: fetch an image URL and return base64 data URL
+const fetchImageAsBase64 = (url: string): Promise<string> =>
+  fetch(url)
+    .then(r => r.blob())
+    .then(blob => new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    }));
+
+// Helper: add semi-transparent logo watermark to every page of a jsPDF doc
+const addLogoWatermark = (doc: any, logoBase64: string) => {
+  const totalPages = doc.internal.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    const pw = doc.internal.pageSize.getWidth();
+    const ph = doc.internal.pageSize.getHeight();
+    // Centre watermark logo
+    const logoSize = 60;
+    const lx = (pw - logoSize) / 2;
+    const ly = (ph - logoSize) / 2;
+    doc.saveGraphicsState();
+    doc.setGState(new (doc as any).GState({ opacity: 0.08 }));
+    doc.addImage(logoBase64, 'PNG', lx, ly, logoSize, logoSize);
+    // Diagonal brand text
+    doc.setFontSize(22);
+    doc.setTextColor(22, 163, 74); // green-600
+    doc.text('CBSE TOPPERS', pw / 2, ph / 2 + 36, { angle: 45, align: 'center' });
+    doc.restoreGraphicsState();
+    // Small logo in top-right of every page
+    doc.saveGraphicsState();
+    doc.setGState(new (doc as any).GState({ opacity: 1 }));
+    doc.addImage(logoBase64, 'PNG', pw - 24, 4, 18, 18);
+    doc.restoreGraphicsState();
+  }
+};
 const MAX_ATTEMPTS = 5;
 const LOGO_URL = "https://i.ibb.co/vC4MYFFk/1770137585956.png";
 const TG_CHANNEL = "https://t.me/CBSET0PPERS";
@@ -786,7 +826,7 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
     onFinish({ score, total: questions.length, paperId, subject, answers, timestamp: Date.now(), timeSpent: examDuration - timeLeft });
   };
 
-  const downloadPaperPDF = () => {
+  const downloadPaperPDF = async () => {
     const doc = new jsPDF();
     doc.setFontSize(22);
     doc.setTextColor(79, 70, 229); // violet-600
@@ -824,6 +864,12 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
 
       y += 6;
     });
+
+    // Add logo watermark to every page
+    try {
+      const logoBase64 = await fetchImageAsBase64(PDF_LOGO_URL);
+      addLogoWatermark(doc, logoBase64);
+    } catch (_) { /* watermark is optional, skip on error */ }
 
     doc.save(`CBSE_Toppers_${subject}_Paper.pdf`);
   };
@@ -977,7 +1023,7 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
     setLoading(false);
   };
 
-  const downloadQuizPDF = () => {
+  const downloadQuizPDF = async () => {
     const doc = new jsPDF();
     let questions = result.paperId === 'P2' ? PAPER_2_QUESTIONS : PAPER_1_QUESTIONS;
     if (result.paperId === 'AI_DYNAMIC') {
@@ -1017,6 +1063,12 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
         3: { cellWidth: 40 }
       }
     });
+
+    // Add logo watermark to every page
+    try {
+      const logoBase64 = await fetchImageAsBase64(PDF_LOGO_URL);
+      addLogoWatermark(doc, logoBase64);
+    } catch (_) { /* watermark is optional, skip on error */ }
 
     doc.save(`CBSE_Toppers_${result.subject}_Report.pdf`);
   };
