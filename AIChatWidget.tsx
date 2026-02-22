@@ -1,5 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { chatWithAI } from './services/ai';
 
 const AIChatWidget: React.FC = () => {
@@ -63,7 +64,21 @@ const AIChatWidget: React.FC = () => {
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[80%] p-4 rounded-3xl text-sm font-medium leading-relaxed ${msg.role === 'user' ? 'bg-violet-600 text-white rounded-tr-none' : 'bg-white text-slate-800 shadow-sm border border-slate-100 rounded-tl-none'}`}>
-                                    {msg.content}
+                                    <ReactMarkdown
+                                        remarkPlugins={[remarkGfm]}
+                                        components={{
+                                            h1: ({ node, ...props }) => <h1 className="text-lg font-black uppercase mb-2" {...props} />,
+                                            h2: ({ node, ...props }) => <h2 className="text-md font-black uppercase mb-2" {...props} />,
+                                            h3: ({ node, ...props }) => <h3 className="text-sm font-black uppercase mb-1" {...props} />,
+                                            ul: ({ node, ...props }) => <ul className="list-disc ml-4 space-y-1 mb-2" {...props} />,
+                                            ol: ({ node, ...props }) => <ol className="list-decimal ml-4 space-y-1 mb-2" {...props} />,
+                                            a: ({ node, ...props }) => <a className="text-violet-600 underline font-bold" target="_blank" rel="noopener noreferrer" {...props} />,
+                                            p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                                            code: ({ node, ...props }) => <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono" {...props} />
+                                        }}
+                                    >
+                                        {msg.content}
+                                    </ReactMarkdown>
                                 </div>
                             </div>
                         ))}
