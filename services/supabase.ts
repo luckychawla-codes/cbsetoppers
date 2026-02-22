@@ -224,3 +224,20 @@ export const fetchStudentStats = async (student_id: string) => {
     return null;
   }
 };
+
+/** Fetch maintenance status and settings */
+export const fetchMaintenanceStatus = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('maintenance_enabled, maintenance_message, maintenance_opening_date')
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  } catch (e) {
+    console.error('fetchMaintenanceStatus error:', e);
+    return null;
+  }
+};

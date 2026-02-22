@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { User, QuizResult, Question } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2, STREAM_SUBJECTS } from './constants';
-import { verifyStudent, registerStudent, supabase, saveQuizResult, fetchStudentStats, updateStudentProfile } from './services/supabase';
+import { verifyStudent, registerStudent, supabase, saveQuizResult, fetchStudentStats, updateStudentProfile, fetchMaintenanceStatus } from './services/supabase';
 import { analyzeResult, generateAIQuiz, getMotivationalQuote } from './services/ai';
 import AIChatWidget from './AIChatWidget';
 import ReactMarkdown from 'react-markdown';
@@ -230,6 +230,69 @@ const TypingGreeting: React.FC<{ name: string }> = ({ name }) => {
     return () => clearInterval(timer);
   }, [name]);
   return <>{displayed}</>;
+};
+
+const MaintenancePage: React.FC<{ data: any }> = ({ data }) => {
+  const openingDate = data?.maintenance_opening_date ? new Date(data.maintenance_opening_date).toLocaleString('en-IN', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  }) : null;
+
+  return (
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-700">
+      <div className="max-w-md w-full space-y-8">
+        <div className="relative inline-block">
+          <div className="w-24 h-24 bg-violet-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-violet-200 animate-bounce cursor-default">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div className="absolute -top-2 -right-2 w-8 h-8 bg-amber-400 rounded-full border-4 border-white flex items-center justify-center shadow-lg animate-pulse">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Maintenance Mode</h1>
+          <div className="h-1 w-20 bg-violet-600 mx-auto rounded-full" />
+          <p className="text-slate-500 font-medium text-sm leading-relaxed max-w-xs mx-auto">
+            {data?.maintenance_message || "We're currently improving your experience. We'll be back online shortly!"}
+          </p>
+        </div>
+
+        {openingDate && (
+          <div className="bg-slate-50 border border-slate-100 p-6 rounded-[2rem] space-y-2">
+            <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest">Expected Back By</p>
+            <p className="text-lg font-black text-slate-800">{openingDate}</p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+          <a href={TG_CHANNEL} target="_blank" className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-violet-200 transition-all group">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Updates</p>
+            <p className="text-[11px] font-bold text-slate-700 group-hover:text-violet-600">Join Channel</p>
+          </a>
+          <a href={CONTACT_OWNER} target="_blank" className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-violet-200 transition-all group">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Support</p>
+            <p className="text-[11px] font-bold text-slate-700 group-hover:text-violet-600">Contact Admin</p>
+          </a>
+        </div>
+
+        <button
+          onClick={() => { localStorage.removeItem('pe_cbt_session'); window.location.reload(); }}
+          className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-red-500 transition-colors"
+        >
+          Sign Out & Return Home
+        </button>
+      </div>
+    </div>
+  );
 };
 
 const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => void }> = ({ onLogin, setView }) => {
@@ -2087,6 +2150,24 @@ const App: React.FC = () => {
   const [examConfig, setExamConfig] = useState<{ subj: string, pid: string } | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [zoomedImg, setZoomedImg] = useState<string | null>(null);
+  const [isMaintenance, setIsMaintenance] = useState(false);
+  const [maintenanceData, setMaintenanceData] = useState<any>(null);
+
+  useEffect(() => {
+    const checkMaintenance = async () => {
+      const data = await fetchMaintenanceStatus();
+      if (data?.maintenance_enabled) {
+        setIsMaintenance(true);
+        setMaintenanceData(data);
+      } else {
+        setIsMaintenance(false);
+      }
+    };
+    checkMaintenance();
+    // Check every 30 seconds
+    const interval = setInterval(checkMaintenance, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleZoom = (e: any) => setZoomedImg(e.detail);
@@ -2167,32 +2248,42 @@ const App: React.FC = () => {
     <div className="App selection:bg-violet-100 selection:text-violet-600">
       {view === 'auth' && <AuthScreen onLogin={handleLogin} setView={setView} />}
       {view === 'verify' && <VerificationPortal onBack={() => setView('auth')} />}
-      {view === 'dashboard' && user && (
-        <Dashboard
-          user={user}
-          onStartExam={(subj, pid) => { setExamConfig({ subj, pid }); setView('exam'); }}
-          setView={setView}
-          selectedSubject={selectedSubject}
-          setSelectedSubject={setSelectedSubject}
-        />
-      )}
-      {view === 'exam' && user && examConfig && (
-        <QuizEngine
-          user={user}
-          subject={examConfig.subj}
-          paperId={examConfig.pid}
-          onFinish={(res) => { setQuizResult(res); setView('result'); }}
-        />
-      )}
-      {view === 'result' && quizResult && (
-        <ResultView result={quizResult} onDone={() => { setView('dashboard'); setQuizResult(null); setExamConfig(null); }} />
-      )}
-      {view === 'profile' && user && (
-        <ProfileView
-          user={user}
-          onBack={() => setView('dashboard')}
-          onUpdate={handleUpdateProfile}
-        />
+
+      {/* Authenticated Views with Maintenance Check */}
+      {view !== 'auth' && view !== 'verify' && (
+        isMaintenance ? (
+          <MaintenancePage data={maintenanceData} />
+        ) : (
+          <>
+            {view === 'dashboard' && user && (
+              <Dashboard
+                user={user}
+                onStartExam={(subj, pid) => { setExamConfig({ subj, pid }); setView('exam'); }}
+                setView={setView}
+                selectedSubject={selectedSubject}
+                setSelectedSubject={setSelectedSubject}
+              />
+            )}
+            {view === 'exam' && user && examConfig && (
+              <QuizEngine
+                user={user}
+                subject={examConfig.subj}
+                paperId={examConfig.pid}
+                onFinish={(res) => { setQuizResult(res); setView('result'); }}
+              />
+            )}
+            {view === 'result' && quizResult && (
+              <ResultView result={quizResult} onDone={() => { setView('dashboard'); setQuizResult(null); setExamConfig(null); }} />
+            )}
+            {view === 'profile' && user && (
+              <ProfileView
+                user={user}
+                onBack={() => setView('dashboard')}
+                onUpdate={handleUpdateProfile}
+              />
+            )}
+          </>
+        )
       )}
 
       <AIChatWidget
