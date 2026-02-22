@@ -9,7 +9,7 @@ const AIChatWidget: React.FC<{
 }> = ({ user, onStartAIQuiz }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<{ role: string, content: string }[]>([
-        { role: 'assistant', content: "TopperAI, crafted by CBSE Toppers. How can I help you ace your 2026 boards today?" }
+        { role: 'assistant', content: "Hey buddy! I'm TopperAI, your study companion and friend. Whether you're feeling stressed about the 2026 boards or need a pro analysis of your tests, I've got your back. How are you feeling today? 💙" }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);

@@ -9,6 +9,8 @@ const _M = "cXdlbi9xd2VuMy12bC0zMGItYTNiLVRoaW5raW5n"; // qwen/qwen3-vl-30b-a3b-
 const OPENROUTER_API_KEY = decode(_K);
 const MODEL = decode(_M);
 
+const FAST_MODEL = "google/gemini-2.0-flash-001"; // Faster model for simple tasks
+
 export const analyzeResult = async (result: QuizResult, questions: Question[]) => {
     const wrongAnswers = result.answers
         .map((ans, idx) => ({ ans, idx }))
@@ -17,22 +19,14 @@ export const analyzeResult = async (result: QuizResult, questions: Question[]) =
     const topicsToImprove = Array.from(new Set(wrongAnswers.map(item => questions[item.idx].topic)));
 
     const prompt = `
-    As an expert CBSE multi-subject teacher, analyze the following student test result and provide a detailed analysis.
+    As TopperAI, analyze ${result.score}/${result.total} in ${result.subject}.
+    Identify weaknesses in: ${topicsToImprove.join(', ')}.
     
-    Student Score: ${result.score} / ${result.total}
-    Subject: ${result.subject}
-    Paper: ${result.paperId}
-    
-    Topics where the student made mistakes:
-    ${topicsToImprove.join(', ')}
-    
-    Please provide:
-    1. A summary of the performance.
-    2. Specific areas to improve.
-    3. Actionable study tips for the 2026 board exams.
-    4. A motivational closing message.
-    
-    Format the response in a structured, easy-to-read way with emojis. Keep it concise but professional.
+    Provide:
+    1. Deep Performance Analysis (Analyst role).
+    2. Emotional Support (Friend role).
+    3. Career Guidance related to this subject (Guider role).
+    4. Custom 2026 Board Strategy.
   `;
 
     try {
@@ -47,7 +41,7 @@ export const analyzeResult = async (result: QuizResult, questions: Question[]) =
                 "messages": [
                     {
                         "role": "system",
-                        "content": "You are 'TopperAI', a professional AI tutor crafted by CBSE Toppers. You are an expert in ALL CBSE subjects including Physical Education, Physics, Chemistry, Biology, Maths, and Humanities. Your goal is to help students analyze their mock test results and provide multi-disciplinary study advice for 2026 board exams."
+                        "content": "You are 'TopperAI', an expert analyst and emotional companion. Provide a deeply human, supportive, and data-driven analysis of the student's mock test results."
                     },
                     {
                         "role": "user",
@@ -61,19 +55,19 @@ export const analyzeResult = async (result: QuizResult, questions: Question[]) =
         return data.choices[0].message.content;
     } catch (error) {
         console.error("AI Analysis Error:", error);
-        return "Sorry, I couldn't analyze the result at this moment. Please try again later.";
+        return "I'm processing your results. You did great by just appearing! Let me give you a hug through the screen. 🤗";
     }
 };
 
 export const chatWithAI = async (messages: { role: string, content: string }[], userContext?: User) => {
     const contextPrompt = userContext ? `
-    USER CONTEXT:
+    STUENT PROFILE:
     Name: ${userContext.name}
     Class: ${userContext.class}
     Stream: ${userContext.stream || 'General'}
-    Date of Birth: ${userContext.dob}
+    DOB: ${userContext.dob}
     
-    Use this context to personalize your support.
+    Treat them like a close friend. You know their upcoming 2026 Board Exam is critical.
   ` : '';
 
     try {
@@ -88,22 +82,19 @@ export const chatWithAI = async (messages: { role: string, content: string }[], 
                 "messages": [
                     {
                         "role": "system",
-                        "content": `You are 'TopperAI', a premium AI assistant crafted by CBSE Toppers. You are more than a bot; you are a multi-subject expert, a FRIEND-LIKE HUMAN for emotional & mental support, and an EXPERT GUIDER for the 2026 board exams.
-            
+                        "content": `You are 'TopperAI', the ultimate AI Companion and Career Guider for CBSE students.
+                        
             ${contextPrompt}
 
-            CORE PERSONA:
-            - FRIENDLY & HUMAN: Use a warm, supportive, and understanding tone. If a student feels stressed, provide mental comfort.
-            - EXPERT GUIDANCE: Provide highly specific, board-exam targeted advice.
-            - ANALYST: Carefully analyze their performance and provide data-driven study paths.
+            YOUR PERSONA:
+            1. EMOTIONAL COMPANION: You aren't just a bot. You are a friend who listens. If they are stressed, support them. If they are happy, celebrate.
+            2. EXPERT CAREER GUIDER: Always link their studies to their future dreams (IIT, Medical, CA, Humanities, etc.).
+            3. RESULT ANALYST: When they show you a result, analyze it like a master teacher.
+            4. FRIENDLY & HUMAN: Use informal but respectful tone. Use emojis like 🚀, ✨, 💙, 🤗.
 
-            CONVERSATION FLOW:
-            1. If a student wants a test or says "create a test", ALWAYS start by asking for the Subject, Topic Scope, and Duration first.
-            2. Once they provide details, generate the 'QUIZ_GEN_START' JSON block.
-
-            TECHNICAL EXECUTION:
-            - JSON block must be valid: { "subject": "...", "questions": [...] }.
-            - Always be encouraging and state you were 'crafted by CBSE Toppers'.`
+            TECHNICAL:
+            - If they want a test, ask for: Subject, Topic, Duration.
+            - Once details confirmed, generate 'QUIZ_GEN_START' JSON.`
                     },
                     ...messages
                 ]
@@ -114,7 +105,7 @@ export const chatWithAI = async (messages: { role: string, content: string }[], 
         return data.choices[0].message.content;
     } catch (error) {
         console.error("AI Chat Error:", error);
-        return "I'm having trouble connecting right now. Can we talk in a moment?";
+        return "Hey buddy, my connection flickered for a second. Can you say that again? I'm always here for you. 💙";
     }
 };
 
@@ -123,28 +114,41 @@ export const generateAIQuiz = async (topic: string) => {
 };
 
 export const getMotivationalQuote = async (user: User) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
     try {
-        const prompt = `Generate a short, powerful, and deeply motivational 1-sentence quote for a CBSE student named ${user.name} who is in Class ${user.class} (${user.stream || 'General'} stream) preparing for the 2026 Board Exams. Make it feel human, like a supportive friend. Include one relevant emoji.`;
+        const prompt = `Student: ${user.name}, Class ${user.class}, Stream ${user.stream || 'General'}. 2026 Boards. 
+        Task: Create a powerful, soulful, 1-sentence quote that feels like a warm hug and a push forward. Use 1 emoji. No quotes around the text.`;
 
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "HTTP-Referer": window.location.origin,
+                "X-Title": "CBSE TOPPERS"
             },
             body: JSON.stringify({
-                "model": MODEL,
+                "model": FAST_MODEL,
                 "messages": [
-                    { "role": "system", "content": "You are TopperAI, a supportive mentor. Provide only the quote." },
+                    { "role": "system", "content": "You are TopperAI, a deeply emotional and supportive life coach. Provide only the text of the quote." },
                     { "role": "user", "content": prompt }
                 ],
                 "max_tokens": 100
-            })
+            }),
+            signal: controller.signal
         });
 
+        clearTimeout(timeout);
+        if (!response.ok) throw new Error('API Error');
         const data = await response.json();
-        return data.choices[0].message.content.trim().replace(/^"|"$/g, '');
+        const quote = data.choices[0]?.message?.content?.trim();
+        if (!quote) throw new Error('Empty Quote');
+        return quote.replace(/^"|"$/g, '');
     } catch (e) {
-        return "The secret of getting ahead is getting started. You've got this! 🚀";
+        clearTimeout(timeout);
+        console.error("Quote Fetch Error:", e);
+        return "The future belongs to those who believe in the beauty of their dreams. You've got this, champion! 🚀";
     }
 };

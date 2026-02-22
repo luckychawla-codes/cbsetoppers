@@ -947,16 +947,24 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
               </ReactMarkdown>
             </div>
 
-            <div className="mt-8 flex items-center gap-3 px-2">
-              <div className="flex -space-x-2">
-                {[1, 2, 3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200" />)}
-              </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Joined by 10k+ Toppers</p>
+            <div className="mt-10 flex flex-col md:flex-row items-center gap-4">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, I scored ${result.score}/${result.total} in ${result.subject}. Can you analyze my performance more deeply and give me a career path? 💙` } }))}
+                className="w-full md:flex-1 py-5 bg-violet-600 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-widest shadow-xl shadow-violet-200 hover:bg-violet-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                Discuss with My Companion
+              </button>
+              <button onClick={onDone} className="w-full md:w-auto px-10 py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-widest hover:bg-black active:scale-95 transition-all">Done</button>
             </div>
           </div>
         )}
 
-        <button onClick={onDone} className="w-full py-6 bg-violet-600 rounded-[2.5rem] font-black text-white uppercase tracking-widest shadow-xl hover:bg-violet-700 active:scale-95 transition-all text-sm">Return to Portal</button>
+        <div className="flex items-center justify-center gap-4 mt-8 opacity-40">
+          <div className="h-px w-8 bg-slate-400" />
+          <p className="text-[9px] font-black uppercase tracking-[0.4em]">TopperAI Result Analytics v2</p>
+          <div className="h-px w-8 bg-slate-400" />
+        </div>
       </div>
     </div>
   );
