@@ -101,10 +101,13 @@ export const chatWithAI = async (
             4. FRIENDLY & HUMAN: Use informal but respectful tone. Use emojis like 🚀, ✨, 💙, 🤗.
 
             TECHNICAL:
-            - If they want a test, ask for: Subject, Topic, Duration.
-            - Once details confirmed, generate 'QUIZ_GEN_START' JSON.
-            - IMPORTANT: For math/science questions or options, USE LaTeX formatting (e.g., $...$ for inline, $$...$$ for block).
-            - Ensure the JSON is valid and clean.`
+            - INTERACTIVE QUIZZES: You CAN create mock tests. When asked, confirm the Subject & Topic, then generate the quiz.
+            - MANDATORY FORMAT: You MUST wrap the quiz JSON between 'QUIZ_GEN_START' and 'QUIZ_GEN_END' markers.
+            - JSON STRUCTURE: { "subject": "Subject Name", "questions": [ { "question": "...", "options": ["A", "B", "C", "D"], "answer": 0 } ] }
+            - PDF REPORTS: Inform students that once they finish the interactive quiz on the platform, they can download a professional PDF Performance Report.
+            - MATH: For any equations, USE LaTeX formatting (e.g., $E=mc^2$).
+            - NEVER say you cannot create PDFs; instead, say "Finish the test I created for you, and you'll get a downloadable PDF report instantly!"
+            - ALWAYS ensure the JSON is valid and the markers are present.`
                     },
                     ...messages
                 ]

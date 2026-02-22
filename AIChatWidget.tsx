@@ -68,16 +68,24 @@ const AIChatWidget: React.FC<{
         // Check for Quiz Generation JSON in response
         if (aiResponse.includes("QUIZ_GEN_START")) {
             try {
-                const jsonStr = aiResponse.split("QUIZ_GEN_START")[1].split("QUIZ_GEN_END")[0];
+                let jsonStr = aiResponse.split("QUIZ_GEN_START")[1].split("QUIZ_GEN_END")[0];
+                // Clean markdown code blocks if present
+                jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
                 const quizData = JSON.parse(jsonStr);
-                setPendingQuiz(quizData);
 
-                // Auto-start quiz
-                localStorage.setItem('topper_ai_quiz', JSON.stringify(quizData.questions));
-                if (onStartAIQuiz) onStartAIQuiz({ subject: quizData.subject });
-                setPendingQuiz(null);
-                setIsOpen(false);
-            } catch (e) { console.error("Quiz Parse Error", e); }
+                if (quizData && quizData.questions && quizData.questions.length > 0) {
+                    setPendingQuiz(quizData);
+                    // Auto-start quiz
+                    localStorage.setItem('topper_ai_quiz', JSON.stringify(quizData.questions));
+                    if (onStartAIQuiz) onStartAIQuiz({ subject: quizData.subject });
+                    setPendingQuiz(null);
+                    setIsOpen(false);
+                }
+            } catch (e) {
+                console.error("Quiz Parse Error", e);
+                // If it fails, we keep the message as is, 
+                // but with the updated prompt it should work.
+            }
         }
     };
 
