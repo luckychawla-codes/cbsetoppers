@@ -47,7 +47,6 @@ export const chatWithAI = async (
             
             1. VISUAL EXPLANATIONS (Python # v-diag):
                - Format: ALWAYS wrap in triple backticks: \`\`\`python [code] \`\`\`
-               - MANDATORY: First line MUST BE EXACTLY: # v-diag
                - Library: matplotlib.pyplot as plt, numpy as np.
             
             2. MOCK TEST MODE (JSON):
@@ -57,14 +56,15 @@ export const chatWithAI = async (
                    "subject": "Chemistry",
                    "questions": [
                      {
-                       "question": "Question text here. To include a diagram, embed: \`\`\`python\\n# v-diag\\n...\\nplt.show()\\n\`\`\`",
-                       "options": ["A. Choice", "B. Choice", "C. Choice", "D. Choice"],
-                       "answer": 0, // 0-indexed integer (0=A, 1=B, 2=C, 3=D)
-                       "topic": "Name"
+                       "question": "Question text here.\n\n\`\`\`python\n# v-diag\nimport matplotlib.pyplot as plt\n# ... draw figure ...\nplt.show()\n\`\`\`",
+                       "options": ["A. Choice 1", "B. Choice 2", "C. Choice 3", "D. Choice 4"],
+                       "answer": 0, 
+                       "topic": "Conceptual"
                      }
                    ]
                  }
-               - For visual-based questions, embed the Python block inside the "question" string.
+               - CRITICAL: Always use TRIPLE BACKTICKS inside the JSON question string for diagrams.
+               - Ensure a DOUBLE NEWLINE before and after the code block inside the JSON string.
 
             ══════════════════════════════════════════════
             PERSONA: Friendly mentor for CBSE 2026, JEE/NEET.

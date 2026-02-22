@@ -32,10 +32,12 @@ const LatexRenderer: React.FC<{ content: string, className?: string }> = ({ cont
         code: ({ node, inline, className, children, ...props }: any) => {
           const match = /language-(\w+)/.exec(className || '');
           const codeValue = String(children).replace(/\n$/, '');
-          // Permissive check: look for v-diag with or without #, and handle missing language tag if contents look like matplotlib
-          const hasVDiag = /^\s*#?\s*v-diag/i.test(codeValue) || codeValue.includes('# v-diag') || codeValue.includes('v-diag');
-          const isPython = match && match[1] === 'python';
-          const isVisualIntent = hasVDiag && (isPython || codeValue.includes('import matplotlib') || !match);
+
+          const isVisualIntent = !inline && (
+            codeValue.includes('v-diag') ||
+            codeValue.includes('import matplotlib') ||
+            codeValue.includes('plt.')
+          );
 
           if (isVisualIntent) {
             const diagId = `diag-${Math.random().toString(36).substr(2, 9)}`;
@@ -48,10 +50,10 @@ const LatexRenderer: React.FC<{ content: string, className?: string }> = ({ cont
                   const img = document.getElementById(diagId) as HTMLImageElement;
                   if (img && img.src) window.dispatchEvent(new CustomEvent('topper-zoom', { detail: img.src }));
                 }}
-                className="my-4 bg-white rounded-2xl p-3 border border-slate-100 flex flex-col items-center justify-center max-h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all cursor-zoom-in group"
+                className="my-4 bg-white rounded-2xl p-3 border border-slate-100 flex flex-col items-center justify-center min-h-[140px] relative overflow-hidden shadow-sm hover:shadow-md transition-all cursor-zoom-in group"
               >
-                <img id={diagId} className="max-w-full max-h-full object-contain rounded-lg z-10 transition-transform group-hover:scale-[1.02]" alt="TopperAI Visual Support" />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors z-20" />
+                <img id={diagId} className="max-w-full max-h-full object-contain rounded-lg z-10" alt="TopperAI Visual Support" />
+                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity z-20" />
                 <p id={`${diagId}-err`} className="text-red-500 text-[8px] font-mono mt-1 absolute bottom-1" />
               </div>
             );
@@ -86,9 +88,12 @@ const SimpleLatex: React.FC<{ content: string, className?: string }> = ({ conten
         code: ({ node, inline, className, children, ...props }: any) => {
           const match = /language-(\w+)/.exec(className || '');
           const codeValue = String(children).replace(/\n$/, '');
-          const hasVDiag = /^\s*#?\s*v-diag/i.test(codeValue) || codeValue.includes('# v-diag') || codeValue.includes('v-diag');
-          const isPython = match && match[1] === 'python';
-          const isVisualIntent = hasVDiag && (isPython || codeValue.includes('import matplotlib') || !match);
+
+          const isVisualIntent = !inline && (
+            codeValue.includes('v-diag') ||
+            codeValue.includes('import matplotlib') ||
+            codeValue.includes('plt.')
+          );
 
           if (isVisualIntent) {
             const diagId = `diag-${Math.random().toString(36).substr(2, 9)}`;
@@ -101,10 +106,14 @@ const SimpleLatex: React.FC<{ content: string, className?: string }> = ({ conten
                   const img = document.getElementById(diagId) as HTMLImageElement;
                   if (img && img.src) window.dispatchEvent(new CustomEvent('topper-zoom', { detail: img.src }));
                 }}
-                className="my-3 bg-white rounded-xl p-2 border border-slate-100 flex flex-col items-center justify-center max-h-[140px] relative overflow-hidden shadow-sm hover:shadow-md transition-all cursor-zoom-in group"
+                className="my-3 bg-white rounded-xl p-2 border border-slate-100 flex flex-col items-center justify-center min-h-[140px] relative overflow-hidden shadow-sm hover:shadow-md transition-all cursor-zoom-in group"
               >
                 <img id={diagId} className="max-w-full max-h-full object-contain rounded-lg z-10" alt="TopperAI Visual Support" />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors z-20" />
+                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity z-20" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/50 backdrop-blur-[2px] z-0 group-[&:not(:has(img[src]))]:flex hidden">
+                  <div className="w-4 h-4 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mb-1" />
+                  <span className="text-[7px] font-black text-violet-600 uppercase tracking-widest">Visualizing...</span>
+                </div>
                 <p id={`${diagId}-err`} className="text-red-500 text-[7px] font-mono absolute bottom-0" />
               </div>
             );

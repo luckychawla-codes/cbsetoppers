@@ -151,8 +151,11 @@ const AIChatWidget: React.FC<{
                                                     const isQuizJSON = codeValue.includes('QUIZ_GEN_START') || (codeValue.includes('"questions"') && codeValue.includes('"options"'));
                                                     if (isQuizJSON) return null;
 
-                                                    const hasVDiag = /^\s*#?\s*v-diag/i.test(codeValue) || codeValue.includes('# v-diag') || codeValue.includes('v-diag');
-                                                    const isVisualIntent = hasVDiag && (match?.[1] === 'python' || codeValue.includes('import matplotlib') || !match);
+                                                    const isVisualIntent = !inline && (
+                                                        codeValue.includes('v-diag') ||
+                                                        codeValue.includes('import matplotlib') ||
+                                                        codeValue.includes('plt.')
+                                                    );
 
                                                     if (isVisualIntent) {
                                                         const diagId = `diag-${Math.random().toString(36).substr(2, 9)}`;
@@ -166,10 +169,10 @@ const AIChatWidget: React.FC<{
                                                                 className="my-3 bg-white rounded-2xl p-2 border border-slate-100 flex flex-col items-center justify-center max-h-[160px] relative overflow-hidden group shadow-md cursor-zoom-in"
                                                             >
                                                                 <img id={diagId} className="max-w-full max-h-full object-contain rounded-lg z-10 transition-transform group-hover:scale-[1.02]" alt="Generating AI Diagram..." />
-                                                                {!pyodide && <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-20">
-                                                                    <div className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mb-1" />
-                                                                    <p className="text-[8px] font-black text-violet-600 uppercase tracking-widest">Rendering...</p>
-                                                                </div>}
+                                                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/50 backdrop-blur-[2px] z-0 group-[&:not(:has(img[src]))]:flex hidden">
+                                                                    <div className="w-4 h-4 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mb-1" />
+                                                                    <span className="text-[7px] font-black text-violet-600 uppercase tracking-widest">Rendering...</span>
+                                                                </div>
                                                                 <p id={`${diagId}-err`} className="text-red-500 text-[8px] font-mono absolute bottom-0" />
                                                             </div>
                                                         );
