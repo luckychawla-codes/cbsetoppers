@@ -14,7 +14,9 @@ CREATE TABLE IF NOT EXISTS students (
   email TEXT UNIQUE NOT NULL,
   phone TEXT,
   student_id VARCHAR(10) UNIQUE NOT NULL,
-  is_verified BOOLEAN DEFAULT TRUE
+  is_verified BOOLEAN DEFAULT TRUE,
+  gender TEXT,
+  competitive_exams TEXT[] DEFAULT '{}'
 );
 
 -- 2. Security Configuration
