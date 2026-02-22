@@ -7,6 +7,47 @@ import { analyzeResult, generateAIQuiz, getMotivationalQuote } from './services/
 import AIChatWidget from './AIChatWidget';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+
+const LatexRenderer: React.FC<{ content: string, className?: string }> = ({ content, className }) => {
+  return (
+    <ReactMarkdown
+      className={className}
+      remarkPlugins={[remarkGfm, remarkMath]}
+      rehypePlugins={[rehypeKatex]}
+      components={{
+        h1: ({ node, ...props }) => <h1 className="text-xl font-black uppercase mb-4 text-slate-900" {...props} />,
+        h2: ({ node, ...props }) => <h2 className="text-lg font-black uppercase mb-3 text-slate-800" {...props} />,
+        h3: ({ node, ...props }) => <h3 className="text-md font-black uppercase mb-2 text-slate-700" {...props} />,
+        p: ({ node, ...props }) => <p className="mb-4 last:mb-0 leading-relaxed text-slate-600 font-medium" {...props} />,
+        ul: ({ node, ...props }) => <ul className="list-disc ml-4 space-y-2 mb-4" {...props} />,
+        ol: ({ node, ...props }) => <ol className="list-decimal ml-4 space-y-2 mb-4" {...props} />,
+        li: ({ node, ...props }) => <li className="text-slate-600" {...props} />,
+        strong: ({ node, ...props }) => <strong className="font-black text-violet-600" {...props} />,
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+};
+const SimpleLatex: React.FC<{ content: string, className?: string }> = ({ content, className }) => {
+  return (
+    <ReactMarkdown
+      className={className}
+      remarkPlugins={[remarkGfm, remarkMath]}
+      rehypePlugins={[rehypeKatex]}
+      components={{
+        p: ({ node, ...props }) => <span {...props} />,
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+};
 
 const EXAM_DURATION = 90 * 60;
 const MAX_ATTEMPTS = 5;
@@ -790,8 +831,8 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Question {currentIdx + 1} of {questions.length}</span>
               </div>
 
-              <h2 className="text-xl md:text-3xl font-black text-slate-900 leading-[1.35] tracking-tight mb-12">
-                {questions[currentIdx].question}
+              <h2 className="text-xl md:text-3xl font-black text-slate-900 leading-[1.35] tracking-tight mb-12 text-left">
+                <SimpleLatex content={questions[currentIdx].question} />
               </h2>
 
               <div className="grid grid-cols-1 gap-4">
@@ -806,7 +847,9 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
                     className={`group w-full p-6 md:p-8 rounded-3xl text-left transition-all border-2 flex items-center gap-6 relative overflow-hidden ${answers[currentIdx] === i ? 'bg-violet-600 border-violet-600 text-white shadow-xl translate-x-3' : 'bg-slate-50 border-transparent hover:border-violet-100 hover:bg-white text-slate-700 active:scale-[0.98]'}`}
                   >
                     <span className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center font-black transition-all ${answers[currentIdx] === i ? 'bg-white text-violet-600 shadow-md' : 'bg-white border-slate-200 text-slate-400 border group-hover:bg-violet-50 group-hover:text-violet-600'}`}>{String.fromCharCode(65 + i)}</span>
-                    <span className="text-base md:text-xl font-bold flex-1">{opt}</span>
+                    <span className="text-base md:text-xl font-bold flex-1 text-left">
+                      <SimpleLatex content={opt} />
+                    </span>
                     {answers[currentIdx] === i && (
                       <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
@@ -859,6 +902,50 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
     setLoading(false);
   };
 
+  const downloadQuizPDF = () => {
+    const doc = new jsPDF();
+    let questions = result.paperId === 'P2' ? PAPER_2_QUESTIONS : PAPER_1_QUESTIONS;
+    if (result.paperId === 'AI_DYNAMIC') {
+      const saved = localStorage.getItem('topper_ai_quiz');
+      if (saved) questions = JSON.parse(saved);
+    }
+
+    doc.setFontSize(22);
+    doc.setTextColor(79, 70, 229); // violet-600
+    doc.text('CBSE TOPPERS', 14, 20);
+
+    doc.setFontSize(16);
+    doc.setTextColor(30, 41, 59); // slate-800
+    doc.text(`${result.subject} - PERFORMANCE REPORT`, 14, 32);
+
+    doc.setFontSize(10);
+    doc.text(`Score: ${result.score} / ${result.total}`, 14, 42);
+    doc.text(`Timestamp: ${new Date(result.timestamp).toLocaleString()}`, 14, 48);
+
+    const tableData = questions.map((q, i) => [
+      i + 1,
+      q.question.replace(/\$/g, ''),
+      result.answers[i] !== null ? q.options[result.answers[i]!].replace(/\$/g, '') : 'SKIP',
+      q.options[q.answer].replace(/\$/g, '')
+    ]);
+
+    autoTable(doc, {
+      startY: 55,
+      head: [['#', 'Question', 'Your Answer', 'Correct Answer']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229] },
+      styles: { fontSize: 8, cellPadding: 3 },
+      columnStyles: {
+        1: { cellWidth: 90 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 40 }
+      }
+    });
+
+    doc.save(`CBSE_Toppers_${result.subject}_Report.pdf`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center p-6 animate-in fade-in duration-700 text-left overflow-y-auto">
       <div className="max-w-2xl w-full text-center mt-10 pb-20">
@@ -898,22 +985,17 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
             </div>
 
             <div className="relative z-10 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  h1: ({ node, ...props }) => <h1 className="text-lg font-black uppercase mb-3 text-slate-900" {...props} />,
-                  h2: ({ node, ...props }) => <h2 className="text-md font-black uppercase mb-2 text-slate-800" {...props} />,
-                  p: ({ node, ...props }) => <p className="mb-4 last:mb-0 leading-relaxed text-slate-600 font-medium" {...props} />,
-                  ul: ({ node, ...props }) => <ul className="list-disc ml-4 space-y-2 mb-4" {...props} />,
-                  li: ({ node, ...props }) => <li className="text-slate-600" {...props} />,
-                  strong: ({ node, ...props }) => <strong className="font-black text-violet-600" {...props} />
-                }}
-              >
-                {analysis}
-              </ReactMarkdown>
+              <LatexRenderer content={analysis} className="prose prose-slate max-w-none" />
             </div>
 
             <div className="mt-10 flex flex-col md:flex-row items-center gap-4">
+              <button
+                onClick={downloadQuizPDF}
+                className="w-full md:w-auto px-8 py-5 bg-white border-2 border-slate-100 text-slate-600 rounded-[2rem] font-black uppercase text-[11px] tracking-widest hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Download PDF Report
+              </button>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, I scored ${result.score}/${result.total} in ${result.subject}. Can you analyze my performance more deeply and give me a career path? 💙` } }))}
                 className="w-full md:flex-1 py-5 bg-violet-600 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-widest shadow-xl shadow-violet-200 hover:bg-violet-700 active:scale-95 transition-all flex items-center justify-center gap-2"

@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { chatWithAI } from './services/ai';
+import { User } from './types';
 
 const AIChatWidget: React.FC<{
     user?: User | null,
@@ -67,6 +71,12 @@ const AIChatWidget: React.FC<{
                 const jsonStr = aiResponse.split("QUIZ_GEN_START")[1].split("QUIZ_GEN_END")[0];
                 const quizData = JSON.parse(jsonStr);
                 setPendingQuiz(quizData);
+
+                // Auto-start quiz
+                localStorage.setItem('topper_ai_quiz', JSON.stringify(quizData.questions));
+                if (onStartAIQuiz) onStartAIQuiz({ subject: quizData.subject });
+                setPendingQuiz(null);
+                setIsOpen(false);
             } catch (e) { console.error("Quiz Parse Error", e); }
         }
     };
@@ -113,7 +123,8 @@ const AIChatWidget: React.FC<{
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[80%] p-4 rounded-3xl text-sm font-medium leading-relaxed ${msg.role === 'user' ? 'bg-violet-600 text-white rounded-tr-none' : 'bg-white text-slate-800 shadow-sm border border-slate-100 rounded-tl-none'}`}>
                                     <ReactMarkdown
-                                        remarkPlugins={[remarkGfm]}
+                                        remarkPlugins={[remarkGfm, remarkMath]}
+                                        rehypePlugins={[rehypeKatex]}
                                         components={{
                                             h1: ({ node, ...props }) => <h1 className="text-lg font-black uppercase mb-2" {...props} />,
                                             h2: ({ node, ...props }) => <h2 className="text-md font-black uppercase mb-2" {...props} />,
@@ -122,25 +133,8 @@ const AIChatWidget: React.FC<{
                                             ol: ({ node, ...props }) => <ol className="list-decimal ml-4 space-y-1 mb-2" {...props} />,
                                             a: ({ node, ...props }) => <a className="text-violet-600 underline font-bold" target="_blank" rel="noopener noreferrer" {...props} />,
                                             p: ({ node, ...props }) => {
-                                                const containsQuiz = JSON.stringify(props.children).includes('QUIZ_GEN_START');
-                                                if (containsQuiz) {
-                                                    return (
-                                                        <div className="mt-4 p-5 bg-violet-50 rounded-2xl border-2 border-violet-100 text-center shadow-xl animate-in zoom-in duration-500">
-                                                            <div className="w-12 h-12 bg-violet-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-                                                            </div>
-                                                            <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-1">Interactive Quiz Loaded</h4>
-                                                            <p className="text-[9px] font-bold text-violet-500 uppercase tracking-widest mb-4">Personalized by TopperAI</p>
-                                                            <button
-                                                                onClick={startQuiz}
-                                                                className="w-full py-4 bg-violet-600 text-white rounded-xl font-black uppercase text-[11px] tracking-widest shadow-lg shadow-violet-200 hover:bg-violet-700 active:scale-95 transition-all text-center flex items-center justify-center gap-2"
-                                                            >
-                                                                Start Test Now
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                                                            </button>
-                                                        </div>
-                                                    )
-                                                }
+                                                const content = JSON.stringify(props.children);
+                                                if (content.includes('QUIZ_GEN_START')) return null;
                                                 return <p className="mb-2 last:mb-0" {...props} />
                                             },
                                             code: ({ node, inline, className, children, ...props }: any) => {

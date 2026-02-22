@@ -41,7 +41,7 @@ export const analyzeResult = async (result: QuizResult, questions: Question[]) =
                 "messages": [
                     {
                         "role": "system",
-                        "content": "You are 'TopperAI', an expert analyst and emotional companion. Provide a deeply human, supportive, and data-driven analysis of the student's mock test results."
+                        "content": "You are 'TopperAI', an expert analyst and emotional companion. Provide a deeply human, supportive, and data-driven analysis of the student's mock test results. USE LaTeX for any mathematical or scientific equations (e.g., use $E=mc^2$ or $$\\frac{a}{b}$$)."
                     },
                     {
                         "role": "user",
@@ -102,7 +102,9 @@ export const chatWithAI = async (
 
             TECHNICAL:
             - If they want a test, ask for: Subject, Topic, Duration.
-            - Once details confirmed, generate 'QUIZ_GEN_START' JSON.`
+            - Once details confirmed, generate 'QUIZ_GEN_START' JSON.
+            - IMPORTANT: For math/science questions or options, USE LaTeX formatting (e.g., $...$ for inline, $$...$$ for block).
+            - Ensure the JSON is valid and clean.`
                     },
                     ...messages
                 ]
