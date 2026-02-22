@@ -6,7 +6,7 @@ const _K = "c2stb3ItdjEtOWU1YTU5ZjY2NmNjNDg4YmUwZjI0OTg0OTg1NjIyZmUwNGIyYjBkNGM0
 const _M = "cXdlbi9xd2VuMy12bC0zMGItYTNiLVRoaW5raW5n";
 
 const OPENROUTER_API_KEY = decode(_K);
-const MODEL = "google/gemini-2.0-flash-001"; // Using flash for speed/reliability but keeping logic
+const MODEL = decode(_M);
 
 export const analyzeResult = async (result: QuizResult) => {
     // Basic analysis if called directly
