@@ -3,14 +3,28 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { chatWithAI } from './services/ai';
 
-const AIChatWidget: React.FC<{ onStartAIQuiz?: (config: { subject: string }) => void }> = ({ onStartAIQuiz }) => {
+const AIChatWidget: React.FC<{
+    user?: User | null,
+    onStartAIQuiz?: (config: { subject: string }) => void
+}> = ({ user, onStartAIQuiz }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([
-        { role: 'assistant', content: 'Hi! I am TopperAI, crafted by CBSE Toppers. How can I help you with your board preparation today?' }
+    const [messages, setMessages] = useState<{ role: string, content: string }[]>([
+        { role: 'assistant', content: "TopperAI, crafted by CBSE Toppers. How can I help you ace your 2026 boards today?" }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleOpen = (e: any) => {
+            setIsOpen(true);
+            if (e.detail?.message) {
+                setInput(e.detail.message);
+            }
+        };
+        window.addEventListener('open-topper-chat', handleOpen);
+        return () => window.removeEventListener('open-topper-chat', handleOpen);
+    }, []);
 
     const [pendingQuiz, setPendingQuiz] = useState<{ subject: string, questions: any[] } | null>(null);
 
@@ -23,7 +37,7 @@ const AIChatWidget: React.FC<{ onStartAIQuiz?: (config: { subject: string }) => 
         setIsLoading(true);
 
         const chatHistory = [...messages, { role: 'user', content: userMsg }];
-        const aiResponse = await chatWithAI(chatHistory);
+        const aiResponse = await chatWithAI(chatHistory, user || undefined);
 
         setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
         setIsLoading(false);
@@ -110,9 +124,45 @@ const AIChatWidget: React.FC<{ onStartAIQuiz?: (config: { subject: string }) => 
                                                 }
                                                 return <p className="mb-2 last:mb-0" {...props} />
                                             },
-                                            code: ({ node, ...props }) => {
-                                                if (props.children && String(props.children).includes('QUIZ_GEN_START')) return null;
-                                                return <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono" {...props} />
+                                            code: ({ node, inline, className, children, ...props }: any) => {
+                                                const match = /language-(\w+)/.exec(className || '');
+                                                const codeValue = String(children).replace(/\n$/, '');
+
+                                                if (codeValue.includes('QUIZ_GEN_START')) return null;
+
+                                                if (inline) {
+                                                    return <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-violet-600" {...props}>{children}</code>;
+                                                }
+
+                                                return (
+                                                    <div className="relative my-4 group">
+                                                        <div className="absolute right-3 top-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onClick={() => {
+                                                                    navigator.clipboard.writeText(codeValue);
+                                                                    alert('Code copied to clipboard!');
+                                                                }}
+                                                                className="p-2 bg-slate-900/80 backdrop-blur-md text-white rounded-lg hover:bg-slate-900 transition-all border border-white/10 flex items-center gap-1.5 shadow-xl"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                                                <span className="text-[8px] font-black uppercase tracking-widest">Copy</span>
+                                                            </button>
+                                                        </div>
+                                                        <div className="bg-slate-950 rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+                                                            <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/5">
+                                                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{match ? match[1] : 'code'}</span>
+                                                                <div className="flex gap-1">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-red-500/50" />
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500/50" />
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500/50" />
+                                                                </div>
+                                                            </div>
+                                                            <pre className="p-4 overflow-x-auto text-[11px] font-mono text-slate-300 leading-relaxed custom-scrollbar">
+                                                                <code>{children}</code>
+                                                            </pre>
+                                                        </div>
+                                                    </div>
+                                                );
                                             }
                                         }}
                                     >

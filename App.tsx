@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, User, QuizResult, Question } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2 } from './constants';
 import { verifyStudent, registerStudent, supabase } from './services/supabase';
-import { analyzeResult, generateAIQuiz } from './services/ai';
+import { analyzeResult, generateAIQuiz, getMotivationalQuote } from './services/ai';
 import AIChatWidget from './AIChatWidget';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -373,44 +373,130 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
   );
 };
 
+const MotivationalQuote: React.FC<{ user: User }> = ({ user }) => {
+  const [quote, setQuote] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const fetchQuote = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const q = await getMotivationalQuote(user);
+      if (q) setQuote(q);
+      else setError(true);
+    } catch (e) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchQuote();
+  }, [fetchQuote]);
+
+  return (
+    <div className="max-w-6xl mx-auto px-6 md:px-8 mt-6 animate-in zoom-in duration-1000">
+      <div className="bg-gradient-to-r from-violet-600 to-indigo-700 p-8 md:p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group border border-white/10">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:scale-110 transition-transform duration-1000" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full -ml-16 -mb-16 blur-2xl" />
+
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+          <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center shrink-0 border border-white/30 shadow-xl animate-bounce-slow">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          </div>
+
+          <div className="flex-1 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-4 mb-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-60">TopperAI Morning Guidance</p>
+              <div className="h-px w-12 bg-white/20 hidden md:block" />
+            </div>
+
+            <h3 className="text-xl md:text-3xl font-black leading-tight italic tracking-tight mb-4 min-h-[1.5em] transition-all">
+              {loading ? (
+                <span className="opacity-40 animate-pulse">Consulting the experts for your daily dose...</span>
+              ) : error ? (
+                <span className="text-indigo-200">Consistency is the key to board success. Keep pushing! 🚀</span>
+              ) : (
+                `"${quote}"`
+              )}
+            </h3>
+
+            <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
+              <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                <span className="w-4 h-0.5 bg-white/40" />
+                Specialized Mentor for Class {user.class}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={fetchQuote}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl border border-white/10 transition-all text-[9px] font-black uppercase tracking-widest active:scale-95 disabled:opacity-50"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                  Regenerate
+                </button>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, can you expand on that quote: "${quote}"? I need some motivation for my ${user.stream || 'board'} exams.` } }))}
+                  className="flex items-center gap-2 px-6 py-2 bg-violet-400 text-white rounded-xl border border-violet-300 transition-all text-[9px] font-black uppercase tracking-widest active:scale-95 shadow-lg shadow-indigo-600/20"
+                >
+                  Discuss with TopperAI
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string) => void, setView: (v: View) => void }> = ({ user, onStartExam, setView }) => {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [showTgMenu, setShowTgMenu] = useState(false);
   const [showLegalSide, setShowLegalSide] = useState<'privacy' | 'terms' | 'refund' | 'honor' | null>(null);
 
   const { coreSubjects, additionalSubjects } = useMemo(() => {
+    const universalAdditional = ["Physical Education", "Computer Science", "Music", "Fine Arts", "AI & Concepts"];
+
     if (user.class === 'Xth') {
       return {
         coreSubjects: ["Science", "Mathematics", "Social Science", "English"],
-        additionalSubjects: ["Hindi", "AI & Concepts"]
+        additionalSubjects: Array.from(new Set(["Hindi", ...universalAdditional]))
       };
     }
 
     if (user.class === 'XIIth') {
+      let core: string[] = [];
+      let extra: string[] = [];
+
       switch (user.stream) {
         case 'PCM':
-          return {
-            coreSubjects: ["Physics", "Chemistry", "Mathematics", "English Core"],
-            additionalSubjects: ["Computer Science", "Physical Education", "Economics", "Fine Arts", "AI & Concepts"]
-          };
+          core = ["Physics", "Chemistry", "Mathematics", "English Core"];
+          extra = ["Economics"];
+          break;
         case 'PCB':
-          return {
-            coreSubjects: ["Physics", "Chemistry", "Biology", "English Core"],
-            additionalSubjects: ["Psychology", "Biotechnology", "Physical Education", "Fine Arts", "AI & Concepts"]
-          };
+          core = ["Physics", "Chemistry", "Biology", "English Core"];
+          extra = ["Psychology", "Biotechnology"];
+          break;
         case 'Commerce':
-          return {
-            coreSubjects: ["Accountancy", "Business Studies", "Economics", "English Core"],
-            additionalSubjects: ["Mathematics", "Informatics Practices", "Physical Education", "Fine Arts", "AI & Concepts"]
-          };
+          core = ["Accountancy", "Business Studies", "Economics", "English Core"];
+          extra = ["Mathematics", "Informatics Practices"];
+          break;
         case 'Humanities':
-          return {
-            coreSubjects: ["History", "Political Science", "Geography", "English Core"],
-            additionalSubjects: ["Psychology", "Sociology", "Fine Arts", "AI & Concepts"]
-          };
+          core = ["History", "Political Science", "Geography", "English Core"];
+          extra = ["Psychology", "Sociology"];
+          break;
+        default:
+          core = ["English Core"];
       }
+      return {
+        coreSubjects: core,
+        additionalSubjects: Array.from(new Set([...extra, ...universalAdditional]))
+      };
     }
-    return { coreSubjects: ["English Core"], additionalSubjects: ["Physical Education", "AI & Concepts"] };
+    return { coreSubjects: ["English Core"], additionalSubjects: universalAdditional };
   }, [user.class, user.stream]);
 
   const renderSubjectCard = (subj: string, isCore: boolean) => (
@@ -445,10 +531,10 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
         </div>
       </header>
 
-      <div className="bg-violet-600/5 border-b border-violet-100 py-3.5 px-6 md:px-12 animate-in slide-in-from-top duration-700">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+      <div className="bg-slate-50 py-2 border-b border-slate-100">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 px-6 md:px-8">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center flex-shrink-0 animate-pulse">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             </div>
             <p className="text-[10px] md:text-sm font-black text-slate-800 uppercase tracking-tight">
@@ -465,6 +551,8 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
           </a>
         </div>
       </div>
+
+      <MotivationalQuote user={user} />
 
       <main className="max-w-6xl mx-auto p-4 md:p-12">
         {!selectedSubject ? (
@@ -658,9 +746,8 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
 // QuizEngine, ResultView components remain the same as they are stable
 const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: QuizResult) => void, user: User }> = ({ subject, paperId, onFinish, user }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [answers, setAnswers] = useState<(number | null)[]>(new Array(100).fill(null));
+  const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [timeLeft, setTimeLeft] = useState(EXAM_DURATION);
-  const [submitting, setSubmitting] = useState(false);
 
   const questions = useMemo(() => {
     if (paperId === 'AI_DYNAMIC') {
@@ -671,56 +758,121 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
   }, [paperId]);
 
   useEffect(() => {
-    if (paperId === 'AI_DYNAMIC') setAnswers(new Array(questions.length).fill(null));
-  }, [questions, paperId]);
-
-  const currentQ = questions[currentIdx];
-  const caseStudies = paperId === 'P2' ? CASE_STUDIES_P2 : CASE_STUDIES_P1;
-  const caseStudy = caseStudies.find(c => c.questionIds.includes(currentIdx + 1));
-
-  useEffect(() => {
-    const timer = setInterval(() => setTimeLeft(p => p > 0 ? p - 1 : 0), 1000);
+    setAnswers(new Array(questions.length).fill(null));
+    const timer = setInterval(() => setTimeLeft(prev => prev > 0 ? prev - 1 : 0), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [questions]);
 
-  const handleSubmit = useCallback(async () => {
-    setSubmitting(true);
-    let score = 0;
-    answers.forEach((ans, idx) => { if (ans === questions[idx].answer) score++; });
-    onFinish({ score, total: questions.length, subject, paperId, answers, timestamp: Date.now(), timeSpent: EXAM_DURATION - timeLeft });
-  }, [answers, questions, subject, paperId, timeLeft, onFinish]);
+  const handleFinish = () => {
+    const score = answers.reduce((acc, ans, idx) => (ans === questions[idx].answer ? acc + 1 : acc), 0);
+    onFinish({ score, total: questions.length, paperId, subject, answers, timestamp: Date.now(), timeSpent: EXAM_DURATION - timeLeft });
+  };
 
   return (
-    <div className="fixed inset-0 bg-white z-[100] flex flex-col overflow-hidden text-left">
-      <header className="bg-slate-900 text-white p-5 flex justify-between items-center">
-        <div className="bg-slate-800 px-6 py-2 rounded-xl font-mono text-xl font-black text-violet-400 border border-slate-700">{formatTime(timeLeft)}</div>
-        <button onClick={() => confirm('Submit exam?') && handleSubmit()} disabled={submitting} className="bg-red-600 px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-red-700 active:scale-95 disabled:opacity-50">{submitting ? 'SYNC...' : 'SUBMIT'}</button>
-      </header>
-      <main className="flex-1 overflow-y-auto p-4 md:p-14 bg-black">
-        <div className="max-w-3xl mx-auto space-y-8">
-          {caseStudy && (
-            <div className="bg-violet-600 text-white p-8 rounded-[2rem] shadow-xl text-left border-l-[12px] border-violet-400">
-              <p className="text-[10px] font-black uppercase tracking-widest mb-3 opacity-60">Source Material {caseStudy.id}</p>
-              <p className="text-base font-medium italic leading-relaxed">{caseStudy.narrative}</p>
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden font-sans text-left">
+      {/* Sidebar - Question Navigation */}
+      <aside className="w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-slate-100 flex flex-col h-auto md:h-screen sticky top-0 md:relative z-20 transition-all duration-500">
+        <div className="p-8 border-b border-slate-50">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-100">
+              <img src={LOGO_URL} className="w-6 h-6 rounded" />
             </div>
-          )}
-          <div className="bg-white p-8 md:p-14 rounded-[3.5rem] shadow-sm text-left">
-            <h2 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight mb-10">{currentQ.question}</h2>
-            <div className="grid grid-cols-1 gap-4">
-              {currentQ.options.map((opt, i) => (
-                <button key={i} onClick={() => { const n = [...answers]; n[currentIdx] = i; setAnswers(n); }} className={`w-full text-left p-6 rounded-[1.5rem] border-2 font-bold flex items-center gap-6 transition-all ${answers[currentIdx] === i ? 'bg-violet-600 border-violet-600 text-white shadow-lg' : 'bg-slate-50 border-transparent text-slate-700 hover:bg-slate-100'}`}>
-                  <span className={`w-10 h-10 rounded-xl flex items-center justify-center font-black transition-colors ${answers[currentIdx] === i ? 'bg-white text-violet-600' : 'bg-white border-slate-200 text-slate-400 border'}`}>{String.fromCharCode(65 + i)}</span>
-                  <span className="text-lg">{opt}</span>
-                </button>
-              ))}
+            <div>
+              <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter">Assessment</h1>
+              <p className="text-[10px] font-bold text-violet-500 uppercase tracking-widest leading-none">{subject}</p>
+            </div>
+          </div>
+          <div className="bg-slate-900 text-white p-5 rounded-2xl shadow-xl flex items-center justify-between group overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-full -mr-8 -mt-8 blur-2xl" />
+            <div className="relative z-10 text-left">
+              <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">Time Remaining</p>
+              <p className={`text-2xl font-black font-mono tracking-tighter ${timeLeft < 300 ? 'text-red-400 animate-pulse' : 'text-white'}`}>{formatTime(timeLeft)}</p>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 custom-scrollbar">
+          <div className="grid grid-cols-5 md:grid-cols-4 gap-3">
+            {questions.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentIdx(i)}
+                className={`h-10 md:h-12 rounded-xl text-[11px] font-black transition-all border-2 flex items-center justify-center ${currentIdx === i ? 'bg-violet-600 border-violet-600 text-white shadow-lg shadow-violet-100 scale-105' : answers[i] !== null ? 'bg-green-50 border-green-100 text-green-600' : 'bg-slate-50 border-transparent text-slate-400 hover:border-slate-200'}`}
+              >
+                {String(i + 1).padStart(2, '0')}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-8 border-t border-slate-50">
+          <button onClick={handleFinish} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl hover:bg-black active:scale-95 transition-all">Submit Attempt</button>
+        </div>
+      </aside>
+
+      {/* Main Content - Question Area */}
+      <main className="flex-1 flex flex-col h-auto md:h-screen relative bg-white md:bg-slate-50 overflow-y-auto">
+        <div className="flex-1 w-full max-w-4xl mx-auto p-6 md:p-12 flex items-center justify-center">
+          <div className="w-full bg-white md:rounded-[3.5rem] md:shadow-3xl md:border md:border-slate-50 p-8 md:p-16 animate-in slide-in-from-right-10 duration-500 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-violet-50 rounded-full -mr-20 -mt-20 blur-3xl opacity-50" />
+
+            <div className="relative z-10 text-left">
+              <div className="flex items-center gap-4 mb-10">
+                <span className="w-12 h-12 bg-violet-100 text-violet-600 rounded-2xl flex items-center justify-center font-black text-lg shadow-sm border border-violet-200">Q{currentIdx + 1}</span>
+                <div className="h-px flex-1 bg-slate-100" />
+                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Question {currentIdx + 1} of {questions.length}</span>
+              </div>
+
+              <h2 className="text-xl md:text-3xl font-black text-slate-900 leading-[1.35] tracking-tight mb-12">
+                {questions[currentIdx].question}
+              </h2>
+
+              <div className="grid grid-cols-1 gap-4">
+                {questions[currentIdx].options.map((opt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      const newAns = [...answers];
+                      newAns[currentIdx] = i;
+                      setAnswers(newAns);
+                    }}
+                    className={`group w-full p-6 md:p-8 rounded-3xl text-left transition-all border-2 flex items-center gap-6 relative overflow-hidden ${answers[currentIdx] === i ? 'bg-violet-600 border-violet-600 text-white shadow-xl translate-x-3' : 'bg-slate-50 border-transparent hover:border-violet-100 hover:bg-white text-slate-700 active:scale-[0.98]'}`}
+                  >
+                    <span className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center font-black transition-all ${answers[currentIdx] === i ? 'bg-white text-violet-600 shadow-md' : 'bg-white border-slate-200 text-slate-400 border group-hover:bg-violet-50 group-hover:text-violet-600'}`}>{String.fromCharCode(65 + i)}</span>
+                    <span className="text-base md:text-xl font-bold flex-1">{opt}</span>
+                    {answers[currentIdx] === i && (
+                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
+
+        <footer className="p-6 md:p-12 bg-white md:bg-transparent flex justify-between gap-6 w-full max-w-4xl mx-auto items-center">
+          <button disabled={currentIdx === 0} onClick={() => setCurrentIdx(c => c - 1)} className="flex-1 py-5 bg-white border border-slate-100 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:border-violet-200 hover:text-violet-600 transition-all disabled:opacity-20 active:scale-95">Previous</button>
+
+          <div className="hidden md:flex gap-2">
+            {[...Array(Math.min(questions.length, 5))].map((_, i) => (
+              <div key={i} className={`h-1.5 w-4 rounded-full transition-all ${currentIdx === i ? 'bg-violet-600 w-8' : 'bg-slate-200'}`} />
+            ))}
+          </div>
+
+          <button
+            onClick={() => {
+              if (currentIdx < questions.length - 1) setCurrentIdx(c => c + 1);
+              else handleFinish();
+            }}
+            className="flex-1 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all active:scale-95 shadow-xl"
+          >
+            {currentIdx === questions.length - 1 ? 'Finish Test' : 'Next Question'}
+          </button>
+        </footer>
       </main>
-      <footer className="p-6 bg-slate-950 border-t border-slate-800 flex justify-between gap-4">
-        <button disabled={currentIdx === 0} onClick={() => setCurrentIdx(c => c - 1)} className="flex-1 py-5 bg-slate-100 rounded-2xl font-black uppercase text-[10px] text-slate-500 hover:bg-slate-200 transition-colors disabled:opacity-30">Back</button>
-        <button disabled={currentIdx === questions.length - 1} onClick={() => setCurrentIdx(c => c + 1)} className="flex-1 py-5 bg-black text-white rounded-2xl font-black uppercase text-[10px] hover:bg-black transition-colors disabled:opacity-30">Next</button>
-      </footer>
     </div>
   );
 };
@@ -1091,10 +1243,13 @@ const App: React.FC = () => {
         />
       )}
 
-      <AIChatWidget onStartAIQuiz={(config) => {
-        setExamConfig({ subj: config.subject, pid: 'AI_DYNAMIC' });
-        setView('exam');
-      }} />
+      <AIChatWidget
+        user={user}
+        onStartAIQuiz={(config) => {
+          setExamConfig({ subj: config.subject, pid: 'AI_DYNAMIC' });
+          setView('exam');
+        }}
+      />
     </div>
   );
 };
