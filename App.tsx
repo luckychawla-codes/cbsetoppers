@@ -1,6 +1,6 @@
 // CBSE TOPPERS - Premium Education Platform
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, User, QuizResult, Question } from './types';
+import { User, QuizResult, Question } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2 } from './constants';
 import { verifyStudent, registerStudent, supabase } from './services/supabase';
 import { analyzeResult, generateAIQuiz, getMotivationalQuote } from './services/ai';
@@ -466,8 +466,13 @@ const MotivationalQuote: React.FC<{ user: User }> = ({ user }) => {
   );
 };
 
-const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string) => void, setView: (v: View) => void }> = ({ user, onStartExam, setView }) => {
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+const Dashboard: React.FC<{
+  user: User,
+  onStartExam: (subj: string, pid: string) => void,
+  setView: (v: View) => void,
+  selectedSubject: string | null,
+  setSelectedSubject: (s: string | null) => void
+}> = ({ user, onStartExam, setView, selectedSubject, setSelectedSubject }) => {
   const [showTgMenu, setShowTgMenu] = useState(false);
   const [showLegalSide, setShowLegalSide] = useState<'privacy' | 'terms' | 'refund' | 'honor' | null>(null);
 
@@ -774,6 +779,21 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
     const score = answers.reduce((acc, ans, idx) => (ans === questions[idx].answer ? acc + 1 : acc), 0);
     onFinish({ score, total: questions.length, paperId, subject, answers, timestamp: Date.now(), timeSpent: EXAM_DURATION - timeLeft });
   };
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center animate-in fade-in duration-500">
+        <div className="max-w-md w-full bg-white p-12 rounded-[3rem] shadow-2xl border border-violet-100">
+          <div className="w-20 h-20 bg-violet-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-violet-200">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Quiz Data Missing</h2>
+          <p className="text-slate-500 mt-4 mb-8 font-bold text-sm uppercase tracking-widest">TopperAI couldn't find this quiz. Try creating one in the chat!</p>
+          <button onClick={() => window.location.reload()} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all">Back to Dashboard</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden font-sans text-left">
@@ -1228,6 +1248,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   const [examConfig, setExamConfig] = useState<{ subj: string, pid: string } | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1278,6 +1299,8 @@ const App: React.FC = () => {
           user={user}
           onStartExam={(subj, pid) => { setExamConfig({ subj, pid }); setView('exam'); }}
           setView={setView}
+          selectedSubject={selectedSubject}
+          setSelectedSubject={setSelectedSubject}
         />
       )}
       {view === 'exam' && user && examConfig && (
