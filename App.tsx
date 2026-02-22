@@ -233,6 +233,7 @@ const TypingGreeting: React.FC<{ name: string }> = ({ name }) => {
 };
 
 const MaintenancePage: React.FC<{ data: any }> = ({ data }) => {
+  const [showContacts, setShowContacts] = useState(false);
   const openingDate = data?.maintenance_opening_date ? new Date(data.maintenance_opening_date).toLocaleString('en-IN', {
     day: 'numeric',
     month: 'long',
@@ -273,14 +274,13 @@ const MaintenancePage: React.FC<{ data: any }> = ({ data }) => {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
-          <a href={TG_CHANNEL} target="_blank" className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-violet-200 transition-all group">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Updates</p>
-            <p className="text-[11px] font-bold text-slate-700 group-hover:text-violet-600">Join Channel</p>
-          </a>
-          <a href={CONTACT_OWNER} target="_blank" className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-violet-200 transition-all group">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Support</p>
-            <p className="text-[11px] font-bold text-slate-700 group-hover:text-violet-600">Contact Admin</p>
+        <div className="flex justify-center">
+          <a href={TG_CHANNEL} target="_blank" className="w-full p-6 bg-slate-50 rounded-[2rem] border border-slate-100 hover:border-violet-200 transition-all group flex flex-col items-center">
+            <div className="w-10 h-10 bg-violet-100 text-violet-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" /></svg>
+            </div>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Official Updates</p>
+            <p className="text-sm font-black text-slate-700 group-hover:text-violet-600 uppercase tracking-tight">Join Telegram Channel</p>
           </a>
         </div>
 
@@ -293,16 +293,60 @@ const MaintenancePage: React.FC<{ data: any }> = ({ data }) => {
       </div>
 
       {/* Floating Telegram Icon for Maintenance Mode */}
-      <a
-        href={TG_CHANNEL}
-        target="_blank"
+      <button
+        onClick={() => setShowContacts(true)}
         className="fixed bottom-8 right-8 w-16 h-16 bg-[#229ED9] text-white rounded-2xl shadow-2xl shadow-blue-200 flex items-center justify-center hover:scale-110 active:scale-95 transition-all animate-in zoom-in slide-in-from-bottom-10 duration-700 z-[100] group"
       >
         <svg className="w-8 h-8 group-hover:rotate-12 transition-transform" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" />
         </svg>
-        <div className="absolute -top-2 -left-2 bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase">Update</div>
-      </a>
+        <div className="absolute -top-2 -left-2 bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase">Contact</div>
+      </button>
+
+      {/* Contact Bottom Sheet */}
+      {showContacts && (
+        <div className="fixed inset-0 z-[500] flex items-end justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowContacts(false)} />
+          <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl relative z-10 p-8 pt-10 animate-in slide-in-from-bottom-full duration-500 flex flex-col">
+            <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-8 shrink-0" />
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">Technical Support</h3>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Connect with the Founders</p>
+            </div>
+            <div className="space-y-4 mb-4">
+              <a href={CONTACT_FOUNDER} target="_blank" className="flex items-center justify-between p-6 bg-slate-50 border border-slate-100 rounded-[2rem] hover:border-violet-500 transition-all group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <span className="text-xl">👑</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-0.5">Founder</p>
+                    <p className="font-black text-slate-800 uppercase tracking-tight">Lucky Chawla</p>
+                  </div>
+                </div>
+                <div className="w-10 h-10 bg-violet-600 text-white rounded-full flex items-center justify-center shadow-lg group-hover:rotate-12 transition-all">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" /></svg>
+                </div>
+              </a>
+              <a href={CONTACT_OWNER} target="_blank" className="flex items-center justify-between p-6 bg-slate-50 border border-slate-100 rounded-[2rem] hover:border-violet-500 transition-all group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <span className="text-xl">🛡️</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-0.5">Co-Founder</p>
+                    <p className="font-black text-slate-800 uppercase tracking-tight">Tarun Chaudhary</p>
+                  </div>
+                </div>
+                <div className="w-10 h-10 bg-violet-600 text-white rounded-full flex items-center justify-center shadow-lg group-hover:rotate-12 transition-all">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" /></svg>
+                </div>
+              </a>
+            </div>
+            <button onClick={() => setShowContacts(false)} className="w-full mt-6 py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95">Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
