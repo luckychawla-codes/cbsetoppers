@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, User, QuizResult, Question } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2 } from './constants';
 import { verifyStudent, registerStudent, supabase } from './services/supabase';
-import { analyzeResult } from './services/ai';
+import { analyzeResult, generateAIQuiz } from './services/ai';
 import AIChatWidget from './AIChatWidget';
 
 const EXAM_DURATION = 90 * 60;
@@ -639,9 +639,22 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
   const [answers, setAnswers] = useState<(number | null)[]>(new Array(100).fill(null));
   const [timeLeft, setTimeLeft] = useState(EXAM_DURATION);
   const [submitting, setSubmitting] = useState(false);
-  const questions = useMemo(() => paperId === 'P2' ? PAPER_2_QUESTIONS : PAPER_1_QUESTIONS, [paperId]);
+
+  const questions = useMemo(() => {
+    if (paperId === 'AI_DYNAMIC') {
+      const saved = localStorage.getItem('topper_ai_quiz');
+      return saved ? JSON.parse(saved) : PAPER_1_QUESTIONS;
+    }
+    return paperId === 'P2' ? PAPER_2_QUESTIONS : PAPER_1_QUESTIONS;
+  }, [paperId]);
+
+  useEffect(() => {
+    if (paperId === 'AI_DYNAMIC') setAnswers(new Array(questions.length).fill(null));
+  }, [questions, paperId]);
+
   const currentQ = questions[currentIdx];
-  const caseStudy = (paperId === 'P2' ? CASE_STUDIES_P2 : CASE_STUDIES_P1).find(c => c.questionIds.includes(currentIdx + 1));
+  const caseStudies = paperId === 'P2' ? CASE_STUDIES_P2 : CASE_STUDIES_P1;
+  const caseStudy = caseStudies.find(c => c.questionIds.includes(currentIdx + 1));
 
   useEffect(() => {
     const timer = setInterval(() => setTimeLeft(p => p > 0 ? p - 1 : 0), 1000);
@@ -652,7 +665,7 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
     setSubmitting(true);
     let score = 0;
     answers.forEach((ans, idx) => { if (ans === questions[idx].answer) score++; });
-    onFinish({ score, total: 100, subject, paperId, answers, timestamp: Date.now(), timeSpent: EXAM_DURATION - timeLeft });
+    onFinish({ score, total: questions.length, subject, paperId, answers, timestamp: Date.now(), timeSpent: EXAM_DURATION - timeLeft });
   }, [answers, questions, subject, paperId, timeLeft, onFinish]);
 
   return (
@@ -684,7 +697,7 @@ const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: Q
       </main>
       <footer className="p-6 bg-slate-950 border-t border-slate-800 flex justify-between gap-4">
         <button disabled={currentIdx === 0} onClick={() => setCurrentIdx(c => c - 1)} className="flex-1 py-5 bg-slate-100 rounded-2xl font-black uppercase text-[10px] text-slate-500 hover:bg-slate-200 transition-colors disabled:opacity-30">Back</button>
-        <button disabled={currentIdx === 99} onClick={() => setCurrentIdx(c => c + 1)} className="flex-1 py-5 bg-black text-white rounded-2xl font-black uppercase text-[10px] hover:bg-black transition-colors disabled:opacity-30">Next</button>
+        <button disabled={currentIdx === questions.length - 1} onClick={() => setCurrentIdx(c => c + 1)} className="flex-1 py-5 bg-black text-white rounded-2xl font-black uppercase text-[10px] hover:bg-black transition-colors disabled:opacity-30">Next</button>
       </footer>
     </div>
   );
@@ -696,7 +709,11 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
 
   const getAnalysis = async () => {
     setLoading(true);
-    const questions = result.paperId === 'P2' ? PAPER_2_QUESTIONS : PAPER_1_QUESTIONS;
+    let questions = result.paperId === 'P2' ? PAPER_2_QUESTIONS : PAPER_1_QUESTIONS;
+    if (result.paperId === 'AI_DYNAMIC') {
+      const saved = localStorage.getItem('topper_ai_quiz');
+      if (saved) questions = JSON.parse(saved);
+    }
     const res = await analyzeResult(result, questions);
     setAnalysis(res);
     setLoading(false);
@@ -709,7 +726,7 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
           <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-4">{result.subject}</p>
           <div className="text-[8rem] md:text-[12rem] font-black leading-none tracking-tighter animate-in zoom-in duration-1000 delay-200">{result.score}</div>
-          <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em]">SCORE / 100</p>
+          <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em]">SCORE / {result.total}</p>
         </div>
 
         {!analysis ? (
@@ -924,7 +941,7 @@ const App: React.FC = () => {
       {view === 'result' && quizResult && <ResultView result={quizResult} onDone={handleDoneResult} />}
       {view === 'profile' && user && <ProfileView user={user} onBack={() => setView('dashboard')} />}
       {view === 'verify' && <VerificationPortal onBack={() => setView('auth')} />}
-      <AIChatWidget />
+      <AIChatWidget onStartAIQuiz={(config) => handleStartExam(config.subject, 'AI_DYNAMIC')} />
     </div>
   );
 };

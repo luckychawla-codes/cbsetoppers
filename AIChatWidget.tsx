@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { chatWithAI } from './services/ai';
 
-const AIChatWidget: React.FC = () => {
+const AIChatWidget: React.FC<{ onStartAIQuiz?: (config: { subject: string }) => void }> = ({ onStartAIQuiz }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([
         { role: 'assistant', content: 'Hi! I am TopperAI, crafted by CBSE Toppers. How can I help you with your board preparation today?' }
@@ -31,6 +31,17 @@ const AIChatWidget: React.FC = () => {
 
         setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
         setIsLoading(false);
+
+        // Check for Quiz Generation JSON in response
+        if (aiResponse.includes("QUIZ_GEN_START")) {
+            try {
+                const jsonStr = aiResponse.split("QUIZ_GEN_START")[1].split("QUIZ_GEN_END")[0];
+                const quizData = JSON.parse(jsonStr);
+                localStorage.setItem('topper_ai_quiz', JSON.stringify(quizData.questions));
+                if (onStartAIQuiz) onStartAIQuiz({ subject: quizData.subject });
+                setIsOpen(false);
+            } catch (e) { console.error("Quiz Parse Error", e); }
+        }
     };
 
     return (

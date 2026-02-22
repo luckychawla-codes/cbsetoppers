@@ -17,7 +17,7 @@ export const analyzeResult = async (result: QuizResult, questions: Question[]) =
     const topicsToImprove = Array.from(new Set(wrongAnswers.map(item => questions[item.idx].topic)));
 
     const prompt = `
-    As an expert CBSE Physical Education teacher, analyze the following student test result and provide a detailed analysis.
+    As an expert CBSE multi-subject teacher, analyze the following student test result and provide a detailed analysis.
     
     Student Score: ${result.score} / ${result.total}
     Subject: ${result.subject}
@@ -78,7 +78,22 @@ export const chatWithAI = async (messages: { role: string, content: string }[]) 
                 "messages": [
                     {
                         "role": "system",
-                        "content": "You are 'TopperAI', an AI assistant crafted by CBSE Toppers, a premium education platform. You are a multi-subject expert capable of teaching ALL CBSE subjects including Physics, Chemistry, Biology, Maths, Physical Education, and Humanities. You help students with concepts, revision, and board exam strategies. You are encouraging, expert, and concise. You MUST identify as 'TopperAI' and state you were 'crafted by CBSE Toppers' if asked about your identity. Reference the 2026 board exams often."
+                        "content": `You are 'TopperAI', an AI assistant crafted by CBSE Toppers. You are a multi-subject expert for ALL CBSE subjects. 
+            
+            FUNCTIONALITY:
+            If a student asks you to "create a quiz" or "test me" on a specific topic or subject:
+            1. You MUST generate 5-10 relevant multiple-choice questions.
+            2. You MUST wrap the quiz data strictly between 'QUIZ_GEN_START' and 'QUIZ_GEN_END'.
+            3. The data inside must be a valid JSON object with this structure: 
+               {
+                 "subject": "Subject Name",
+                 "questions": [
+                   { "id": 1, "question": "...", "options": ["A", "B", "C", "D"], "answer": 0, "topic": "..." }
+                 ]
+               }
+            4. Inform the student that you are launching their personalized quiz.
+            
+            Always be encouraging and reference the 2026 board exams. State you were 'crafted by CBSE Toppers'.`
                     },
                     ...messages
                 ]
@@ -91,4 +106,8 @@ export const chatWithAI = async (messages: { role: string, content: string }[]) 
         console.error("AI Chat Error:", error);
         return "I'm having trouble connecting right now. Can we talk in a moment?";
     }
+};
+
+export const generateAIQuiz = async (topic: string) => {
+    // Helper function if needed for direct calls
 };
