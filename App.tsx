@@ -458,7 +458,7 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
   const [showLegalSide, setShowLegalSide] = useState<'privacy' | 'terms' | 'refund' | 'honor' | null>(null);
 
   const { coreSubjects, additionalSubjects } = useMemo(() => {
-    const universalAdditional = ["Physical Education", "Computer Science", "Music", "Fine Arts", "AI & Concepts"];
+    const universalAdditional = ["Physical Education", "Computer Science", "Music", "Fine Arts"];
 
     if (user.class === 'Xth') {
       return {
@@ -614,23 +614,24 @@ const Dashboard: React.FC<{ user: User, onStartExam: (subj: string, pid: string)
               <h3 className="text-4xl md:text-7xl font-black text-slate-900 uppercase tracking-tighter leading-none">{selectedSubject}</h3>
               {selectedSubject === "Physics" && <TypingPartnershipText />}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {['P1', 'P2', 'Mock'].map(pid => {
-                return (
-                  <div key={pid} className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-50 flex flex-col hover:shadow-2xl transition-all relative group overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-violet-50 rounded-bl-[4rem] -mr-12 -mt-12 group-hover:bg-violet-600 transition-all duration-500" />
-                    <div className="text-left relative z-10">
-                      <h4 className="font-black text-base uppercase text-slate-900 mb-8">{pid === 'P1' ? 'Assessment P-1' : pid === 'P2' ? 'Assessment P-2' : 'Full Mock Exam'}</h4>
-                      <div className="mb-10 flex flex-col">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Unlimited Access</span>
-                      </div>
-                      <button onClick={() => onStartExam(selectedSubject || '', pid)} className="w-full py-5 rounded-[1.5rem] font-black uppercase text-[11px] tracking-widest transition-all bg-violet-600 text-white shadow-xl hover:bg-violet-700 active:scale-95">
-                        Launch Assessment
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="bg-white p-10 md:p-16 rounded-[3.5rem] shadow-2xl border border-violet-100 relative overflow-hidden text-center md:text-left">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-violet-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
+              <div className="relative z-10">
+                <div className="w-20 h-20 bg-violet-600 rounded-[2rem] flex items-center justify-center mb-8 shadow-xl shadow-violet-200 mx-auto md:mx-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <h4 className="text-3xl md:text-5xl font-black text-slate-900 uppercase tracking-tighter mb-4">NO QUIzes are avaible right now.</h4>
+                <p className="text-lg md:text-xl font-bold text-slate-500 uppercase tracking-widest leading-relaxed mb-10 max-w-2xl">
+                  Stay updated we will add quized meanwhile you can create a custom quizze by chatting with our AI mentor below.
+                </p>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, since there are no pre-built quizzes for ${selectedSubject}, can you create a custom 10-question mock test for me on this subject?` } }))}
+                  className="px-10 py-5 bg-violet-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-violet-200 hover:bg-violet-700 active:scale-95 transition-all flex items-center justify-center gap-3 mx-auto md:mx-0"
+                >
+                  Create Custom AI Quiz
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1040,7 +1041,7 @@ const ProfileView: React.FC<{ user: User, onBack: () => void, onUpdate: (u: User
     setIsSaving(true);
     setError('');
     try {
-      const updated = await updateStudentProfile(user.id, {
+      const updated = await updateStudentProfile(user.student_id, {
         name: editedName,
         gender: editedGender
       });

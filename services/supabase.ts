@@ -63,7 +63,7 @@ export const registerStudent = async (params: {
   }
 };
 
-export const updateStudentProfile = async (id: string, updates: {
+export const updateStudentProfile = async (studentId: string, updates: {
   name?: string;
   gender?: string;
   class?: string;
@@ -73,7 +73,7 @@ export const updateStudentProfile = async (id: string, updates: {
     const { data, error } = await supabase
       .from('students')
       .update(updates)
-      .eq('id', id)
+      .eq('student_id', studentId)
       .select()
       .single();
 
@@ -116,7 +116,7 @@ export const verifyStudent = async (identifier: string, password?: string) => {
     // 3. Fetch full profile from 'students' table
     const { data: profile, error: profileError } = await supabase
       .from('students')
-      .select('id, name, student_id, email, dob, class, stream, phone, is_verified')
+      .select('id, name, student_id, email, dob, class, stream, phone, gender, is_verified')
       .eq('email', email)
       .maybeSingle();
 

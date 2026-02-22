@@ -8,12 +8,29 @@ const AIChatWidget: React.FC<{
     onStartAIQuiz?: (config: { subject: string }) => void
 }> = ({ user, onStartAIQuiz }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<{ role: string, content: string }[]>([
-        { role: 'assistant', content: "Hey buddy! I'm TopperAI, your study companion and friend. Whether you're feeling stressed about the 2026 boards or need a pro analysis of your tests, I've got your back. How are you feeling today? 💙" }
-    ]);
+    const [messages, setMessages] = useState<{ role: string, content: string }[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Initialize first message when user is available
+    useEffect(() => {
+        if (user && messages.length === 0) {
+            setMessages([
+                {
+                    role: 'assistant',
+                    content: `Hi ${user.name.split(' ')[0]}! I'm TopperAI, your study companion and friend. Whether you're feeling stressed about the 2026 boards or need a pro analysis of your tests, I've got your back. How are you feeling today? 💙`
+                }
+            ]);
+        } else if (!user && messages.length === 0) {
+            setMessages([
+                {
+                    role: 'assistant',
+                    content: "Hi! I'm TopperAI, your study companion and friend. How can I help you ace your boards today? 💙"
+                }
+            ]);
+        }
+    }, [user, messages.length]);
 
     useEffect(() => {
         const handleOpen = (e: any) => {
