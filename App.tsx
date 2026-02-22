@@ -329,6 +329,7 @@ const MaintenancePage: React.FC<{ data: any }> = ({ data }) => {
                   <div className="text-left">
                     <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-0.5">Founder</p>
                     <p className="font-black text-slate-800 uppercase tracking-tight">Lucky Chawla</p>
+                    <p className="text-[9px] font-bold text-slate-400 mt-1">{EMAIL_FOUNDER}</p>
                   </div>
                 </div>
                 <div className="w-10 h-10 bg-violet-600 text-white rounded-full flex items-center justify-center shadow-lg group-hover:rotate-12 transition-all">
@@ -342,7 +343,8 @@ const MaintenancePage: React.FC<{ data: any }> = ({ data }) => {
                   </div>
                   <div className="text-left">
                     <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-0.5">OWNER</p>
-                    <p className="font-black text-slate-800 uppercase tracking-tight">Tarun Chaudhary</p>
+                    <p className="font-black text-slate-800 uppercase tracking-tight">Tarun Kumar</p>
+                    <p className="text-[9px] font-bold text-slate-400 mt-1">{EMAIL_OWNER}</p>
                   </div>
                 </div>
                 <div className="w-10 h-10 bg-violet-600 text-white rounded-full flex items-center justify-center shadow-lg group-hover:rotate-12 transition-all">
@@ -1555,7 +1557,7 @@ const Dashboard: React.FC<{
                 </div>
                 <div className="text-left">
                   <h4 className="text-xl font-black text-slate-800 leading-none flex items-center gap-2">
-                    Tarun Chaudhary
+                    Tarun Kumar
                     <span className="text-[9px] w-5 h-5 flex items-center justify-center bg-sky-500 text-white rounded-full shadow-sm">O</span>
                   </h4>
                   <p className="text-[11px] font-bold text-slate-400 mt-2">{EMAIL_OWNER}</p>
