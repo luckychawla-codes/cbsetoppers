@@ -1,17 +1,15 @@
 import { decode } from '../utils/crypto';
 import { User, QuizResult } from '../types';
 
-// Encrypted keys for security (OpenRouter)
-const _K = "c2stb3ItdjEtOGUxNWYzZDBiYTQwMTMyZDljMjZjMDc4NjBkN2I3ZGFjMjQ0MDUzYjBmZTI1NjNhODQxMWEzMzg0ZjU4ZTU0NA==";
+// Encrypted keys for security (OpenAI)
+const _K = "c2stcHJvai1FVTliTkJKM3N2NElINUlBME11UEJWbkt1UTh6SnQzaWRTSUtUOVlsMVFvVjYybmxpSFNmLS1kTlZYWExyRmE0bUFkZi0wTlhzUVQzQmxia0ZKenNpcXNRR3JPUUxzTDJ5aVpmVTY2S2hsYW5zWDRvU2pRQmRjYWtlblM1eGNNZmpOVnN5bE54Sm9tTW10bWVaZmZBaHFzTm5GRHNBA==";
 
 const OPENROUTER_API_KEY = decode(_K);
 
-// Model Fallback List (Primary to Backups)
+// Model Fallback List (Official OpenAI Models)
 const MODELS = [
-    "openai/gpt-4o-mini",
-    "google/gemini-2.0-flash-lite-preview-02-05:free",
-    "meta-llama/llama-3.3-70b-instruct",
-    "deepseek/deepseek-chat"
+    "gpt-4o-mini",
+    "gpt-4o"
 ];
 
 export const analyzeResult = async (result: QuizResult) => {
@@ -29,7 +27,7 @@ export const chatWithAI = async (
     for (const modelId of MODELS) {
         try {
             console.log(`Trying model: ${modelId}`);
-            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            const response = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
