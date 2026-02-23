@@ -1,10 +1,10 @@
 import { decode } from '../utils/crypto';
 import { User, QuizResult } from '../types';
 
-// Encrypted keys for security (OpenAI)
-const _K = "c2stcHJvai1FVTliTkJKM3N2NElINUlBME11UEJWbkt1UTh6SnQzaWRTSUtUOVlsMVFvVjYybmxpSFNmLS1kTlZYWExyRmE0bUFkZi0wTlhzUVQzQmxia0ZKenNpcXNRR3JPUUxzTDJ5aVpmVTY2S2hsYW5zWDRvU2pRQmRjYWtlblM1eGNNZmpOVnN5bE54Sm9tTW10bWVaZmZBaHFzTm5GRHNBA==";
+// Encrypted keys for security (Official OpenAI)
+const _K = "c2stc3ZjYWNjdC1VUVJ2bUZhY28xSUlPLTNMY1daU1AtNU9mYm9VOGxjZ282WXlTVXk5LUZQNjBrTXBJQjRWczRYVWlJeTJ3VWVJTXRRa1otQmhzLVQzQmxia0ZKTWh1QnV0UjNkeFl4WHVJN0Y4VkxQdFo0VTAwNnkyUVVpUWVEOEt3MUFLUnIyZktiZVV0amdzN1JhUy1mbjlzMWZWSm51RExmOEE=";
 
-const OPENROUTER_API_KEY = decode(_K);
+const OPENAI_API_KEY = decode(_K);
 
 // Model Fallback List (Official OpenAI Models)
 const MODELS = [
@@ -30,7 +30,7 @@ export const chatWithAI = async (
             const response = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                    "Authorization": `Bearer ${OPENAI_API_KEY}`,
                     "Content-Type": "application/json",
                     "HTTP-Referer": window.location.origin,
                     "X-Title": "CBSE TOPPERS"
@@ -108,15 +108,14 @@ export const getMotivationalQuote = async (user: User) => {
     const timeout = setTimeout(() => controller.abort(), 8000);
 
     try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                "Authorization": `Bearer ${OPENAI_API_KEY}`,
                 "Content-Type": "application/json",
-                "HTTP-Referer": window.location.origin,
             },
             body: JSON.stringify({
-                "model": "google/gemini-2.0-flash-001",
+                "model": "gpt-4o-mini",
                 "messages": [
                     { "role": "system", "content": "Give a short, powerful, 1-line motivational quote for a CBSE student. No quotes, just text." },
                     { "role": "user", "content": `Student: ${user.name}` }
