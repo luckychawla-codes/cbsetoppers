@@ -2,11 +2,17 @@ import { decode } from '../utils/crypto';
 import { User, QuizResult } from '../types';
 
 // Encrypted keys for security (OpenRouter)
-const _K = "c2stb3ItdjEtOWU1YTU5ZjY2NmNjNDg4YmUwZjI0OTg0OTg1NjIyZmUwNGIyYjBkNGM0ZDFkODQ5NzcxZWEzMDExZjE0NDEwMg==";
-const _M = "cXdlbi9xd2VuMy12bC0zMGItYTNiLVRoaW5raW5n";
+const _K = "c2stb3ItdjEtOGUxNWYzZDBiYTQwMTMyZDljMjZjMDc4NjBkN2I3ZGFjMjQ0MDUzYjBmZTI1NjNhODQxMWEzMzg0ZjU4ZTU0NA==";
 
 const OPENROUTER_API_KEY = decode(_K);
-const MODEL = decode(_M);
+
+// Model Fallback List (Primary to Backups)
+const MODELS = [
+    "openai/gpt-4o-mini",
+    "google/gemini-2.0-flash-lite-preview-02-05:free",
+    "meta-llama/llama-3.3-70b-instruct",
+    "deepseek/deepseek-chat"
+];
 
 export const analyzeResult = async (result: QuizResult) => {
     // Basic analysis if called directly
@@ -18,21 +24,25 @@ export const chatWithAI = async (
     user: User | undefined,
     websiteContext?: { currentView?: string, selectedSubject?: string | null }
 ) => {
-    try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                "Content-Type": "application/json",
-                "HTTP-Referer": window.location.origin,
-                "X-Title": "CBSE TOPPERS"
-            },
-            body: JSON.stringify({
-                "model": MODEL,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": `You are TopperAI, the #1 AI Mentor for CBSE Class 10/12 students.
+    let lastError: any;
+
+    for (const modelId of MODELS) {
+        try {
+            console.log(`Trying model: ${modelId}`);
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": window.location.origin,
+                    "X-Title": "CBSE TOPPERS"
+                },
+                body: JSON.stringify({
+                    "model": modelId,
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": `You are TopperAI, the #1 AI Mentor for CBSE Class 10/12 students.
             
             ─── STUDENT PROFILE ───
             Name: ${user?.name || 'Friend'}
@@ -70,18 +80,25 @@ export const chatWithAI = async (
             PERSONA: Friendly mentor for CBSE 2026, JEE/NEET.
             ALWAYS use LaTeX ($...$ or $$...$$) for equations.
             AI launches 'Quiz Mode' automatically from the JSON.`
-                    },
-                    ...messages
-                ]
-            })
-        });
+                        },
+                        ...messages
+                    ]
+                })
+            });
 
-        const data = await response.json();
-        return data.choices[0].message.content;
-    } catch (error) {
-        console.error("AI Chat Error:", error);
-        return "Hey buddy, my connection flickered for a second. Can you say that again? I'm always here for you. 💙";
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content;
+        } catch (error) {
+            console.error(`AI Chat Error with ${modelId}:`, error);
+            lastError = error;
+        }
     }
+    return "Hey buddy, my connection flickered for a second. Let me try once more or refresh! 💙";
 };
 
 export const generateAIQuiz = async (topic: string) => {
