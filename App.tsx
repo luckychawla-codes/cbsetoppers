@@ -1605,12 +1605,7 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
 
       {/* ── Minimalist Light Footer ── */}
       <footer className="mt-20 pb-12 flex flex-col items-center gap-4">
-        <button
-          onClick={() => { hapticsImpactLight(); setView('help'); }}
-          className="px-6 py-2.5 bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-violet-100 dark:border-violet-800 active:scale-95 transition-all mb-2"
-        >
-          Customer Support & Help
-        </button>
+
         <p className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em]">© 2026 CBSE TOPPERS · Premium Education</p>
       </footer>
 
@@ -2502,14 +2497,7 @@ const ProfileView: React.FC<{ user: User, setView: (v: View) => void, onBack: ()
                   </div>
                 )}
 
-                <section className="bg-violet-900 rounded-[3rem] p-10 text-white space-y-4 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
-                  <h3 className="text-xl font-black uppercase tracking-tighter">Support Excellence</h3>
-                  <p className="text-[11px] font-medium text-violet-200 leading-relaxed uppercase tracking-wider">
-                    Have questions or need technical assistance? Our team is available 24/7 on Telegram.
-                  </p>
-                  <a href={TG_CHANNEL} target="_blank" className="inline-block px-8 py-4 bg-white text-violet-900 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all transition-colors duration-200">Contact Us Now</a>
-                </section>
+
 
                 <footer className="text-center pt-8">
                   <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest">© 2026 CBSE TOPPERS. Made with ❤️ by Students.</p>
@@ -3410,7 +3398,7 @@ const App: React.FC = () => {
         </motion.div>
       </AnimatePresence>
 
-      {!isMaintenance && user && view !== 'store' && (
+      {!isMaintenance && user && view === 'dashboard' && (
         <button
           onClick={() => { hapticsImpactLight(); setView('store'); }}
           className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-tr from-violet-600 to-indigo-700 text-white rounded-[1.8rem] shadow-[0_20px_50px_rgba(79,70,229,0.3)] flex flex-col items-center justify-center active:scale-90 transition-all z-[100] group overflow-hidden border-2 border-white/20"
