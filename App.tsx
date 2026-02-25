@@ -2632,7 +2632,7 @@ const InternshipForm: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   // Form State
   const [name, setName] = useState('');
-  const [age, setAge] = useState('');
+  const [dob, setDob] = useState('');
   const [currentClass, setCurrentClass] = useState('');
   const [board, setBoard] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -2656,6 +2656,12 @@ const InternshipForm: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       setIsSubmitting(false);
       setIsSubmitted(true);
     }, 2000);
+  };
+
+  const getMinAgeDate = () => {
+    const today = new Date();
+    const minDate = new Date(today.getFullYear() - 17, today.getMonth(), today.getDate());
+    return minDate.toISOString().split('T')[0];
   };
 
   const roles = ["Content Creator", "Doubt Solver", "Admin", "Technical Team", "Social Media", "Graphic Design", "Other"];
@@ -2692,8 +2698,18 @@ const InternshipForm: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   <SmoothInput placeholder="Your Name" value={name} onChange={setName} />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Age</p>
-                  <SmoothInput placeholder="Your Age" value={age} onChange={setAge} />
+                  <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Date of Birth</p>
+                  <input
+                    type="date"
+                    max={getMinAgeDate()}
+                    className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white font-bold text-sm outline-none focus:ring-2 focus:ring-violet-100 transition-all appearance-none"
+                    value={dob}
+                    onChange={(e) => {
+                      setDob(e.target.value);
+                      if (e.target.value) setIs17Plus(true);
+                    }}
+                  />
+                  <p className="text-[7px] text-slate-400 uppercase font-black tracking-widest ml-4 mt-1">Min 17 years required</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
@@ -2724,7 +2740,7 @@ const InternshipForm: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   </div>
                 </div>
                 <button
-                  disabled={!name || !age || !currentClass || !board}
+                  disabled={!name || !dob || !currentClass || !board}
                   onClick={() => setStep(2)}
                   className="w-full py-4 bg-violet-600 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-widest shadow-xl disabled:opacity-50 mt-4 active:scale-95 transition-all"
                 >
