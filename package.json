@@ -10,7 +10,9 @@
     "start": "vite preview --host 0.0.0.0 --port ${PORT:-10000}",
     "app:build": "npm run build && npx cap sync",
     "app:open": "npx cap open android",
-    "app:build:final": "npm run build && npx cap sync && cd android && gradlew assembleDebug && copy app\\build\\outputs\\apk\\debug\\app-debug.apk ..\\..\\CBSE_TOPPERS_learning_user.apk"
+    "app:build:user:final": "npm run build && npx cap sync && cd android && gradlew assembleLearningRelease && copy app\\build\\outputs\\apk\\learning\\release\\app-learning-release-unsigned.apk ..\\..\\CBSE_TOPPERS_learning_user.apk",
+    "app:build:admin:final": "npm run build && npx cap sync && cd android && gradlew assembleAdminRelease && copy app\\build\\outputs\\apk\\admin\\release\\app-admin-release-unsigned.apk ..\\..\\CBSE_TOPPERS_admin_exclusive.apk",
+    "app:build:final": "npm run app:build:user:final"
   },
   "dependencies": {
     "@capacitor/android": "^5.7.8",
