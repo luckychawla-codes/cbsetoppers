@@ -2247,7 +2247,14 @@ const ProfileView: React.FC<{ user: User, onBack: () => void, onUpdate: (u: User
                 <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight">{user.name}</h2>
               )}
               <p className="text-[10px] font-black text-violet-600 uppercase tracking-[0.3em] mt-2">Student ID: {user.student_id}</p>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">{user.class}{user.stream ? ` | ${user.stream}` : ''}</p>
+              <div className="flex flex-col items-center mt-1">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">{user.class}{user.stream ? ` | ${user.stream}` : ''}</p>
+                {user.competitive_exams && user.competitive_exams.length > 0 && (
+                  <p className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mt-1 opacity-60">
+                    {user.competitive_exams.join(' • ')}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -2259,45 +2266,37 @@ const ProfileView: React.FC<{ user: User, onBack: () => void, onUpdate: (u: User
               </div>
             )}
 
-            {/* Academic Info Group */}
-            <div className="space-y-4">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Academic Journey</h3>
-              <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-50 space-y-6">
-                {/* Class & Stream Toggle */}
-                <div className="space-y-3 text-left">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Current Class</label>
-                  {isEditing ? (
+            {/* Editing Controls for Academic Info (Only visible when editing) */}
+            {isEditing && (
+              <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Modify Academic Path</h3>
+                <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-50 space-y-6">
+                  {/* Class Toggle */}
+                  <div className="space-y-3 text-left">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Update Class</label>
                     <div className="grid grid-cols-2 gap-3">
                       {['Xth', 'XIIth'].map(c => (
                         <button key={c} onClick={() => setEditedClass(c)} className={`py-4 rounded-2xl font-black text-[10px] uppercase transition-all ${editedClass === c ? 'bg-violet-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400'}`}>{c}</button>
                       ))}
                     </div>
-                  ) : (
-                    <div className="p-5 bg-slate-50 rounded-2xl font-black text-slate-800 uppercase text-[11px] tracking-widest">Class {user.class}</div>
-                  )}
-                </div>
+                  </div>
 
-                {((isEditing && editedClass === 'XIIth') || (!isEditing && user.class === 'XIIth')) && (
-                  <div className="space-y-3 animate-in slide-in-from-top-2">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Educational Stream</label>
-                    {isEditing ? (
+                  {editedClass === 'XIIth' && (
+                    <div className="space-y-3 animate-in slide-in-from-top-2">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Update Stream</label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                         {['PCB', 'PCM', 'PCBM', 'Commerce', 'Humanities'].map(s => (
                           <button key={s} onClick={() => setEditedStream(s)} className={`py-3 rounded-xl font-black text-[9px] uppercase transition-all ${editedStream === s ? 'bg-violet-50 text-violet-600 border border-violet-100' : 'bg-slate-50 text-slate-400'}`}>{s}</button>
                         ))}
                       </div>
-                    ) : (
-                      <div className="p-5 bg-slate-50 rounded-2xl font-black text-slate-800 uppercase text-[11px] tracking-widest">{user.stream || 'Not Specified'}</div>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  )}
 
-                {/* Competitive Exams Integrated Here */}
-                <div className="space-y-3 pt-2">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Competitive Ambitions</label>
-                  <div className="flex flex-wrap gap-2">
-                    {['JEE', 'NEET', 'CUET', 'CLAT', 'NDA', 'NTSE', 'KVPY', 'OLYMPIAD'].map(exam => (
-                      isEditing ? (
+                  {/* Competitive Exams */}
+                  <div className="space-y-3 pt-2">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Competitive Ambitions</label>
+                    <div className="flex flex-wrap gap-2">
+                      {['JEE', 'NEET', 'CUET', 'CLAT', 'NDA', 'NTSE', 'KVPY', 'OLYMPIAD'].map(exam => (
                         <button
                           key={exam}
                           onClick={() => toggleExam(exam)}
@@ -2305,21 +2304,12 @@ const ProfileView: React.FC<{ user: User, onBack: () => void, onUpdate: (u: User
                         >
                           {exam}
                         </button>
-                      ) : (
-                        editedExams.includes(exam) && (
-                          <div key={exam} className="px-4 py-2 bg-violet-50 text-violet-600 rounded-xl font-black text-[9px] uppercase tracking-widest border border-violet-100">
-                            {exam}
-                          </div>
-                        )
-                      )
-                    ))}
-                    {!isEditing && editedExams.length === 0 && (
-                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest w-full py-2">No targets set</p>
-                    )}
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Identity & Personal Info */}
             <div className="space-y-4">
