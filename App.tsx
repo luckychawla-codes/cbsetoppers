@@ -676,6 +676,12 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
             )}
           </div>
         )}
+        <button
+          onClick={() => setView('help')}
+          className="mt-10 text-[10px] font-black text-slate-300 dark:text-slate-600 hover:text-violet-500 uppercase tracking-widest transition-colors active:scale-95"
+        >
+          Need Help? Contact Support Center
+        </button>
       </div>
 
       {
@@ -1598,8 +1604,14 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
       {showStats && <StatsPanel user={user} onClose={() => setShowStats(false)} />}
 
       {/* ── Minimalist Light Footer ── */}
-      <footer className="mt-20 pb-12 text-center">
-        <p className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em]">Made with ❤️ by Students</p>
+      <footer className="mt-20 pb-12 flex flex-col items-center gap-4">
+        <button
+          onClick={() => { hapticsImpactLight(); setView('help'); }}
+          className="px-6 py-2.5 bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-violet-100 dark:border-violet-800 active:scale-95 transition-all mb-2"
+        >
+          Customer Support & Help
+        </button>
+        <p className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em]">© 2026 CBSE TOPPERS · Premium Education</p>
       </footer>
 
       {/* Telegram Bottom Sheet Support */}
@@ -2095,7 +2107,7 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
 
 
 
-type View = 'auth' | 'dashboard' | 'exam' | 'result' | 'profile' | 'verify' | 'store' | 'internship';
+type View = 'auth' | 'dashboard' | 'exam' | 'result' | 'profile' | 'verify' | 'store' | 'internship' | 'help';
 
 const VerificationPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [email, setEmail] = useState('');
@@ -2151,7 +2163,7 @@ const VerificationPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   );
 };
 
-const ProfileView: React.FC<{ user: User, onBack: () => void, onUpdate: (u: User) => void }> = ({ user, onBack, onUpdate }) => {
+const ProfileView: React.FC<{ user: User, setView: (v: View) => void, onBack: () => void, onUpdate: (u: User) => void }> = ({ user, setView, onBack, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(user.name);
   const [editedGender, setEditedGender] = useState(user.gender || '');
@@ -2453,6 +2465,16 @@ const ProfileView: React.FC<{ user: User, onBack: () => void, onUpdate: (u: User
                         <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500">{doc.desc}</p>
                       </button>
                     ))}
+                    <button
+                      onClick={() => { setShowAbout(false); setView('help'); }}
+                      className="w-full p-6 bg-violet-600 rounded-3xl border border-transparent shadow-xl active:scale-95 transition-all text-left group"
+                    >
+                      <h4 className="text-sm font-black text-white uppercase tracking-tight mb-1 flex items-center gap-2">
+                        Get Help & Support
+                        <span className="text-lg">🆘</span>
+                      </h4>
+                      <p className="text-[10px] font-black text-violet-200 uppercase tracking-widest leading-relaxed">Contact CEO, Founder & Official Team</p>
+                    </button>
                   </div>
                 </section>
 
@@ -2620,6 +2642,123 @@ const StoreView: React.FC<{ user: User, onBack: () => void }> = ({ user, onBack 
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+
+const HelpView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  return (
+    <div className="min-h-screen bg-white dark:bg-[#0f172a] flex flex-col items-center animate-in fade-in duration-500 overflow-y-auto w-full pb-20">
+      <div className="w-full sticky top-0 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 z-50 px-6 py-4 flex items-center justify-between">
+        <button onClick={onBack} className="p-2 -ml-2 text-slate-900 dark:text-white active:scale-90 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <h1 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Customer Support</h1>
+        <div className="w-10" />
+      </div>
+
+      <div className="max-w-md w-full p-8 space-y-10">
+        <header className="text-center space-y-4">
+          <div className="w-20 h-20 bg-violet-600 text-white rounded-[2rem] flex items-center justify-center shadow-xl shadow-violet-500/20 mx-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight">Help & Feedback</h2>
+          <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.3em]">We're here to solve your problems 24/7</p>
+        </header>
+
+        {/* Primary Contact */}
+        <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white relative overflow-hidden group shadow-2xl">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-violet-600/20 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-700" />
+          <div className="relative z-10 space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-xs font-black uppercase tracking-widest text-violet-400">Official Support Email</h3>
+              <p className="text-xl font-black tracking-tight break-all">cbsetoppers@zohomail.in</p>
+            </div>
+            <a href="mailto:cbsetoppers@zohomail.in" className="inline-block px-10 py-4 bg-white text-slate-900 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all">Draft an Email</a>
+          </div>
+        </div>
+
+        {/* Community Links */}
+        <section className="space-y-6">
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pl-1">Join Our Community</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <a href={TG_CHANNEL} target="_blank" className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-[2rem] border border-blue-100 dark:border-blue-800 text-center space-y-3 group active:scale-95 transition-all">
+              <div className="w-10 h-10 bg-blue-500 text-white rounded-xl flex items-center justify-center mx-auto shadow-lg group-hover:rotate-12 transition-transform">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.13-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" /></svg>
+              </div>
+              <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">TG Channel</p>
+            </a>
+            <a href={TG_GROUP} target="_blank" className="p-6 bg-cyan-50 dark:bg-cyan-900/20 rounded-[2rem] border border-cyan-100 dark:border-cyan-800 text-center space-y-3 group active:scale-95 transition-all">
+              <div className="w-10 h-10 bg-cyan-500 text-white rounded-xl flex items-center justify-center mx-auto shadow-lg group-hover:-rotate-12 transition-transform">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+              </div>
+              <p className="text-[9px] font-black text-cyan-600 uppercase tracking-widest">Main Group</p>
+            </a>
+          </div>
+        </section>
+
+        {/* Administration Details */}
+        <section className="space-y-6">
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pl-1">Administration Team</h3>
+          <div className="space-y-4">
+            {/* Founder */}
+            <div className="p-6 bg-white dark:bg-slate-800/50 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-violet-100 dark:bg-violet-900/40 rounded-2xl flex items-center justify-center text-xl">👤</div>
+                <div>
+                  <h4 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Lucky Chawla</h4>
+                  <p className="text-[8px] font-black text-violet-500 uppercase tracking-widest">Founder & Developer</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <a href={CONTACT_FOUNDER} target="_blank" className="p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl text-slate-400 hover:text-blue-500 transition-colors">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.13-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" /></svg>
+                </a>
+              </div>
+            </div>
+
+            {/* Owner */}
+            <div className="p-6 bg-white dark:bg-slate-800/50 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center text-xl">🔱</div>
+                <div>
+                  <h4 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Tarun Kumar</h4>
+                  <p className="text-[8px] font-black text-indigo-500 uppercase tracking-widest">Co-Founder & Owner</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <a href={CONTACT_OWNER} target="_blank" className="p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl text-slate-400 hover:text-blue-500 transition-colors">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.13-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" /></svg>
+                </a>
+              </div>
+            </div>
+
+            {/* CEO */}
+            <div className="p-6 bg-white dark:bg-slate-800/50 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/40 rounded-2xl flex items-center justify-center text-xl">🏛️</div>
+                <div>
+                  <h4 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Abhisek Pani</h4>
+                  <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Chief Executive Officer</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <a href={CONTACT_CEO} target="_blank" className="p-2.5 bg-slate-50 dark:bg-slate-700 rounded-xl text-slate-400 hover:text-blue-500 transition-colors">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.13-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" /></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer className="pt-10 text-center space-y-2 pb-10">
+          <p className="text-[8px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest">Legal Queries: Tarun Kumar (Owner)</p>
+          <p className="text-[8px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest">Tech Issues: Lucky Chawla (Founder)</p>
+        </footer>
+      </div>
     </div>
   );
 };
@@ -3003,6 +3142,20 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    let buffer = "";
+    const handleKeyDown = (e: KeyboardEvent) => {
+      buffer += e.key;
+      if (buffer.endsWith("==/help")) {
+        setView('help');
+        buffer = "";
+      }
+      if (buffer.length > 20) buffer = buffer.substring(buffer.length - 20);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
     const handleOnline = () => { performHealthCheck(); hapticsImpactLight(); };
     const handleOffline = () => { setIsOnline(false); hapticsImpactMedium(); };
 
@@ -3207,9 +3360,10 @@ const App: React.FC = () => {
           {view === 'auth' && <AuthScreen onLogin={handleLogin} setView={setView} />}
           {view === 'verify' && <VerificationPortal onBack={() => setView('auth')} />}
           {view === 'internship' && <InternshipForm onBack={() => setView('auth')} />}
+          {view === 'help' && <HelpView onBack={() => setView(user ? 'dashboard' : 'auth')} />}
 
           {/* Authenticated Views with Maintenance Check */}
-          {view !== 'auth' && view !== 'verify' && view !== 'internship' && (
+          {view !== 'auth' && view !== 'verify' && view !== 'internship' && view !== 'help' && (
             isMaintenance ? (
               <MaintenancePage data={maintenanceData} />
             ) : (
@@ -3239,6 +3393,7 @@ const App: React.FC = () => {
                 {view === 'profile' && user && (
                   <ProfileView
                     user={user}
+                    setView={setView}
                     onBack={() => setView('dashboard')}
                     onUpdate={handleUpdateProfile}
                   />
