@@ -74,3 +74,24 @@ export interface DashboardContent {
   exam_target?: string;
   created_at?: string;
 }
+export interface ClassCategory {
+  id: string;
+  name: string; // e.g., 'Xth', 'XIIth'
+}
+
+export interface StreamCategory {
+  id: string;
+  name: string; // e.g., 'Science', 'Commerce'
+}
+
+export interface ExamCategory {
+  id: string;
+  name: string; // e.g., 'JEE', 'NEET'
+}
+
+export interface SubjectCategory {
+  id: string;
+  name: string;
+  stream_id?: string;
+  class_name?: string;
+}

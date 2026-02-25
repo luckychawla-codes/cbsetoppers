@@ -411,7 +411,13 @@ const SmoothInput: React.FC<{
   );
 });
 
-const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => void }> = ({ onLogin, setView }) => {
+const AuthScreen: React.FC<{
+  onLogin: (u: User) => void,
+  setView: (v: View) => void,
+  dbClasses: ClassCategory[],
+  dbStreams: StreamCategory[],
+  dbExams: ExamCategory[]
+}> = ({ onLogin, setView, dbClasses, dbStreams, dbExams }) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [regStep, setRegStep] = useState(1);
   const [hasJoinedTG, setHasJoinedTG] = useState(false);
@@ -604,24 +610,24 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
                   <input type="date" className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 font-bold text-sm dark:text-white outline-none focus:ring-2 focus:ring-violet-100" value={regDOB} onChange={(e) => setRegDOB(e.target.value)} />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {['Xth', 'XIIth'].map(c => (
-                    <button key={c} onClick={() => setRegClass(c)} className={`py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border-2 transition-all ${regClass === c ? 'bg-violet-600 border-violet-600 text-white shadow-md' : 'bg-slate-50 dark:bg-slate-800 border-transparent dark:border-slate-700 text-slate-400 dark:text-slate-500'}`}>{c}</button>
+                  {dbClasses.map(c => (
+                    <button key={c.id} onClick={() => setRegClass(c.name)} className={`py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border-2 transition-all ${regClass === c.name ? 'bg-violet-600 border-violet-600 text-white shadow-md' : 'bg-slate-50 dark:bg-slate-800 border-transparent dark:border-slate-700 text-slate-400 dark:text-slate-500'}`}>{c.name}</button>
                   ))}
                 </div>
                 {regClass === 'XIIth' && (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2 animate-in fade-in duration-300">
-                    {['PCB', 'PCM', 'PCBM', 'Commerce', 'Humanities'].map(s => (
-                      <button key={s} onClick={() => setRegStream(s)} className={`py-3 rounded-xl font-black text-[9px] uppercase tracking-tighter border-2 transition-all ${regStream === s ? 'bg-violet-50 border-violet-200 text-violet-600' : 'bg-slate-50 border-transparent text-slate-400'}`}>{s}</button>
+                    {dbStreams.map(s => (
+                      <button key={s.id} onClick={() => setRegStream(s.name)} className={`py-3 rounded-xl font-black text-[9px] uppercase tracking-tighter border-2 transition-all ${regStream === s.name ? 'bg-violet-50 border-violet-200 text-violet-600' : 'bg-slate-50 border-transparent text-slate-400'}`}>{s.name}</button>
                     ))}
                   </div>
                 )}
                 <div className="space-y-1 mt-2">
                   <p className="text-[10px] font-black text-slate-400 uppercase ml-4">Target Competitive Exams</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {['JEE', 'NEET', 'CUET', 'NDA'].map(exam => {
-                      const isActive = regCompetitions.includes(exam);
+                    {dbExams.map(exam => {
+                      const isActive = regCompetitions.includes(exam.name);
                       return (
-                        <button key={exam} onClick={() => setRegCompetitions(prev => isActive ? prev.filter(e => e !== exam) : [...prev, exam])} className={`py-3 rounded-xl font-black text-[8px] uppercase tracking-tighter border-2 transition-all ${isActive ? 'bg-violet-50 border-violet-200 text-violet-600' : 'bg-slate-50 border-transparent text-slate-400'}`}>{exam}</button>
+                        <button key={exam.id} onClick={() => setRegCompetitions(prev => isActive ? prev.filter(e => e !== exam.name) : [...prev, exam.name])} className={`py-3 rounded-xl font-black text-[8px] uppercase tracking-tighter border-2 transition-all ${isActive ? 'bg-violet-50 border-violet-200 text-violet-600' : 'bg-slate-50 border-transparent text-slate-400'}`}>{exam.name}</button>
                       );
                     })}
                   </div>
@@ -798,14 +804,18 @@ const MOCK_LEADERBOARD = [
 ];
 
 // ─── Syllabus Tracker Section ──────────────────────────────────────────────────
-const SyllabusTrackerSection: React.FC<{ user: User }> = ({ user }) => {
+const SyllabusTrackerSection: React.FC<{ user: User, dbSubjects: SubjectCategory[], dbStreams: StreamCategory[] }> = ({ user, dbSubjects, dbStreams }) => {
   const [completed, setCompleted] = useState<Record<string, number>>(() => {
     try { return JSON.parse(localStorage.getItem(`syllabus_prog_v1_${user.student_id}`) || '{}'); }
     catch { return {}; }
   });
 
-  const streamKey = user.stream && user.class === 'XIIth' ? user.stream : user.class === 'Xth' ? 'X' : (user.stream || 'PCM');
-  const subjects = STREAM_SUBJECTS[streamKey] || STREAM_SUBJECTS['PCM'];
+  const subjects = useMemo(() => {
+    const userStreamObj = dbStreams.find(s => s.name === user.stream);
+    return dbSubjects
+      .filter(s => (s.stream_id && userStreamObj && user.class === 'XIIth' && s.stream_id === userStreamObj.id) || (s.class_name && s.class_name === user.class))
+      .map(s => s.name);
+  }, [dbSubjects, dbStreams, user.class, user.stream]);
 
   const toggleSubject = (subj: string) => {
     const newProgress = { ...completed };
@@ -860,7 +870,7 @@ const PerformanceDashboard: React.FC<{ user: User }> = ({ user }) => {
   }, []);
 
   const stats = useMemo(() => {
-    if (history.length === 0) return { accuracy: 78, strongest: 'Biology', weakest: 'Chemistry', xp: 540, rank: '#12' };
+    if (history.length === 0) return { accuracy: 78, strongest: 'Mathematics', weakest: 'English', xp: 540, rank: '#12' };
     const subjectMap: Record<string, { total: number; score: number }> = {};
     let totalScore = 0, totalQ = 0;
     history.forEach(r => {
@@ -873,7 +883,7 @@ const PerformanceDashboard: React.FC<{ user: User }> = ({ user }) => {
     const subjects = Object.entries(subjectMap).map(([name, d]) => ({ name, pct: Math.round((d.score / d.total) * 100) }));
     subjects.sort((a, b) => b.pct - a.pct);
     const xp = history.reduce((acc, r) => acc + Math.round((r.score / r.total) * 100) + 10, 0);
-    return { accuracy, strongest: subjects[0]?.name || 'Biology', weakest: subjects[subjects.length - 1]?.name || 'Chemistry', xp, rank: '#' + Math.max(1, 50 - history.length) };
+    return { accuracy, strongest: subjects[0]?.name || 'Mathematics', weakest: subjects[subjects.length - 1]?.name || 'English', xp, rank: '#' + Math.max(1, 50 - history.length) };
   }, [history]);
 
   const last7 = useMemo(() => {
@@ -883,7 +893,7 @@ const PerformanceDashboard: React.FC<{ user: User }> = ({ user }) => {
   }, [history]);
 
   const weakTopics = useMemo(() => {
-    if (history.length === 0) return ['Genetics & Evolution (Chapter 6)', 'Chemical Kinetics (Unit III)', 'Electromagnetic Induction'];
+    if (history.length === 0) return ['Core Concepts (Chapter 1)', 'Problem Solving (Unit II)', 'Applied Theory'];
     return [`Focus on ${stats.weakest} — your lowest scoring subject`, 'Practice 5 MCQs daily on weak chapters', 'Attempt one full AI mock test every 3 days'];
   }, [history, stats.weakest]);
 
@@ -1399,7 +1409,17 @@ const LEGAL_DATA: Record<string, { title: string, content: { h: string, p: strin
   }
 };
 
-const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => void, setView: (v: View) => void, selectedSubject: string | null, setSelectedSubject: (s: string | null) => void, theme: 'light' | 'dark', setTheme: (t: 'light' | 'dark') => void }> = ({ user, onStartExam, setView, selectedSubject, setSelectedSubject, theme, setTheme }) => {
+const Dashboard: React.FC<{
+  user: User,
+  onStartExam: (s: string, p: string) => void,
+  setView: (v: View) => void,
+  selectedSubject: string | null,
+  setSelectedSubject: (s: string | null) => void,
+  theme: 'light' | 'dark',
+  setTheme: (t: 'light' | 'dark') => void,
+  dbSubjects: SubjectCategory[],
+  dbStreams: StreamCategory[]
+}> = ({ user, onStartExam, setView, selectedSubject, setSelectedSubject, theme, setTheme, dbSubjects, dbStreams }) => {
   const [showStats, setShowStats] = useState(false);
   const [showTgMenu, setShowTgMenu] = useState(false);
   const [showLegalSide, setShowLegalSide] = useState<string | null>(null);
@@ -1568,7 +1588,7 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
             </div>
           </div>
 
-          <SyllabusTrackerSection user={user} />
+          <SyllabusTrackerSection user={user} dbSubjects={dbSubjects} dbStreams={dbStreams} />
 
           {/* Dynamic Sections and Folders */}
           {!currentFolder ? (
@@ -2186,7 +2206,16 @@ const VerificationPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   );
 };
 
-const ProfileView: React.FC<{ user: User, setView: (v: View) => void, setShowPdf: (url: string | null) => void, onBack: () => void, onUpdate: (u: User) => void }> = ({ user, setView, setShowPdf, onBack, onUpdate }) => {
+const ProfileView: React.FC<{
+  user: User,
+  setView: (v: View) => void,
+  setShowPdf: (url: string | null) => void,
+  onBack: () => void,
+  onUpdate: (u: User) => void,
+  dbClasses: ClassCategory[],
+  dbStreams: StreamCategory[],
+  dbExams: ExamCategory[]
+}> = ({ user, setView, setShowPdf, onBack, onUpdate, dbClasses, dbStreams, dbExams }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(user.name);
   const [editedGender, setEditedGender] = useState(user.gender || '');
@@ -2319,8 +2348,8 @@ const ProfileView: React.FC<{ user: User, setView: (v: View) => void, setShowPdf
                   <div className="space-y-3 text-left">
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Update Class</label>
                     <div className="grid grid-cols-2 gap-3">
-                      {['Xth', 'XIIth'].map(c => (
-                        <button key={c} onClick={() => setEditedClass(c)} className={`py-4 rounded-2xl font-black text-[10px] uppercase transition-all ${editedClass === c ? 'bg-violet-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400'}`}>{c}</button>
+                      {dbClasses.map(c => (
+                        <button key={c.id} onClick={() => setEditedClass(c.name)} className={`py-4 rounded-2xl font-black text-[10px] uppercase transition-all ${editedClass === c.name ? 'bg-violet-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400'}`}>{c.name}</button>
                       ))}
                     </div>
                   </div>
@@ -2329,8 +2358,8 @@ const ProfileView: React.FC<{ user: User, setView: (v: View) => void, setShowPdf
                     <div className="space-y-3 animate-in slide-in-from-top-2">
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Update Stream</label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {['PCB', 'PCM', 'PCBM', 'Commerce', 'Humanities'].map(s => (
-                          <button key={s} onClick={() => setEditedStream(s)} className={`py-3 rounded-xl font-black text-[9px] uppercase transition-all ${editedStream === s ? 'bg-violet-50 text-violet-600 border border-violet-100' : 'bg-slate-50 text-slate-400'}`}>{s}</button>
+                        {dbStreams.map(s => (
+                          <button key={s.id} onClick={() => setEditedStream(s.name)} className={`py-3 rounded-xl font-black text-[9px] uppercase transition-all ${editedStream === s.name ? 'bg-violet-50 text-violet-600 border border-violet-100' : 'bg-slate-50 text-slate-400'}`}>{s.name}</button>
                         ))}
                       </div>
                     </div>
@@ -2340,13 +2369,13 @@ const ProfileView: React.FC<{ user: User, setView: (v: View) => void, setShowPdf
                   <div className="space-y-3 pt-2">
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Competitive Ambitions</label>
                     <div className="flex flex-wrap gap-2">
-                      {['JEE', 'NEET', 'CUET', 'CLAT', 'NDA', 'NTSE', 'KVPY', 'OLYMPIAD'].map(exam => (
+                      {dbExams.map(exam => (
                         <button
-                          key={exam}
-                          onClick={() => toggleExam(exam)}
-                          className={`px-4 py-2 rounded-xl border-2 font-black text-[9px] uppercase tracking-widest transition-all ${editedExams.includes(exam) ? 'bg-violet-600 border-violet-600 text-white shadow-lg' : 'bg-slate-50 border-transparent text-slate-400'}`}
+                          key={exam.id}
+                          onClick={() => toggleExam(exam.name)}
+                          className={`px-4 py-2 rounded-xl border-2 font-black text-[9px] uppercase tracking-widest transition-all ${editedExams.includes(exam.name) ? 'bg-violet-600 border-violet-600 text-white shadow-lg' : 'bg-slate-50 border-transparent text-slate-400'}`}
                         >
-                          {exam}
+                          {exam.name}
                         </button>
                       ))}
                     </div>
@@ -2466,6 +2495,14 @@ const ProfileView: React.FC<{ user: User, setView: (v: View) => void, setShowPdf
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
                     CBSE TOPPERS is a premium educational platform designed to empower students with AI-driven learning tools, competitive exam preparation, and real-time performance analytics. Our mission is to democratize high-quality education through technology.
                   </p>
+                </section>
+
+                <section className="space-y-4">
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Platform Disclaimer</h3>
+                  <div className="w-full h-80 rounded-[2rem] overflow-hidden border border-slate-100 dark:border-slate-800 shadow-inner">
+                    <iframe src="/disclaimer.pdf#toolbar=0" className="w-full h-full border-none" title="Disclaimer" />
+                  </div>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase text-center">Tap to expand legal documents below</p>
                 </section>
 
                 <div className="h-px bg-slate-100 dark:bg-slate-800" />
@@ -2791,10 +2828,26 @@ const HelpView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
 
 
-const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+const AdminPanel: React.FC<{
+  onBack: () => void,
+  dbClasses: ClassCategory[],
+  dbStreams: StreamCategory[],
+  dbExams: ExamCategory[],
+  dbSubjects: SubjectCategory[],
+  onRefreshCategories: () => void
+}> = ({ onBack, dbClasses, dbStreams, dbExams, dbSubjects, onRefreshCategories }) => {
   const [contents, setContents] = useState<DashboardContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [isManagingCategories, setIsManagingCategories] = useState(false);
+
+  // Category Management State
+  const [newClassName, setNewClassName] = useState('');
+  const [newStreamName, setNewStreamName] = useState('');
+  const [newExamName, setNewExamName] = useState('');
+  const [newSubjectName, setNewSubjectName] = useState('');
+  const [subStreamId, setSubStreamId] = useState('');
+  const [subClassName, setSubClassName] = useState('');
 
   // New Content State
   const [title, setTitle] = useState('');
@@ -2839,6 +2892,55 @@ const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
   };
 
+  const handleAddClass = async () => {
+    if (!newClassName.trim()) return;
+    try {
+      await createClass(newClassName.trim());
+      setNewClassName('');
+      onRefreshCategories();
+    } catch (e) { alert('Error adding class'); }
+  };
+
+  const handleAddStream = async () => {
+    if (!newStreamName.trim()) return;
+    try {
+      await createStream(newStreamName.trim());
+      setNewStreamName('');
+      onRefreshCategories();
+    } catch (e) { alert('Error adding stream'); }
+  };
+
+  const handleAddExam = async () => {
+    if (!newExamName.trim()) return;
+    try {
+      await createExam(newExamName.trim());
+      setNewExamName('');
+      onRefreshCategories();
+    } catch (e) { alert('Error adding exam'); }
+  };
+
+  const handleDeleteCategory = async (type: 'class' | 'stream' | 'exam' | 'subject', id: string) => {
+    if (!window.confirm(`Delete this ${type}?`)) return;
+    try {
+      if (type === 'class') await deleteClass(id);
+      else if (type === 'stream') await deleteStream(id);
+      else if (type === 'subject') await deleteSubject(id);
+      else await deleteExam(id);
+      onRefreshCategories();
+    } catch (e) { alert(`Error deleting ${type}`); }
+  };
+
+  const handleAddSubject = async () => {
+    if (!newSubjectName.trim() || (!subStreamId && !subClassName)) {
+      return alert('Subject name and (Stream or Class) required');
+    }
+    try {
+      await createSubject(newSubjectName.trim(), subStreamId || undefined, subClassName || undefined);
+      setNewSubjectName('');
+      onRefreshCategories();
+    } catch (e) { alert('Error adding subject'); }
+  };
+
   const sections = contents.filter(c => c.type === 'section');
   const folders = contents.filter(c => c.type === 'folder');
 
@@ -2849,12 +2951,112 @@ const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
         </button>
         <h1 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Admin Panel</h1>
-        <button onClick={() => setIsAdding(!isAdding)} className="p-2 bg-violet-600 text-white rounded-xl shadow-lg active:scale-95 transition-all">
+        <button onClick={() => { setIsAdding(!isAdding); setIsManagingCategories(false); }} className="p-2 bg-violet-600 text-white rounded-xl shadow-lg active:scale-95 transition-all">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+        </button>
+        <button onClick={() => { setIsManagingCategories(!isManagingCategories); setIsAdding(false); }} className="p-2 bg-slate-900 text-white rounded-xl shadow-lg active:scale-95 transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
         </button>
       </div>
 
       <div className="max-w-xl w-full mx-auto p-6 space-y-8">
+        {isManagingCategories && (
+          <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800 space-y-8 animate-in slide-in-from-top-4 duration-500">
+            <h2 className="text-lg font-black uppercase text-slate-900 dark:text-white mb-4">Manage Categories</h2>
+
+            {/* Classes Section */}
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Classes</h3>
+              <div className="flex gap-2">
+                <SmoothInput placeholder="New Class (e.g. XIth)" value={newClassName} onChange={setNewClassName} />
+                <button onClick={handleAddClass} className="p-4 bg-violet-600 text-white rounded-2xl shadow-lg active:scale-95 transition-all">Add</button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {dbClasses.map(c => (
+                  <div key={c.id} className="group relative">
+                    <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800">{c.name}</div>
+                    <button onClick={() => handleDeleteCategory('class', c.id)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4"><path d="M6 18L18 6M6 6l12 12" /></svg></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Streams Section */}
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Streams</h3>
+              <div className="flex gap-2">
+                <SmoothInput placeholder="New Stream (e.g. Arts)" value={newStreamName} onChange={setNewStreamName} />
+                <button onClick={handleAddStream} className="p-4 bg-violet-600 text-white rounded-2xl shadow-lg active:scale-95 transition-all">Add</button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {dbStreams.map(s => (
+                  <div key={s.id} className="group relative">
+                    <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800">{s.name}</div>
+                    <button onClick={() => handleDeleteCategory('stream', s.id)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4"><path d="M6 18L18 6M6 6l12 12" /></svg></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Exams Section */}
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Competitive Exams</h3>
+              <div className="flex gap-2">
+                <SmoothInput placeholder="New Exam (e.g. CLAT)" value={newExamName} onChange={setNewExamName} />
+                <button onClick={handleAddExam} className="p-4 bg-violet-600 text-white rounded-2xl shadow-lg active:scale-95 transition-all">Add</button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {dbExams.map(ex => (
+                  <div key={ex.id} className="group relative">
+                    <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800">{ex.name}</div>
+                    <button onClick={() => handleDeleteCategory('exam', ex.id)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4"><path d="M6 18L18 6M6 6l12 12" /></svg></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Subjects Section */}
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Syllabus Subjects</h3>
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <select className="flex-1 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 dark:text-white font-bold text-sm outline-none" value={subStreamId} onChange={(e) => { setSubStreamId(e.target.value); if (e.target.value) setSubClassName(''); }}>
+                    <option value="">Link to Stream</option>
+                    {dbStreams.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                  <select className="flex-1 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 dark:text-white font-bold text-sm outline-none" value={subClassName} onChange={(e) => { setSubClassName(e.target.value); if (e.target.value) setSubStreamId(''); }}>
+                    <option value="">Link to Class</option>
+                    {dbClasses.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-2">
+                  <SmoothInput placeholder="Subject Name (e.g. Physics)" value={newSubjectName} onChange={setNewSubjectName} />
+                  <button onClick={handleAddSubject} className="p-4 bg-violet-600 text-white rounded-2xl shadow-lg active:scale-95 transition-all">Add</button>
+                </div>
+              </div>
+
+              <div className="max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="grid grid-cols-1 gap-2">
+                  {dbSubjects.map(sub => {
+                    const linked = sub.stream_id ? dbStreams.find(s => s.id === sub.stream_id)?.name : sub.class_name;
+                    return (
+                      <div key={sub.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 group">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-xs text-slate-700 dark:text-slate-300">{sub.name}</span>
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{linked || 'Unlinked'}</span>
+                        </div>
+                        <button onClick={() => handleDeleteCategory('subject', sub.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {isAdding && (
           <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800 space-y-4 animate-in slide-in-from-top-4 duration-500">
             <h2 className="text-lg font-black uppercase text-slate-900 dark:text-white mb-4">Add New Resource</h2>
@@ -2901,19 +3103,14 @@ const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Target Class</p>
                 <select className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 dark:text-white font-bold text-sm outline-none" value={targetClass} onChange={(e) => setTargetClass(e.target.value)}>
                   <option value="">All Classes</option>
-                  <option value="Xth">Class 10th</option>
-                  <option value="XIIth">Class 12th</option>
+                  {dbClasses.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                 </select>
               </div>
               <div className="space-y-1">
                 <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Target Stream</p>
                 <select className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 dark:text-white font-bold text-sm outline-none" value={targetStream} onChange={(e) => setTargetStream(e.target.value)}>
                   <option value="">All Streams</option>
-                  <option value="PCM">PCM</option>
-                  <option value="PCB">PCB</option>
-                  <option value="PCBM">PCBM</option>
-                  <option value="Commerce">Commerce</option>
-                  <option value="Humanities">Humanities</option>
+                  {dbStreams.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
                 </select>
               </div>
             </div>
@@ -2922,11 +3119,7 @@ const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Target Competitive Exam (optional)</p>
               <select className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 dark:text-white font-bold text-sm outline-none" value={targetExam} onChange={(e) => setTargetExam(e.target.value)}>
                 <option value="">No Exam Target</option>
-                <option value="JEE">JEE (Main/Advanced)</option>
-                <option value="NEET">NEET (Medical)</option>
-                <option value="CUET">CUET (University Entrance)</option>
-                <option value="NDA">NDA (Defense)</option>
-                <option value="CLAT">CLAT (Law)</option>
+                {dbExams.map(ex => <option key={ex.id} value={ex.name}>{ex.name}</option>)}
                 <option value="Other">Other Exams</option>
               </select>
             </div>
@@ -3285,6 +3478,26 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingNet, setIsCheckingNet] = useState(false);
   const [showPdf, setShowPdf] = useState<string | null>(null);
+  const [dbClasses, setDbClasses] = useState<ClassCategory[]>([]);
+  const [dbStreams, setDbStreams] = useState<StreamCategory[]>([]);
+  const [dbExams, setDbExams] = useState<ExamCategory[]>([]);
+  const [dbSubjects, setDbSubjects] = useState<SubjectCategory[]>([]);
+
+  const loadCategories = async () => {
+    try {
+      const [cls, strm, ex, sub] = await Promise.all([fetchClasses(), fetchStreams(), fetchExams(), fetchSubjects()]);
+      setDbClasses(cls);
+      setDbStreams(strm);
+      setDbExams(ex);
+      setDbSubjects(sub);
+    } catch (e) {
+      console.error('Failed to load categories:', e);
+    }
+  };
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     // Hide splash screen after app mount
@@ -3576,11 +3789,28 @@ const App: React.FC = () => {
           transition={{ duration: 0.3, ease: "easeOut" }}
           className="flex-1"
         >
-          {view === 'auth' && <AuthScreen onLogin={handleLogin} setView={setView} />}
+          {view === 'auth' && (
+            <AuthScreen
+              onLogin={handleLogin}
+              setView={setView}
+              dbClasses={dbClasses}
+              dbStreams={dbStreams}
+              dbExams={dbExams}
+            />
+          )}
           {view === 'verify' && <VerificationPortal onBack={() => setView('auth')} />}
           {view === 'internship' && <InternshipForm onBack={() => setView('auth')} />}
           {view === 'help' && <HelpView onBack={() => setView(user ? 'dashboard' : 'auth')} />}
-          {view === 'admin' && <AdminPanel onBack={() => setView(user ? 'dashboard' : 'auth')} />}
+          {view === 'admin' && (
+            <AdminPanel
+              onBack={() => setView(user ? 'dashboard' : 'auth')}
+              dbClasses={dbClasses}
+              dbStreams={dbStreams}
+              dbExams={dbExams}
+              dbSubjects={dbSubjects}
+              onRefreshCategories={loadCategories}
+            />
+          )}
 
           {/* Overlays */}
           {showPdf && <PdfViewer url={showPdf} onClose={() => setShowPdf(null)} />}
@@ -3600,6 +3830,8 @@ const App: React.FC = () => {
                     setSelectedSubject={setSelectedSubject}
                     theme={theme}
                     setTheme={setTheme}
+                    dbSubjects={dbSubjects}
+                    dbStreams={dbStreams}
                   />
                 )}
                 {view === 'exam' && user && examConfig && (
@@ -3620,6 +3852,9 @@ const App: React.FC = () => {
                     setShowPdf={setShowPdf}
                     onBack={() => setView('dashboard')}
                     onUpdate={handleUpdateProfile}
+                    dbClasses={dbClasses}
+                    dbStreams={dbStreams}
+                    dbExams={dbExams}
                   />
                 )}
                 {view === 'store' && user && (
