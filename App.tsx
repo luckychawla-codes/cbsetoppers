@@ -1,8 +1,8 @@
 // CBSE TOPPERS - Premium Education Platform
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { User, QuizResult, Question } from './types';
+import { User, QuizResult, Question, DashboardContent, ContentType } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2, STREAM_SUBJECTS } from './constants';
-import { verifyStudent, registerStudent, supabase, saveQuizResult, fetchStudentStats, updateStudentProfile, fetchMaintenanceStatus } from './services/supabase';
+import { verifyStudent, registerStudent, supabase, saveQuizResult, fetchStudentStats, updateStudentProfile, fetchMaintenanceStatus, fetchDashboardContent, createDashboardContent, deleteDashboardContent } from './services/supabase';
 import { analyzeResult, generateAIQuiz, getMotivationalQuote } from './services/ai';
 import AIChatWidget from './AIChatWidget';
 import ReactMarkdown from 'react-markdown';
@@ -1403,6 +1403,67 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
   const [showStats, setShowStats] = useState(false);
   const [showTgMenu, setShowTgMenu] = useState(false);
   const [showLegalSide, setShowLegalSide] = useState<string | null>(null);
+  const [dynamicContent, setDynamicContent] = useState<DashboardContent[]>([]);
+  const [currentFolder, setCurrentFolder] = useState<DashboardContent | null>(null);
+  const [history, setHistory] = useState<DashboardContent[]>([]);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadDynamicContent();
+  }, [user.class, user.stream]);
+
+  const loadDynamicContent = async () => {
+    const data = await fetchDashboardContent();
+    // Filter by class and stream
+    const filtered = data.filter(c => {
+      const classMatch = !c.class_target || c.class_target === user.class;
+      const streamMatch = !c.stream_target || c.stream_target === user.stream;
+      return classMatch && streamMatch;
+    });
+    setDynamicContent(filtered);
+  };
+
+  const FullScreenVideo: React.FC<{ url: string, onClose: () => void }> = ({ url, onClose }) => {
+    // Extract ID from youtube link
+    const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+
+    return (
+      <div className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center animate-in fade-in duration-300">
+        <div className="absolute top-6 right-6 z-[1010]">
+          <button onClick={onClose} className="p-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all active:scale-95 shadow-2xl">
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="w-full h-full relative group">
+          <iframe
+            src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+            className="w-full h-full border-none"
+            allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+        <p className="fixed bottom-6 text-[10px] font-black text-white/40 uppercase tracking-[0.5em] pointer-events-none">Landscape orientation recommended</p>
+      </div>
+    );
+  };
+  const handleContentClick = (item: DashboardContent) => {
+    hapticsImpactLight();
+    if (item.type === 'folder') {
+      setHistory([...history, currentFolder].filter(Boolean) as DashboardContent[]);
+      setCurrentFolder(item);
+    } else if (item.type === 'video') {
+      setVideoUrl(item.content_link || '');
+    } else if (item.content_link) {
+      window.open(item.content_link, '_blank');
+    }
+  };
+
+  const navigateBack = () => {
+    const prev = history[history.length - 1] || null;
+    const newHistory = history.slice(0, -1);
+    setCurrentFolder(prev);
+    setHistory(newHistory);
+  };
 
   useEffect(() => {
     const handleOpenStats = () => setShowStats(true);
@@ -1455,6 +1516,27 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
     }
     return { coreSubjects: ["English Core"], additionalSubjects: universalAdditional };
   }, [user.class, user.stream]);
+
+  const renderDashboardItem = (item: DashboardContent) => (
+    <button
+      key={item.id}
+      onClick={() => handleContentClick(item)}
+      className="bg-white dark:bg-slate-800/50 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-violet-400 transition-all text-center flex flex-col items-center gap-4 group animate-in zoom-in duration-300 relative overflow-hidden"
+    >
+      <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-violet-50 dark:bg-slate-700/50 text-violet-600 dark:text-violet-400 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-all">
+        {item.type === 'folder' ? (
+          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+        ) : item.type === 'video' ? (
+          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        ) : item.type === 'photo' ? (
+          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 00-2 2z" /></svg>
+        ) : (
+          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+        )}
+      </div>
+      <span className="text-[10px] md:text-[12px] font-black uppercase text-slate-800 dark:text-slate-200 tracking-tight leading-tight px-2">{item.title}</span>
+    </button>
+  );
 
   const renderSubjectCard = (subj: string, isCore: boolean) => (
     <button key={subj} onClick={() => setSelectedSubject(subj)} className="bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-violet-400 dark:hover:border-violet-600 hover:shadow-2xl transition-all text-center flex flex-col items-center gap-4 group animate-in slide-in-from-bottom-4 relative overflow-hidden">
@@ -1531,27 +1613,69 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
 
             <SyllabusTrackerSection user={user} />
 
-            <section className="mb-16">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="h-px flex-1 bg-slate-100" />
-                <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Core Subjects</h3>
-                <div className="h-px flex-1 bg-slate-100" />
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                {coreSubjects.map(subj => renderSubjectCard(subj, true))}
-              </div>
-            </section>
+            {/* Dynamic Sections and Folders */}
+            {!currentFolder ? (
+              <>
+                {dynamicContent.filter(c => c.type === 'section').map(section => (
+                  <section key={section.id} className="mb-16">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                      <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">{section.title}</h3>
+                      <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                      {dynamicContent.filter(c => c.parent_id === section.id).map(item => renderDashboardItem(item))}
+                    </div>
+                  </section>
+                ))}
 
-            <section className="mb-16">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="h-px flex-1 bg-slate-100" />
-                <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Additional Subjects</h3>
-                <div className="h-px flex-1 bg-slate-100" />
+                <section className="mb-16">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                    <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">Core Subjects</h3>
+                    <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                    {coreSubjects.map(subj => renderSubjectCard(subj, true))}
+                  </div>
+                </section>
+
+                <section className="mb-16">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                    <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">Additional Subjects</h3>
+                    <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                    {additionalSubjects.map(subj => renderSubjectCard(subj, false))}
+                  </div>
+                </section>
+              </>
+            ) : (
+              <div className="animate-in slide-in-from-right duration-500">
+                <button onClick={navigateBack} className="mb-10 flex items-center gap-3 text-[10px] font-black uppercase text-slate-400 hover:text-violet-600 transition-all active:scale-95">
+                  <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center border dark:border-slate-800 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
+                  </div>
+                  Back to {history[history.length - 1]?.title || 'Portal'}
+                </button>
+                <div className="mb-10 text-center md:text-left">
+                  <h3 className="text-2xl md:text-5xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight">{currentFolder.title}</h3>
+                  <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.3em] mt-2">Browsing Folder Content</p>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                  {dynamicContent.filter(c => c.parent_id === currentFolder.id).map(item => renderDashboardItem(item))}
+                </div>
+                {dynamicContent.filter(c => c.parent_id === currentFolder.id).length === 0 && (
+                  <div className="py-20 text-center">
+                    <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">No resources in this folder yet.</p>
+                  </div>
+                )}
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                {additionalSubjects.map(subj => renderSubjectCard(subj, false))}
-              </div>
-            </section>
+            )}
+
+            {/* Render Video Player if active */}
+            {videoUrl && <FullScreenVideo url={videoUrl} onClose={() => setVideoUrl(null)} />}
 
             {/* end of subject sections — no analytics on homepage */}
           </div>
@@ -2102,7 +2226,7 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
 
 
 
-type View = 'auth' | 'dashboard' | 'exam' | 'result' | 'profile' | 'verify' | 'store' | 'internship' | 'help';
+type View = 'auth' | 'dashboard' | 'exam' | 'result' | 'profile' | 'verify' | 'store' | 'internship' | 'help' | 'admin';
 
 const VerificationPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [email, setEmail] = useState('');
@@ -2755,6 +2879,163 @@ const HelpView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 };
 
 
+
+const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const [contents, setContents] = useState<DashboardContent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+
+  // New Content State
+  const [title, setTitle] = useState('');
+  const [type, setType] = useState<ContentType>('section');
+  const [link, setLink] = useState('');
+  const [parentId, setParentId] = useState('');
+  const [targetClass, setTargetClass] = useState('');
+  const [targetStream, setTargetStream] = useState('');
+
+  useEffect(() => {
+    loadContent();
+  }, []);
+
+  const loadContent = async () => {
+    setLoading(true);
+    const data = await fetchDashboardContent();
+    setContents(data);
+    setLoading(false);
+  };
+
+  const handleAdd = async () => {
+    if (!title) return;
+    await createDashboardContent({
+      title,
+      type,
+      content_link: link,
+      parent_id: parentId || undefined,
+      order_index: contents.length,
+      class_target: targetClass || undefined,
+      stream_target: targetStream || undefined
+    });
+    setTitle(''); setLink(''); setParentId(''); setIsAdding(false);
+    loadContent();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Delete this item?')) {
+      await deleteDashboardContent(id);
+      loadContent();
+    }
+  };
+
+  const sections = contents.filter(c => c.type === 'section');
+  const folders = contents.filter(c => c.type === 'folder');
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f172a] flex flex-col animate-in fade-in duration-500 overflow-y-auto w-full pb-32">
+      <div className="w-full sticky top-0 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 z-50 px-6 py-4 flex items-center justify-between">
+        <button onClick={onBack} className="p-2 -ml-2 text-slate-900 dark:text-white active:scale-90 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <h1 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Admin Panel</h1>
+        <button onClick={() => setIsAdding(!isAdding)} className="p-2 bg-violet-600 text-white rounded-xl shadow-lg active:scale-95 transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+        </button>
+      </div>
+
+      <div className="max-w-xl w-full mx-auto p-6 space-y-8">
+        {isAdding && (
+          <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800 space-y-4 animate-in slide-in-from-top-4 duration-500">
+            <h2 className="text-lg font-black uppercase text-slate-900 dark:text-white mb-4">Add New Resource</h2>
+
+            <div className="space-y-1">
+              <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Title / Name</p>
+              <SmoothInput placeholder="e.g. Core Subjects, Chapter 1, Video Lec" value={title} onChange={setTitle} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Type</p>
+                <select className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 dark:text-white font-bold text-sm outline-none" value={type} onChange={(e) => setType(e.target.value as ContentType)}>
+                  <option value="section">Section</option>
+                  <option value="folder">Folder</option>
+                  <option value="file">File / PDF</option>
+                  <option value="photo">Photo / Image</option>
+                  <option value="video">YouTube Video</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Parent (optional)</p>
+                <select className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 dark:text-white font-bold text-sm outline-none" value={parentId} onChange={(e) => setParentId(e.target.value)}>
+                  <option value="">No Parent</option>
+                  {sections.map(s => <option key={s.id} value={s.id}>[Sec] {s.title}</option>)}
+                  {folders.map(f => <option key={f.id} value={f.id}>[Dir] {f.title}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {(type === 'file' || type === 'photo' || type === 'video') && (
+              <div className="space-y-1">
+                <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Resource Link (URL)</p>
+                <SmoothInput placeholder="https://..." value={link} onChange={setLink} />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Target Class</p>
+                <select className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 dark:text-white font-bold text-sm outline-none" value={targetClass} onChange={(e) => setTargetClass(e.target.value)}>
+                  <option value="">All Classes</option>
+                  <option value="Xth">Class 10th</option>
+                  <option value="XIIth">Class 12th</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Target Stream</p>
+                <select className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 dark:text-white font-bold text-sm outline-none" value={targetStream} onChange={(e) => setTargetStream(e.target.value)}>
+                  <option value="">All Streams</option>
+                  <option value="PCM">PCM</option>
+                  <option value="PCB">PCB</option>
+                  <option value="PCBM">PCBM</option>
+                  <option value="Commerce">Commerce</option>
+                  <option value="Humanities">Humanities</option>
+                </select>
+              </div>
+            </div>
+
+            <button onClick={handleAdd} className="w-full py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all">Publish Content</button>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Current Content Tree</h3>
+          {loading ? (
+            <div className="flex justify-center p-12"><div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin" /></div>
+          ) : (
+            <div className="space-y-3">
+              {contents.map(c => (
+                <div key={c.id} className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-lg">
+                      {c.type === 'section' ? '📁' : c.type === 'folder' ? '📂' : c.type === 'photo' ? '🖼️' : c.type === 'video' ? '📺' : '📄'}
+                    </div>
+                    <div>
+                      <h4 className="text-[11px] font-black text-slate-900 dark:text-white uppercase truncate max-w-[180px]">{c.title}</h4>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{c.type} {c.parent_id ? '• Nested' : '• Root'}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => handleDelete(c.id)} className="p-2.5 bg-red-50 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all active:scale-90">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+                </div>
+              ))}
+              {contents.length === 0 && <p className="text-center py-10 text-slate-400 text-[10px] font-black uppercase">No content found. Start by adding a section.</p>}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const InternshipForm: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -3140,6 +3421,10 @@ const App: React.FC = () => {
         setView('help');
         buffer = "";
       }
+      if (buffer.endsWith("==/admin")) {
+        setView('admin');
+        buffer = "";
+      }
       if (buffer.length > 20) buffer = buffer.substring(buffer.length - 20);
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -3352,9 +3637,10 @@ const App: React.FC = () => {
           {view === 'verify' && <VerificationPortal onBack={() => setView('auth')} />}
           {view === 'internship' && <InternshipForm onBack={() => setView('auth')} />}
           {view === 'help' && <HelpView onBack={() => setView(user ? 'dashboard' : 'auth')} />}
+          {view === 'admin' && <AdminPanel onBack={() => setView(user ? 'dashboard' : 'auth')} />}
 
           {/* Authenticated Views with Maintenance Check */}
-          {view !== 'auth' && view !== 'verify' && view !== 'internship' && view !== 'help' && (
+          {view !== 'auth' && view !== 'verify' && view !== 'internship' && view !== 'help' && view !== 'admin' && (
             isMaintenance ? (
               <MaintenancePage data={maintenanceData} />
             ) : (

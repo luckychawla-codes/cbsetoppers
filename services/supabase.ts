@@ -243,3 +243,52 @@ export const fetchMaintenanceStatus = async () => {
     return null;
   }
 };
+import { DashboardContent } from '../types';
+
+export const fetchDashboardContent = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('dashboard_content')
+      .select('*')
+      .order('order_index', { ascending: true });
+    if (error) throw error;
+    return data as DashboardContent[];
+  } catch (e) {
+    console.warn('Dashboard content fetch failed, using mock data');
+    const saved = localStorage.getItem('pe_cbt_dynamic_content');
+    return saved ? JSON.parse(saved) : [];
+  }
+};
+
+export const createDashboardContent = async (content: Omit<DashboardContent, 'id' | 'created_at'>) => {
+  try {
+    const { data, error } = await supabase
+      .from('dashboard_content')
+      .insert([content])
+      .select()
+      .single();
+    if (error) throw error;
+    return data as DashboardContent;
+  } catch (e) {
+    console.error('Create content error:', e);
+    const id = Math.random().toString(36).substr(2, 9);
+    const newContent = { ...content, id, created_at: new Date().toISOString() };
+    const saved = JSON.parse(localStorage.getItem('pe_cbt_dynamic_content') || '[]');
+    saved.push(newContent);
+    localStorage.setItem('pe_cbt_dynamic_content', JSON.stringify(saved));
+    return newContent;
+  }
+};
+
+export const deleteDashboardContent = async (id: string) => {
+  try {
+    const { error } = await supabase.from('dashboard_content').delete().eq('id', id);
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    const saved = JSON.parse(localStorage.getItem('pe_cbt_dynamic_content') || '[]');
+    const filtered = saved.filter((c: any) => c.id !== id);
+    localStorage.setItem('pe_cbt_dynamic_content', JSON.stringify(filtered));
+    return true;
+  }
+};

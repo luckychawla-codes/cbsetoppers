@@ -59,3 +59,17 @@ export interface LeaderboardEntry {
   subject: string;
   created_at: string;
 }
+
+export type ContentType = 'section' | 'folder' | 'file' | 'photo' | 'video';
+
+export interface DashboardContent {
+  id: string;
+  title: string;
+  type: ContentType;
+  content_link?: string;
+  parent_id?: string;
+  order_index: number;
+  class_target?: string;
+  stream_target?: string;
+  created_at?: string;
+}
