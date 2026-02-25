@@ -2667,7 +2667,7 @@ const InternshipForm: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full" />
       </div>
 
-      <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl p-8 md:p-12 border border-slate-50 dark:border-slate-800 animate-in zoom-in duration-700 my-8">
+      <div className="max-w-sm w-full text-center animate-in fade-in zoom-in duration-700 my-8">
         {!isSubmitted ? (
           <div className="space-y-6">
             {/* Header */}
