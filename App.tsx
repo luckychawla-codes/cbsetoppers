@@ -1410,7 +1410,7 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
 
   useEffect(() => {
     loadDynamicContent();
-  }, [user.class, user.stream]);
+  }, [user.class, user.stream, user.competitive_exams]);
 
   const loadDynamicContent = async () => {
     const data = await fetchDashboardContent();
@@ -1418,7 +1418,8 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
     const filtered = data.filter(c => {
       const classMatch = !c.class_target || c.class_target === user.class;
       const streamMatch = !c.stream_target || c.stream_target === user.stream;
-      return classMatch && streamMatch;
+      const examMatch = !c.exam_target || (user.competitive_exams || []).includes(c.exam_target);
+      return classMatch && streamMatch && examMatch;
     });
     setDynamicContent(filtered);
   };
@@ -1448,7 +1449,7 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
   };
   const handleContentClick = (item: DashboardContent) => {
     hapticsImpactLight();
-    if (item.type === 'folder') {
+    if (item.type === 'folder' || item.type === 'competitive_exam' || item.type === 'stream') {
       setHistory([...history, currentFolder].filter(Boolean) as DashboardContent[]);
       setCurrentFolder(item);
     } else if (item.type === 'video') {
@@ -1526,6 +1527,10 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
       <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-violet-50 dark:bg-slate-700/50 text-violet-600 dark:text-violet-400 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-all">
         {item.type === 'folder' ? (
           <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+        ) : item.type === 'competitive_exam' ? (
+          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-2.066 3.42 3.42 0 004.438 0 3.42 3.42 0 001.946 2.066 3.42 3.42 0 000 4.606 3.42 3.42 0 00-1.946 2.066 3.42 3.42 0 00-4.438 0 3.42 3.42 0 00-1.946-2.066 3.42 3.42 0 000-4.606z" /><path d="M12 12a3 3 0 100-6 3 3 0 000 6z" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+        ) : item.type === 'stream' ? (
+          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 4L9 7" /></svg>
         ) : item.type === 'video' ? (
           <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         ) : item.type === 'photo' ? (
@@ -1628,6 +1633,19 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
                     </div>
                   </section>
                 ))}
+
+                {dynamicContent.filter(c => !c.parent_id && c.type !== 'section').length > 0 && (
+                  <section className="mb-16">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                      <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">Quick Access</h3>
+                      <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                      {dynamicContent.filter(c => !c.parent_id && c.type !== 'section').map(item => renderDashboardItem(item))}
+                    </div>
+                  </section>
+                )}
 
                 <section className="mb-16">
                   <div className="flex items-center gap-4 mb-8">
@@ -2892,6 +2910,7 @@ const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [parentId, setParentId] = useState('');
   const [targetClass, setTargetClass] = useState('');
   const [targetStream, setTargetStream] = useState('');
+  const [targetExam, setTargetExam] = useState('');
 
   useEffect(() => {
     loadContent();
@@ -2913,9 +2932,10 @@ const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       parent_id: parentId || undefined,
       order_index: contents.length,
       class_target: targetClass || undefined,
-      stream_target: targetStream || undefined
+      stream_target: targetStream || undefined,
+      exam_target: targetExam || undefined
     });
-    setTitle(''); setLink(''); setParentId(''); setIsAdding(false);
+    setTitle(''); setLink(''); setParentId(''); setTargetExam(''); setIsAdding(false);
     loadContent();
   };
 
@@ -2960,6 +2980,8 @@ const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   <option value="file">File / PDF</option>
                   <option value="photo">Photo / Image</option>
                   <option value="video">YouTube Video</option>
+                  <option value="competitive_exam">Competitive Exam Block</option>
+                  <option value="stream">Stream Block</option>
                 </select>
               </div>
               <div className="space-y-1">
@@ -3001,6 +3023,19 @@ const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               </div>
             </div>
 
+            <div className="space-y-1">
+              <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Target Competitive Exam (optional)</p>
+              <select className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 dark:text-white font-bold text-sm outline-none" value={targetExam} onChange={(e) => setTargetExam(e.target.value)}>
+                <option value="">No Exam Target</option>
+                <option value="JEE">JEE (Main/Advanced)</option>
+                <option value="NEET">NEET (Medical)</option>
+                <option value="CUET">CUET (University Entrance)</option>
+                <option value="NDA">NDA (Defense)</option>
+                <option value="CLAT">CLAT (Law)</option>
+                <option value="Other">Other Exams</option>
+              </select>
+            </div>
+
             <button onClick={handleAdd} className="w-full py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all">Publish Content</button>
           </div>
         )}
@@ -3015,7 +3050,7 @@ const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 <div key={c.id} className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between group">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-lg">
-                      {c.type === 'section' ? '📁' : c.type === 'folder' ? '📂' : c.type === 'photo' ? '🖼️' : c.type === 'video' ? '📺' : '📄'}
+                      {c.type === 'section' ? '📁' : c.type === 'folder' ? '📂' : c.type === 'photo' ? '🖼️' : c.type === 'video' ? '📺' : c.type === 'competitive_exam' ? '🏆' : c.type === 'stream' ? '🧭' : '📄'}
                     </div>
                     <div>
                       <h4 className="text-[11px] font-black text-slate-900 dark:text-white uppercase truncate max-w-[180px]">{c.title}</h4>

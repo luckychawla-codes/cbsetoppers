@@ -60,7 +60,7 @@ export interface LeaderboardEntry {
   created_at: string;
 }
 
-export type ContentType = 'section' | 'folder' | 'file' | 'photo' | 'video';
+export type ContentType = 'section' | 'folder' | 'file' | 'photo' | 'video' | 'competitive_exam' | 'stream';
 
 export interface DashboardContent {
   id: string;
@@ -71,5 +71,6 @@ export interface DashboardContent {
   order_index: number;
   class_target?: string;
   stream_target?: string;
+  exam_target?: string;
   created_at?: string;
 }
