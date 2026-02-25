@@ -2658,14 +2658,14 @@ const HelpView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         </header>
 
         {/* Primary Contact */}
-        <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white relative overflow-hidden group shadow-2xl">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-violet-600/20 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-700" />
-          <div className="relative z-10 space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-xs font-black uppercase tracking-widest text-violet-400">Official Support Email</h3>
-              <p className="text-xl font-black tracking-tight break-all">cbsetoppers@zohomail.in</p>
+        <div className="p-5 bg-slate-900 rounded-[2rem] text-white relative overflow-hidden group shadow-2xl">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-violet-600/20 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-700" />
+          <div className="relative z-10 flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="text-[8px] font-black uppercase tracking-widest text-violet-400">Official Support</h3>
+              <p className="text-sm font-black tracking-tight break-all">cbsetoppers@zohomail.in</p>
             </div>
-            <a href="mailto:cbsetoppers@zohomail.in" className="inline-block px-10 py-4 bg-white text-slate-900 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all">Draft an Email</a>
+            <a href="mailto:cbsetoppers@zohomail.in" className="px-5 py-2.5 bg-white text-slate-900 rounded-xl font-black uppercase text-[8px] tracking-widest active:scale-95 transition-all">Support</a>
           </div>
         </div>
 
@@ -2698,6 +2698,7 @@ const HelpView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-violet-100 dark:bg-violet-900/40 rounded-2xl flex items-center justify-center text-xl">👤</div>
                 <div>
                   <h4 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Lucky Chawla</h4>
+                  <p className="text-[7px] font-bold text-slate-400 dark:text-slate-500 lowercase my-0.5">{EMAIL_FOUNDER}</p>
                   <p className="text-[8px] font-black text-violet-500 uppercase tracking-widest">Founder & Developer</p>
                 </div>
               </div>
@@ -2714,6 +2715,7 @@ const HelpView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center text-xl">🔱</div>
                 <div>
                   <h4 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Tarun Kumar</h4>
+                  <p className="text-[7px] font-bold text-slate-400 dark:text-slate-500 lowercase my-0.5">{EMAIL_OWNER}</p>
                   <p className="text-[8px] font-black text-indigo-500 uppercase tracking-widest">Co-Founder & Owner</p>
                 </div>
               </div>
@@ -2730,6 +2732,7 @@ const HelpView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/40 rounded-2xl flex items-center justify-center text-xl">🏛️</div>
                 <div>
                   <h4 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight">Abhisek Pani</h4>
+                  <p className="text-[7px] font-bold text-slate-400 dark:text-slate-500 lowercase my-0.5">{EMAIL_CEO}</p>
                   <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Chief Executive Officer</p>
                 </div>
               </div>
