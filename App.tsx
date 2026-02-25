@@ -534,6 +534,13 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
                 {isVerifying ? 'Verifying...' : 'Enter Dashboard'}
               </button>
               <button onClick={() => { setIsRegistering(true); setError(''); setRegStep(1); }} className="w-full text-[9px] font-black uppercase text-violet-500 tracking-widest py-2 text-center">New User? Register Now</button>
+              <button
+                onClick={() => setView('internship')}
+                className="w-full mt-2 py-4 border-2 border-violet-100 dark:border-violet-900/30 rounded-2xl flex items-center justify-center gap-2 group hover:bg-violet-50 dark:hover:bg-violet-900/10 transition-all"
+              >
+                <span className="text-[10px] font-black uppercase text-violet-600 dark:text-violet-400 tracking-widest">Apply for Internship</span>
+                <span className="text-xs group-hover:translate-x-1 transition-transform">🚀</span>
+              </button>
               <div className="mt-12 text-center">
                 <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">Made with ❤️ by Students</p>
               </div>
@@ -671,54 +678,56 @@ const AuthScreen: React.FC<{ onLogin: (u: User) => void, setView: (v: View) => v
         )}
       </div>
 
-      {showLegal && (
-        <div className="fixed inset-0 z-[500] flex items-end justify-center p-4">
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowLegal(null)} />
-          <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl relative z-10 p-8 pt-10 animate-in slide-in-from-bottom-full duration-500 flex flex-col max-h-[80vh]">
-            <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-8 shrink-0" />
-            <div className="overflow-y-auto pr-2 custom-scrollbar">
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-6">
-                {showLegal === 'privacy' ? 'Privacy Policy' : 'Terms & Conditions'}
-              </h3>
-              <div className="space-y-6 text-slate-600 text-sm leading-relaxed font-medium">
-                {showLegal === 'privacy' ? (
-                  <>
-                    <section>
-                      <h4 className="font-black text-slate-800 uppercase text-xs mb-2 tracking-widest">1. Data Collection</h4>
-                      <p>We collect basic information like your name, email, roll number, and date of birth to provide a personalized assessment experience and generate valid certificates.</p>
-                    </section>
-                    <section>
-                      <h4 className="font-black text-slate-800 uppercase text-xs mb-2 tracking-widest">2. Usage of Information</h4>
-                      <p>Your data is used solely for identifying you within the CBSE TOPPERS portal, tracking your mock test progress, and providing support via Telegram.</p>
-                    </section>
-                    <section>
-                      <h4 className="font-black text-slate-800 uppercase text-xs mb-2 tracking-widest">3. Data Security</h4>
-                      <p>We implement strict security measures to protect your personal details. We do not sell or share your personal data with third-party advertisers.</p>
-                    </section>
-                  </>
-                ) : (
-                  <>
-                    <section>
-                      <h4 className="font-black text-slate-800 uppercase text-xs mb-2 tracking-widest">1. Platform Usage</h4>
-                      <p>CBSE TOPPERS is an educational tool for mock assessments. Users are expected to use the platform for legitimate preparation purposes only.</p>
-                    </section>
-                    <section>
-                      <h4 className="font-black text-slate-800 uppercase text-xs mb-2 tracking-widest">2. Account Integrity</h4>
-                      <p>Each 8-digit Roll ID is unique to a user. Sharing accounts or attempting to bypass assessment limits (5 attempts per paper) is strictly prohibited.</p>
-                    </section>
-                    <section>
-                      <h4 className="font-black text-slate-800 uppercase text-xs mb-2 tracking-widest">3. Intellectual Property</h4>
-                      <p>All questions, narratives, and branding are the property of CBSE TOPPERS and its partners. Unauthorized reproduction is forbidden.</p>
-                    </section>
-                  </>
-                )}
+      {
+        showLegal && (
+          <div className="fixed inset-0 z-[500] flex items-end justify-center p-4">
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowLegal(null)} />
+            <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl relative z-10 p-8 pt-10 animate-in slide-in-from-bottom-full duration-500 flex flex-col max-h-[80vh]">
+              <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-8 shrink-0" />
+              <div className="overflow-y-auto pr-2 custom-scrollbar">
+                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-6">
+                  {showLegal === 'privacy' ? 'Privacy Policy' : 'Terms & Conditions'}
+                </h3>
+                <div className="space-y-6 text-slate-600 text-sm leading-relaxed font-medium">
+                  {showLegal === 'privacy' ? (
+                    <>
+                      <section>
+                        <h4 className="font-black text-slate-800 uppercase text-xs mb-2 tracking-widest">1. Data Collection</h4>
+                        <p>We collect basic information like your name, email, roll number, and date of birth to provide a personalized assessment experience and generate valid certificates.</p>
+                      </section>
+                      <section>
+                        <h4 className="font-black text-slate-800 uppercase text-xs mb-2 tracking-widest">2. Usage of Information</h4>
+                        <p>Your data is used solely for identifying you within the CBSE TOPPERS portal, tracking your mock test progress, and providing support via Telegram.</p>
+                      </section>
+                      <section>
+                        <h4 className="font-black text-slate-800 uppercase text-xs mb-2 tracking-widest">3. Data Security</h4>
+                        <p>We implement strict security measures to protect your personal details. We do not sell or share your personal data with third-party advertisers.</p>
+                      </section>
+                    </>
+                  ) : (
+                    <>
+                      <section>
+                        <h4 className="font-black text-slate-800 uppercase text-xs mb-2 tracking-widest">1. Platform Usage</h4>
+                        <p>CBSE TOPPERS is an educational tool for mock assessments. Users are expected to use the platform for legitimate preparation purposes only.</p>
+                      </section>
+                      <section>
+                        <h4 className="font-black text-slate-800 uppercase text-xs mb-2 tracking-widest">2. Account Integrity</h4>
+                        <p>Each 8-digit Roll ID is unique to a user. Sharing accounts or attempting to bypass assessment limits (5 attempts per paper) is strictly prohibited.</p>
+                      </section>
+                      <section>
+                        <h4 className="font-black text-slate-800 uppercase text-xs mb-2 tracking-widest">3. Intellectual Property</h4>
+                        <p>All questions, narratives, and branding are the property of CBSE TOPPERS and its partners. Unauthorized reproduction is forbidden.</p>
+                      </section>
+                    </>
+                  )}
+                </div>
               </div>
+              <button onClick={() => setShowLegal(null)} className="w-full mt-8 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 shrink-0">I Understand</button>
             </div>
-            <button onClick={() => setShowLegal(null)} className="w-full mt-8 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 shrink-0">I Understand</button>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
@@ -2086,7 +2095,7 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
 
 
 
-type View = 'auth' | 'dashboard' | 'exam' | 'result' | 'profile' | 'verify' | 'store';
+type View = 'auth' | 'dashboard' | 'exam' | 'result' | 'profile' | 'verify' | 'store' | 'internship';
 
 const VerificationPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [email, setEmail] = useState('');
@@ -2616,6 +2625,295 @@ const StoreView: React.FC<{ user: User, onBack: () => void }> = ({ user, onBack 
 };
 
 
+const InternshipForm: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Form State
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [currentClass, setCurrentClass] = useState('');
+  const [board, setBoard] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [email, setEmail] = useState('');
+  const [telegram, setTelegram] = useState('');
+  const [role, setRole] = useState('');
+  const [skills, setSkills] = useState('');
+  const [experience, setExperience] = useState('');
+  const [hours, setHours] = useState('');
+  const [months, setMonths] = useState('');
+  const [motivation, setMotivation] = useState('');
+  const [contribution, setContribution] = useState('');
+  const [is17Plus, setIs17Plus] = useState(false);
+  const [agreeRules, setAgreeRules] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!is17Plus || !agreeRules) return;
+    setIsSubmitting(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+    }, 2000);
+  };
+
+  const roles = ["Content Creator", "Doubt Solver", "Admin", "Technical Team", "Social Media", "Graphic Design", "Other"];
+
+  return (
+    <div className="min-h-screen bg-white dark:bg-[#0f172a] flex flex-col items-center justify-center p-6 relative transition-colors duration-500 overflow-y-auto">
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none sticky">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-violet-500/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full" />
+      </div>
+
+      <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl p-8 md:p-12 border border-slate-50 dark:border-slate-800 animate-in zoom-in duration-700 my-8">
+        {!isSubmitted ? (
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="text-center">
+              <div className="w-14 h-14 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-xl shadow-violet-500/20 mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight">Internship Portal</h1>
+              <div className="flex justify-center gap-1.5 mt-4">
+                {[1, 2, 3, 4, 5].map(s => <div key={s} className={`h-1 flex-1 max-w-[40px] rounded-full transition-all duration-300 ${step >= s ? 'bg-violet-600' : 'bg-slate-100 dark:bg-slate-800'}`} />)}
+              </div>
+            </div>
+
+            {/* Step 1: Basic Info */}
+            {step === 1 && (
+              <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+                <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.2em] text-center mb-2">Step 1: Basic Information</p>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Full Name</p>
+                  <SmoothInput placeholder="Your Name" value={name} onChange={setName} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Age</p>
+                  <SmoothInput placeholder="Your Age" value={age} onChange={setAge} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Class</p>
+                    <select
+                      className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white font-bold text-sm outline-none focus:ring-2 focus:ring-violet-100 transition-all appearance-none"
+                      value={currentClass}
+                      onChange={(e) => setCurrentClass(e.target.value)}
+                    >
+                      <option value="">Select Class</option>
+                      <option value="XI">XI</option>
+                      <option value="XII">XII</option>
+                      <option value="Dropper">Dropper</option>
+                      <option value="Passed">Passed</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Board</p>
+                    <select
+                      className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white font-bold text-sm outline-none focus:ring-2 focus:ring-violet-100 transition-all appearance-none"
+                      value={board}
+                      onChange={(e) => setBoard(e.target.value)}
+                    >
+                      <option value="">Select Board</option>
+                      <option value="CBSE">CBSE</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <button
+                  disabled={!name || !age || !currentClass || !board}
+                  onClick={() => setStep(2)}
+                  className="w-full py-4 bg-violet-600 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-widest shadow-xl disabled:opacity-50 mt-4 active:scale-95 transition-all"
+                >
+                  Continue
+                </button>
+              </div>
+            )}
+
+            {/* Step 2: Contact Details */}
+            {step === 2 && (
+              <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+                <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.2em] text-center mb-2">Step 2: Contact Details</p>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">WhatsApp Number</p>
+                  <SmoothInput type="tel" placeholder="+91 XXXX XXXX" value={whatsapp} onChange={setWhatsapp} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Email ID</p>
+                  <SmoothInput type="email" placeholder="email@example.com" value={email} onChange={setEmail} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Telegram @Username</p>
+                  <SmoothInput placeholder="@yourusername" value={telegram} onChange={setTelegram} />
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button onClick={() => setStep(1)} className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-[2rem] font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all">Back</button>
+                  <button
+                    disabled={!whatsapp || !email || !telegram}
+                    onClick={() => setStep(3)}
+                    className="flex-[2] py-4 bg-violet-600 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Skills & Role */}
+            {step === 3 && (
+              <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+                <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.2em] text-center mb-2">Step 3: Skills & Role</p>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Applying for Role</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {roles.map(r => (
+                      <button
+                        key={r}
+                        onClick={() => setRole(r)}
+                        className={`py-2.5 rounded-xl font-black text-[8px] uppercase tracking-tighter border-2 transition-all ${role === r ? 'bg-violet-600 border-violet-600 text-white shadow-md' : 'bg-slate-50 dark:bg-slate-800 border-transparent text-slate-400'}`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Your Skills (Brief)</p>
+                  <textarea
+                    className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white border border-transparent focus:border-violet-200 outline-none font-bold text-xs min-h-[80px] resize-none"
+                    placeholder="e.g. Graphic Designing, Python Coding, Content Writing..."
+                    value={skills}
+                    onChange={(e) => setSkills(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Prior Experience (Optional)</p>
+                  <SmoothInput placeholder="Where have you worked before?" value={experience} onChange={setExperience} />
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button onClick={() => setStep(2)} className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-[2rem] font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all">Back</button>
+                  <button
+                    disabled={!role || !skills}
+                    onClick={() => setStep(4)}
+                    className="flex-[2] py-4 bg-violet-600 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Availability & Motivation */}
+            {step === 4 && (
+              <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+                <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.2em] text-center mb-2">Step 4: Commitment</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Hours / Day</p>
+                    <SmoothInput placeholder="e.g. 2-3 hrs" value={hours} onChange={setHours} />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Commitment</p>
+                    <SmoothInput placeholder="e.g. 3 Months" value={months} onChange={setMonths} />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Why join CBSE TOPPERS?</p>
+                  <textarea
+                    className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white border border-transparent focus:border-violet-200 outline-none font-bold text-xs min-h-[60px] resize-none"
+                    placeholder="Tell us your motivation..."
+                    value={motivation}
+                    onChange={(e) => setMotivation(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">How can you contribute?</p>
+                  <textarea
+                    className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white border border-transparent focus:border-violet-200 outline-none font-bold text-xs min-h-[60px] resize-none"
+                    placeholder="Briefly describe your contribution (2-3 lines)..."
+                    value={contribution}
+                    onChange={(e) => setContribution(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button onClick={() => setStep(3)} className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-[2rem] font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all">Back</button>
+                  <button
+                    disabled={!hours || !months || !motivation || !contribution}
+                    onClick={() => setStep(5)}
+                    className="flex-[2] py-4 bg-violet-600 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Declaration */}
+            {step === 5 && (
+              <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+                <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.2em] text-center mb-4">Step 5: Final Declaration</p>
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[2rem] space-y-4 border border-slate-100 dark:border-slate-800">
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      className="mt-1 w-5 h-5 rounded-lg border-2 border-slate-200 text-violet-600 focus:ring-violet-500"
+                      checked={is17Plus}
+                      onChange={(e) => setIs17Plus(e.target.checked)}
+                    />
+                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight leading-relaxed">I am 17 years of age or older (Eligibility Requirement)</span>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      className="mt-1 w-5 h-5 rounded-lg border-2 border-slate-200 text-violet-600 focus:ring-violet-500"
+                      checked={agreeRules}
+                      onChange={(e) => setAgreeRules(e.target.checked)}
+                    />
+                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight leading-relaxed">I agree to follow all community rules and internship terms</span>
+                  </label>
+                </div>
+                <div className="flex gap-2 mt-6">
+                  <button onClick={() => setStep(4)} className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-[2rem] font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all">Back</button>
+                  <button
+                    disabled={isSubmitting || !is17Plus || !agreeRules}
+                    onClick={handleSubmit}
+                    className="flex-[2] py-4 bg-slate-900 dark:bg-violet-600 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-widest shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
+                  >
+                    {isSubmitting ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : null}
+                    {isSubmitting ? 'Submitting...' : 'Apply Now'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <button onClick={onBack} className="w-full text-slate-400 font-bold uppercase text-[9px] tracking-widest pt-4 hover:text-red-500 transition-colors">Discard Application</button>
+          </div>
+        ) : (
+          <div className="space-y-8 py-4 text-center animate-in zoom-in duration-700">
+            <div className="w-24 h-24 bg-green-500 text-white rounded-[2.5rem] mx-auto flex items-center justify-center shadow-2xl shadow-green-200">
+              <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase mb-2">Application Received!</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">
+                Thank you for applying, {name.split(' ')[0]}!<br />
+                Our team will review your details.<br />
+                Stay tuned on Telegram and Email.
+              </p>
+            </div>
+            <button onClick={onBack} className="w-full py-5 bg-slate-900 dark:bg-slate-800 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-widest shadow-xl active:scale-95 transition-all">Back to Home</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const [view, setView] = useState<View>('auth');
   const [user, setUser] = useState<User | null>(null);
@@ -2892,9 +3190,10 @@ const App: React.FC = () => {
         >
           {view === 'auth' && <AuthScreen onLogin={handleLogin} setView={setView} />}
           {view === 'verify' && <VerificationPortal onBack={() => setView('auth')} />}
+          {view === 'internship' && <InternshipForm onBack={() => setView('auth')} />}
 
           {/* Authenticated Views with Maintenance Check */}
-          {view !== 'auth' && view !== 'verify' && (
+          {view !== 'auth' && view !== 'verify' && view !== 'internship' && (
             isMaintenance ? (
               <MaintenancePage data={maintenanceData} />
             ) : (
