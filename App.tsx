@@ -2247,13 +2247,13 @@ const ProfileView: React.FC<{ user: User, onBack: () => void, onUpdate: (u: User
                 <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight">{user.name}</h2>
               )}
               <p className="text-[10px] font-black text-violet-600 uppercase tracking-[0.3em] mt-2">Student ID: {user.student_id}</p>
-              <div className="flex flex-col items-center mt-1">
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">{user.class}{user.stream ? ` | ${user.stream}` : ''}</p>
-                {user.competitive_exams && user.competitive_exams.length > 0 && (
-                  <p className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mt-1 opacity-60">
-                    {user.competitive_exams.join(' • ')}
-                  </p>
-                )}
+              <div className="flex flex-col items-center mt-1 px-4">
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.15em] text-center leading-relaxed opacity-70">
+                  {user.class}{user.stream ? ` | ${user.stream}` : ''}
+                  {user.competitive_exams && user.competitive_exams.length > 0 && (
+                    <> | {user.competitive_exams.join(' | ')}</>
+                  )}
+                </p>
               </div>
             </div>
           </div>
