@@ -2504,8 +2504,8 @@ const ProfileView: React.FC<{
 
                 <section className="space-y-4">
                   <div
-                    className="w-full h-80 rounded-[2rem] overflow-hidden border border-slate-100 dark:border-slate-800 shadow-inner relative cursor-pointer group"
-                    onClick={() => setShowPdf('/disclaimer.pdf')}
+                    className="w-full h-80 rounded-[2rem] overflow-hidden border border-slate-100 dark:border-slate-800 shadow-inner relative cursor-pointer group bg-slate-50 dark:bg-slate-900"
+                    onClick={() => setShowPdf('disclaimer.pdf')}
                   >
                     <div className="absolute inset-0 z-10 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
                       <div className="p-4 bg-white/20 backdrop-blur-md rounded-2xl border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
@@ -2513,7 +2513,7 @@ const ProfileView: React.FC<{
                         <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
                       </div>
                     </div>
-                    <iframe src="/disclaimer.pdf#toolbar=0" className="w-full h-full border-none pointer-events-none" title="Disclaimer" />
+                    <iframe src="disclaimer.pdf" className="w-full h-full border-none pointer-events-none" title="Disclaimer" />
                   </div>
                   <p className="text-[8px] font-bold text-slate-400 uppercase text-center">Tap the document to open in full screen</p>
                 </section>
@@ -2527,8 +2527,7 @@ const ProfileView: React.FC<{
                       { id: 'privacy', title: 'Privacy Policy', desc: 'How we handle and protect your personal data.' },
                       { id: 'terms', title: 'Terms & Conditions', desc: 'Rules and guidelines for using our platform.' },
                       { id: 'refund', title: 'Refund Policy', desc: 'Our policy regarding premium subscriptions.' },
-                      { id: 'honor', title: 'Honor Code', desc: 'Commitment to academic integrity.' },
-                      { id: 'disclaimer', title: 'Platform Disclaimer', desc: 'Important legal notices and disclaimers.', isPdf: true }
+                      { id: 'honor', title: 'Honor Code', desc: 'Commitment to academic integrity.' }
                     ].map(doc => (
                       <button
                         key={doc.id}
@@ -3525,21 +3524,39 @@ const App: React.FC = () => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
-  const PdfViewer: React.FC<{ url: string, onClose: () => void }> = ({ url, onClose }) => (
-    <div className="fixed inset-0 z-[1000] bg-black dark:bg-slate-950 flex flex-col animate-in fade-in duration-300">
-      <div className="absolute top-6 right-6 z-[1010]">
-        <button onClick={onClose} className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all active:scale-95 shadow-2xl border border-white/10">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
+  const PdfViewer: React.FC<{ url: string, onClose: () => void }> = ({ url, onClose }) => {
+    const finalUrl = url.startsWith('http') ? url : (window.location.origin + '/' + url.replace(/^\//, ''));
+
+    return (
+      <div className="fixed inset-0 z-[1000] bg-black dark:bg-slate-950 flex flex-col animate-in fade-in duration-300">
+        <div className="absolute top-6 right-6 z-[1010]">
+          <button onClick={onClose} className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all active:scale-95 shadow-2xl border border-white/10">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="flex-1 w-full relative flex flex-col">
+          <iframe
+            src={`${finalUrl}#toolbar=0`}
+            className="w-full h-full border-none bg-white"
+            title="PDF Viewer"
+          />
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center pointer-events-none -z-10">
+            <svg className="w-16 h-16 text-slate-200 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-relaxed">If the document doesn't load,<br />tap below to open in browser</p>
+            <button
+              onClick={() => window.open(finalUrl, '_blank')}
+              className="mt-6 px-8 py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl pointer-events-auto active:scale-95 transition-all"
+            >
+              Open Externally
+            </button>
+          </div>
+        </div>
+        <div className="p-2 text-center bg-black/40 backdrop-blur-md absolute bottom-0 left-0 right-0 pointer-events-none">
+          <p className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em]">Confidential Document • CBSE TOPPERS • PDF Preview</p>
+        </div>
       </div>
-      <div className="flex-1 w-full">
-        <iframe src={`${url}#toolbar=0`} className="w-full h-full border-none" title="PDF Viewer" />
-      </div>
-      <div className="p-2 text-center bg-black/40 backdrop-blur-md absolute bottom-0 left-0 right-0 pointer-events-none">
-        <p className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em]">Confidential Document • CBSE TOPPERS • PDF Preview</p>
-      </div>
-    </div>
-  );
+    );
+  };
 
   // Preloader Logic
   useEffect(() => {
