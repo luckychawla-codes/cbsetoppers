@@ -1418,8 +1418,9 @@ const Dashboard: React.FC<{
   theme: 'light' | 'dark',
   setTheme: (t: 'light' | 'dark') => void,
   dbSubjects: SubjectCategory[],
-  dbStreams: StreamCategory[]
-}> = ({ user, onStartExam, setView, selectedSubject, setSelectedSubject, theme, setTheme, dbSubjects, dbStreams }) => {
+  dbStreams: StreamCategory[],
+  setShowPdf: (url: string | null) => void
+}> = ({ user, onStartExam, setView, selectedSubject, setSelectedSubject, theme, setTheme, dbSubjects, dbStreams, setShowPdf }) => {
   const [showStats, setShowStats] = useState(false);
   const [showTgMenu, setShowTgMenu] = useState(false);
   const [showLegalSide, setShowLegalSide] = useState<string | null>(null);
@@ -1477,7 +1478,11 @@ const Dashboard: React.FC<{
     } else if (item.type === 'video') {
       setVideoUrl(item.content_link || '');
     } else if (item.content_link) {
-      window.open(item.content_link, '_blank');
+      if (item.content_link.toLowerCase().endsWith('.pdf')) {
+        setShowPdf(item.content_link);
+      } else {
+        window.open(item.content_link, '_blank');
+      }
     }
   };
 
@@ -2498,11 +2503,19 @@ const ProfileView: React.FC<{
                 </section>
 
                 <section className="space-y-4">
-                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Platform Disclaimer</h3>
-                  <div className="w-full h-80 rounded-[2rem] overflow-hidden border border-slate-100 dark:border-slate-800 shadow-inner">
-                    <iframe src="/disclaimer.pdf#toolbar=0" className="w-full h-full border-none" title="Disclaimer" />
+                  <div
+                    className="w-full h-80 rounded-[2rem] overflow-hidden border border-slate-100 dark:border-slate-800 shadow-inner relative cursor-pointer group"
+                    onClick={() => setShowPdf('/disclaimer.pdf')}
+                  >
+                    <div className="absolute inset-0 z-10 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
+                      <div className="p-4 bg-white/20 backdrop-blur-md rounded-2xl border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                        <span className="text-[10px] font-black text-white uppercase tracking-widest">View Full Screen</span>
+                        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                      </div>
+                    </div>
+                    <iframe src="/disclaimer.pdf#toolbar=0" className="w-full h-full border-none pointer-events-none" title="Disclaimer" />
                   </div>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase text-center">Tap to expand legal documents below</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase text-center">Tap the document to open in full screen</p>
                 </section>
 
                 <div className="h-px bg-slate-100 dark:bg-slate-800" />
@@ -3513,20 +3526,17 @@ const App: React.FC = () => {
   }, [theme]);
 
   const PdfViewer: React.FC<{ url: string, onClose: () => void }> = ({ url, onClose }) => (
-    <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-4xl h-[90vh] rounded-[2.5rem] shadow-2xl relative flex flex-col overflow-hidden animate-in zoom-in duration-300">
-        <div className="p-6 border-b dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-md">
-          <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Document Viewer</h3>
-          <button onClick={onClose} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 active:scale-95 transition-all">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
-        <div className="flex-1 w-full bg-slate-100 dark:bg-slate-950">
-          <iframe src={`${url}#toolbar=0`} className="w-full h-full border-none" title="PDF Viewer" />
-        </div>
-        <div className="p-4 text-center bg-slate-50 dark:bg-slate-900/50">
-          <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.3em]">Confidential Document • CBSE TOPPERS Internal</p>
-        </div>
+    <div className="fixed inset-0 z-[1000] bg-black dark:bg-slate-950 flex flex-col animate-in fade-in duration-300">
+      <div className="absolute top-6 right-6 z-[1010]">
+        <button onClick={onClose} className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all active:scale-95 shadow-2xl border border-white/10">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div className="flex-1 w-full">
+        <iframe src={`${url}#toolbar=0`} className="w-full h-full border-none" title="PDF Viewer" />
+      </div>
+      <div className="p-2 text-center bg-black/40 backdrop-blur-md absolute bottom-0 left-0 right-0 pointer-events-none">
+        <p className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em]">Confidential Document • CBSE TOPPERS • PDF Preview</p>
       </div>
     </div>
   );
@@ -3832,6 +3842,7 @@ const App: React.FC = () => {
                     setTheme={setTheme}
                     dbSubjects={dbSubjects}
                     dbStreams={dbStreams}
+                    setShowPdf={setShowPdf}
                   />
                 )}
                 {view === 'exam' && user && examConfig && (
