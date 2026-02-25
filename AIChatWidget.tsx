@@ -109,7 +109,7 @@ const AIChatWidget: React.FC<{
             </button>
 
             {isOpen && (
-                <div className="fixed inset-0 w-full h-full bg-white flex flex-col overflow-hidden z-[400] animate-in slide-in-from-bottom-10 duration-500">
+                <div className="fixed inset-0 w-full h-full bg-white dark:bg-[#0f172a] flex flex-col overflow-hidden z-[400] animate-in slide-in-from-bottom-10 duration-500 transition-colors">
                     <div className="bg-violet-600 py-3 px-6 text-white flex items-center gap-4">
                         <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg border border-white/20">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
@@ -123,11 +123,11 @@ const AIChatWidget: React.FC<{
                         </button>
                     </div>
 
-                    <div ref={scrollRef} className="flex-1 overflow-y-auto bg-slate-50 custom-scrollbar">
+                    <div ref={scrollRef} className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900/50 custom-scrollbar">
                         <div className="max-w-4xl mx-auto p-6 space-y-4">
                             {messages.map((msg, i) => (
                                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[85%] md:max-w-[70%] p-4 rounded-3xl text-sm font-medium leading-relaxed ${msg.role === 'user' ? 'bg-violet-600 text-white rounded-tr-none' : 'bg-white text-slate-800 shadow-sm border border-slate-100 rounded-tl-none'}`}>
+                                    <div className={`max-w-[85%] md:max-w-[70%] p-4 rounded-3xl text-sm font-medium leading-relaxed ${msg.role === 'user' ? 'bg-violet-600 text-white rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 shadow-sm border border-slate-100 dark:border-slate-800 rounded-tl-none'}`}>
                                         <ReactMarkdown
                                             remarkPlugins={[remarkGfm, remarkMath]}
                                             rehypePlugins={[rehypeKatex]}
@@ -137,7 +137,7 @@ const AIChatWidget: React.FC<{
                                                 h3: ({ node, ...props }) => <h3 className="text-sm font-black uppercase mb-1" {...props} />,
                                                 ul: ({ node, ...props }) => <ul className="list-disc ml-4 space-y-1 mb-2" {...props} />,
                                                 ol: ({ node, ...props }) => <ol className="list-decimal ml-4 space-y-1 mb-2" {...props} />,
-                                                a: ({ node, ...props }) => <a className="text-violet-600 underline font-bold" target="_blank" rel="noopener noreferrer" {...props} />,
+                                                a: ({ node, ...props }) => <a className="text-violet-600 dark:text-violet-400 underline font-bold" target="_blank" rel="noopener noreferrer" {...props} />,
                                                 p: ({ node, ...props }) => {
                                                     const content = JSON.stringify(props.children);
                                                     const isQuizMeta = content.includes('QUIZ_GEN_START') || content.includes('QUIZ_GEN_END');
@@ -166,10 +166,10 @@ const AIChatWidget: React.FC<{
                                                                     const img = document.getElementById(diagId) as HTMLImageElement;
                                                                     if (img && img.src) window.dispatchEvent(new CustomEvent('topper-zoom', { detail: img.src }));
                                                                 }}
-                                                                className="my-3 bg-white rounded-2xl p-2 border border-slate-100 flex flex-col items-center justify-center max-h-[160px] relative overflow-hidden group shadow-md cursor-zoom-in"
+                                                                className="my-3 bg-white dark:bg-slate-800 rounded-2xl p-2 border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center max-h-[160px] relative overflow-hidden group shadow-md cursor-zoom-in text-center"
                                                             >
                                                                 <img id={diagId} className="max-w-full max-h-full object-contain rounded-lg z-10 transition-transform group-hover:scale-[1.02]" alt="Generating AI Diagram..." />
-                                                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/50 backdrop-blur-[2px] z-0 group-[&:not(:has(img[src]))]:flex hidden">
+                                                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-[2px] z-0 group-[&:not(:has(img[src]))]:flex hidden">
                                                                     <div className="w-4 h-4 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mb-1" />
                                                                     <span className="text-[7px] font-black text-violet-600 uppercase tracking-widest">Rendering...</span>
                                                                 </div>
@@ -178,7 +178,7 @@ const AIChatWidget: React.FC<{
                                                         );
                                                     }
 
-                                                    if (inline) return <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-violet-600" {...props}>{children}</code>;
+                                                    if (inline) return <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-violet-600 dark:text-violet-400" {...props}>{children}</code>;
 
                                                     return (
                                                         <div className="relative my-4 group">
@@ -200,7 +200,7 @@ const AIChatWidget: React.FC<{
                             ))}
                             {isLoading && (
                                 <div className="flex justify-start">
-                                    <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 rounded-tl-none flex gap-1">
+                                    <div className="bg-white dark:bg-slate-800 p-4 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 rounded-tl-none flex gap-1">
                                         <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" />
                                         <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce [animation-delay:0.2s]" />
                                         <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce [animation-delay:0.4s]" />
@@ -210,7 +210,7 @@ const AIChatWidget: React.FC<{
                         </div>
                     </div>
 
-                    <div className="p-4 bg-white border-t border-slate-100">
+                    <div className="p-4 bg-white dark:bg-[#0f172a] border-t border-slate-100 dark:border-slate-800">
                         <div className="max-w-4xl mx-auto flex gap-2">
                             <input
                                 type="text"
@@ -218,7 +218,7 @@ const AIChatWidget: React.FC<{
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                                 placeholder="Ask anything..."
-                                className="flex-1 bg-slate-50 border-none rounded-2xl px-5 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-violet-100"
+                                className="flex-1 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl px-5 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-violet-100 dark:text-white dark:placeholder-slate-600"
                             />
                             <button
                                 onClick={handleSend}

@@ -70,12 +70,14 @@ export const updateStudentProfile = async (studentId: string, updates: {
   gender?: string;
   class?: string;
   stream?: string;
+  dob?: string;
+  competitive_exams?: string[];
 }) => {
   try {
     const { data, error } = await supabase
       .from('students')
       .update(updates)
-      .eq('student_id', studentId)
+      .eq('id', studentId)
       .select()
       .single();
 

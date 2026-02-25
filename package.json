@@ -7,10 +7,21 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "vite preview --host 0.0.0.0 --port ${PORT:-10000}"
+    "start": "vite preview --host 0.0.0.0 --port ${PORT:-10000}",
+    "app:build": "npm run build && npx cap sync",
+    "app:open": "npx cap open android",
+    "app:build:final": "npm run build && npx cap sync && cd android && gradlew assembleDebug && copy app\\build\\outputs\\apk\\debug\\app-debug.apk ..\\..\\CBSE_TOPPERS_learning_user.apk"
   },
   "dependencies": {
+    "@capacitor/android": "^5.7.8",
+    "@capacitor/app": "^5.0.8",
+    "@capacitor/cli": "^5.7.8",
+    "@capacitor/core": "^5.7.8",
+    "@capacitor/haptics": "^5.0.8",
+    "@capacitor/keyboard": "^5.0.9",
+    "@capacitor/status-bar": "^5.0.8",
     "@supabase/supabase-js": "^2.45.4",
+    "framer-motion": "^12.34.3",
     "jspdf": "^4.2.0",
     "jspdf-autotable": "^5.0.7",
     "katex": "^0.16.28",
