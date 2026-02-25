@@ -60,7 +60,7 @@ export interface LeaderboardEntry {
   created_at: string;
 }
 
-export type ContentType = 'section' | 'folder' | 'file' | 'photo' | 'video' | 'competitive_exam' | 'stream';
+export type ContentType = 'section' | 'folder' | 'file' | 'photo' | 'video' | 'competitive_exam' | 'stream' | 'quiz';
 
 export interface DashboardContent {
   id: string;

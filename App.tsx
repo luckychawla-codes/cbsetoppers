@@ -1452,6 +1452,8 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
     if (item.type === 'folder' || item.type === 'competitive_exam' || item.type === 'stream') {
       setHistory([...history, currentFolder].filter(Boolean) as DashboardContent[]);
       setCurrentFolder(item);
+    } else if (item.type === 'quiz') {
+      onStartExam(item.title, item.content_link || 'Mock');
     } else if (item.type === 'video') {
       setVideoUrl(item.content_link || '');
     } else if (item.content_link) {
@@ -1476,48 +1478,6 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
     (window as any).isStatsOpen = showStats;
   }, [showStats]);
 
-  const { coreSubjects, additionalSubjects } = useMemo(() => {
-    const universalAdditional = ["Physical Education", "Computer Science", "Music", "Fine Arts"];
-
-    if (user.class === 'Xth') {
-      return {
-        coreSubjects: ["Science", "Mathematics", "Social Science", "English"],
-        additionalSubjects: Array.from(new Set(["Hindi", ...universalAdditional]))
-      };
-    }
-
-    if (user.class === 'XIIth') {
-      let core: string[] = [];
-      let extra: string[] = [];
-
-      switch (user.stream) {
-        case 'PCM':
-          core = ["Physics", "Chemistry", "Mathematics", "English Core"];
-          extra = ["Economics"];
-          break;
-        case 'PCB':
-          core = ["Physics", "Chemistry", "Biology", "English Core"];
-          extra = ["Psychology", "Biotechnology"];
-          break;
-        case 'Commerce':
-          core = ["Accountancy", "Business Studies", "Economics", "English Core"];
-          extra = ["Mathematics", "Informatics Practices"];
-          break;
-        case 'Humanities':
-          core = ["History", "Political Science", "Geography", "English Core"];
-          extra = ["Psychology", "Sociology"];
-          break;
-        default:
-          core = ["English Core"];
-      }
-      return {
-        coreSubjects: core,
-        additionalSubjects: Array.from(new Set([...extra, ...universalAdditional]))
-      };
-    }
-    return { coreSubjects: ["English Core"], additionalSubjects: universalAdditional };
-  }, [user.class, user.stream]);
-
   const renderDashboardItem = (item: DashboardContent) => (
     <button
       key={item.id}
@@ -1531,6 +1491,8 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
           <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-2.066 3.42 3.42 0 004.438 0 3.42 3.42 0 001.946 2.066 3.42 3.42 0 000 4.606 3.42 3.42 0 00-1.946 2.066 3.42 3.42 0 00-4.438 0 3.42 3.42 0 00-1.946-2.066 3.42 3.42 0 000-4.606z" /><path d="M12 12a3 3 0 100-6 3 3 0 000 6z" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
         ) : item.type === 'stream' ? (
           <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 4L9 7" /></svg>
+        ) : item.type === 'quiz' ? (
+          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
         ) : item.type === 'video' ? (
           <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         ) : item.type === 'photo' ? (
@@ -1543,15 +1505,6 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
     </button>
   );
 
-  const renderSubjectCard = (subj: string, isCore: boolean) => (
-    <button key={subj} onClick={() => setSelectedSubject(subj)} className="bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-violet-400 dark:hover:border-violet-600 hover:shadow-2xl transition-all text-center flex flex-col items-center gap-4 group animate-in slide-in-from-bottom-4 relative overflow-hidden">
-      {isCore && <div className="absolute top-0 right-0 px-3 py-1 bg-violet-600 text-[8px] font-black text-white uppercase rounded-bl-xl tracking-widest z-10">Core</div>}
-      <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-violet-50 dark:bg-slate-700/50 text-violet-600 dark:text-violet-400 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-all">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-      </div>
-      <span className="text-[11px] md:text-[13px] font-black uppercase text-slate-800 dark:text-slate-200 tracking-tight leading-tight">{subj}</span>
-    </button>
-  );
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f172a] pb-20 relative text-left transition-colors duration-500">
@@ -1597,149 +1550,83 @@ const Dashboard: React.FC<{ user: User, onStartExam: (s: string, p: string) => v
       <MotivationalQuote user={user} />
 
       <main className="max-w-6xl mx-auto p-4 md:p-12">
-        {!selectedSubject ? (
-          <div className="animate-in fade-in duration-700">
-            <div className="mb-10 text-center">
-              <h2 className="text-2xl md:text-4xl font-black text-violet-600 uppercase tracking-tighter leading-tight mb-1 min-h-[1.2em]">
-                <TypingGreeting name={user.name.split(' ')[0]} />
-              </h2>
-              <p className="text-slate-400 font-bold text-[10px] md:text-xs uppercase tracking-[0.3em]">
-                Select a Subject to start MOCK TEST
-              </p>
-              <div className="mt-6 flex justify-center">
-                <button
-                  onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, I'm a Class ${user.class}${user.stream ? ' ' + user.stream : ''} student. Can you analyze my syllabus and create a personalized 30-day preparation plan? 📅` } }))}
-                  className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center gap-3"
-                >
-                  <span className="text-lg">🗓️</span> AI Syllabus Planner
-                </button>
-              </div>
+        <div className="animate-in fade-in duration-700">
+          <div className="mb-10 text-center">
+            <h2 className="text-2xl md:text-4xl font-black text-violet-600 uppercase tracking-tighter leading-tight mb-1 min-h-[1.2em]">
+              <TypingGreeting name={user.name.split(' ')[0]} />
+            </h2>
+            <p className="text-slate-400 font-bold text-[10px] md:text-xs uppercase tracking-[0.3em]">
+              Select a Subject to start MOCK TEST
+            </p>
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, I'm a Class ${user.class}${user.stream ? ' ' + user.stream : ''} student. Can you analyze my syllabus and create a personalized 30-day preparation plan? 📅` } }))}
+                className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center gap-3"
+              >
+                <span className="text-lg">🗓️</span> AI Syllabus Planner
+              </button>
             </div>
+          </div>
 
-            <SyllabusTrackerSection user={user} />
+          <SyllabusTrackerSection user={user} />
 
-            {/* Dynamic Sections and Folders */}
-            {!currentFolder ? (
-              <>
-                {dynamicContent.filter(c => c.type === 'section').map(section => (
-                  <section key={section.id} className="mb-16">
-                    <div className="flex items-center gap-4 mb-8">
-                      <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-                      <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">{section.title}</h3>
-                      <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                      {dynamicContent.filter(c => c.parent_id === section.id).map(item => renderDashboardItem(item))}
-                    </div>
-                  </section>
-                ))}
-
-                {dynamicContent.filter(c => !c.parent_id && c.type !== 'section').length > 0 && (
-                  <section className="mb-16">
-                    <div className="flex items-center gap-4 mb-8">
-                      <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-                      <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">Quick Access</h3>
-                      <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                      {dynamicContent.filter(c => !c.parent_id && c.type !== 'section').map(item => renderDashboardItem(item))}
-                    </div>
-                  </section>
-                )}
-
-                <section className="mb-16">
+          {/* Dynamic Sections and Folders */}
+          {!currentFolder ? (
+            <>
+              {dynamicContent.filter(c => c.type === 'section').map(section => (
+                <section key={section.id} className="mb-16">
                   <div className="flex items-center gap-4 mb-8">
                     <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-                    <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">Core Subjects</h3>
+                    <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">{section.title}</h3>
                     <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                    {coreSubjects.map(subj => renderSubjectCard(subj, true))}
+                    {dynamicContent.filter(c => c.parent_id === section.id).map(item => renderDashboardItem(item))}
                   </div>
                 </section>
+              ))}
 
+              {dynamicContent.filter(c => !c.parent_id && c.type !== 'section').length > 0 && (
                 <section className="mb-16">
                   <div className="flex items-center gap-4 mb-8">
                     <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-                    <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">Additional Subjects</h3>
+                    <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">Quick Access</h3>
                     <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                    {additionalSubjects.map(subj => renderSubjectCard(subj, false))}
+                    {dynamicContent.filter(c => !c.parent_id && c.type !== 'section').map(item => renderDashboardItem(item))}
                   </div>
                 </section>
-              </>
-            ) : (
-              <div className="animate-in slide-in-from-right duration-500">
-                <button onClick={navigateBack} className="mb-10 flex items-center gap-3 text-[10px] font-black uppercase text-slate-400 hover:text-violet-600 transition-all active:scale-95">
-                  <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center border dark:border-slate-800 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
-                  </div>
-                  Back to {history[history.length - 1]?.title || 'Portal'}
-                </button>
-                <div className="mb-10 text-center md:text-left">
-                  <h3 className="text-2xl md:text-5xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight">{currentFolder.title}</h3>
-                  <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.3em] mt-2">Browsing Folder Content</p>
+              )}
+
+              {/* Content added via Admin will appear in sections or Quick Access above */}
+            </>
+          ) : (
+            <div className="animate-in slide-in-from-right duration-500">
+              <button onClick={navigateBack} className="mb-10 flex items-center gap-3 text-[10px] font-black uppercase text-slate-400 hover:text-violet-600 transition-all active:scale-95">
+                <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center border dark:border-slate-800 shadow-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                  {dynamicContent.filter(c => c.parent_id === currentFolder.id).map(item => renderDashboardItem(item))}
-                </div>
-                {dynamicContent.filter(c => c.parent_id === currentFolder.id).length === 0 && (
-                  <div className="py-20 text-center">
-                    <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">No resources in this folder yet.</p>
-                  </div>
-                )}
+                Back to {history[history.length - 1]?.title || 'Portal'}
+              </button>
+              <div className="mb-10 text-center md:text-left">
+                <h3 className="text-2xl md:text-5xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight">{currentFolder.title}</h3>
+                <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.3em] mt-2">Browsing Folder Content</p>
               </div>
-            )}
-
-            {/* Render Video Player if active */}
-            {videoUrl && <FullScreenVideo url={videoUrl} onClose={() => setVideoUrl(null)} />}
-
-            {/* end of subject sections — no analytics on homepage */}
-          </div>
-        ) : (
-          <div className="animate-in fade-in duration-500">
-            <button onClick={() => setSelectedSubject(null)} className="mb-10 flex items-center gap-3 text-[10px] font-black uppercase text-slate-400 hover:text-violet-600 transition-all active:scale-95">
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 v-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg></div>
-              Back to Portal
-            </button>
-            <div className="flex flex-col items-center md:items-start text-center md:text-left mb-12">
-              <h3 className="text-3xl md:text-6xl font-black text-slate-900 uppercase tracking-tighter leading-none">{selectedSubject}</h3>
-              {selectedSubject === "Physics" && <TypingPartnershipText />}
-            </div>
-            <div className="bg-white p-6 md:p-14 rounded-[2.5rem] md:rounded-[4rem] shadow-2xl border border-violet-100 relative overflow-hidden text-center md:text-left animate-in zoom-in duration-500">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-violet-100/30 rounded-full -mr-48 -mt-48 blur-3xl opacity-50" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-50/50 rounded-full -ml-32 -mb-32 blur-3xl opacity-50" />
-
-              <div className="relative z-10">
-                <div className="w-16 h-16 md:w-24 md:h-24 bg-violet-600 rounded-[2rem] md:rounded-[3rem] flex items-center justify-center mb-6 md:mb-10 shadow-2xl shadow-violet-200 mx-auto md:mx-0 animate-bounce-slow">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-12 md:w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                </div>
-
-                <div className="space-y-3 md:space-y-4">
-                  <h4 className="text-xl md:text-3xl font-black text-slate-900 uppercase tracking-tighter leading-tight max-w-4xl">No Quizzes Available Right Now</h4>
-                  <p className="text-xs md:text-base font-bold text-slate-500 uppercase tracking-widest leading-relaxed max-w-3xl">
-                    Stay updated, we will add more quizzes soon. Meanwhile you can create a <span className="text-violet-600">custom AI test</span> by chatting with our AI mentor below.
-                  </p>
-                </div>
-
-                <div className="mt-12 md:mt-20 flex flex-col md:flex-row items-center gap-6">
-                  <button
-                    onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, since there are no pre-built quizzes for ${selectedSubject}, can you create a custom 10-question mock test for me on this subject?` } }))}
-                    className="w-full md:w-auto px-10 py-5 md:py-6 bg-violet-600 text-white rounded-[1.5rem] md:rounded-[2rem] font-black uppercase text-xs md:text-sm tracking-widest shadow-2xl shadow-violet-200 hover:bg-violet-700 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 group"
-                  >
-                    Create Custom AI Quiz
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                  </button>
-
-                  <p className="text-[10px] md:text-xs font-black text-slate-300 uppercase tracking-widest italic">
-                    * AI can generate custom tests for any chapter in 10 seconds
-                  </p>
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                {dynamicContent.filter(c => c.parent_id === currentFolder.id).map(item => renderDashboardItem(item))}
               </div>
+              {dynamicContent.filter(c => c.parent_id === currentFolder.id).length === 0 && (
+                <div className="py-20 text-center">
+                  <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">No resources in this folder yet.</p>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Render Video Player if active */}
+          {videoUrl && <FullScreenVideo url={videoUrl} onClose={() => setVideoUrl(null)} />}
+        </div>
       </main>
 
       {/* My Stats full-screen panel */}
@@ -2171,7 +2058,6 @@ const ResultView: React.FC<{ result: QuizResult, onDone: () => void }> = ({ resu
             </div>
             <div className="glass-card p-6 flex flex-col items-center justify-center text-center">
               <span className="text-3xl mb-2">🏅</span>
-              <p className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest mb-1">Rank</p>
               <p className="font-black text-xl text-slate-800 dark:text-white">#42</p>
             </div>
           </div>
@@ -2300,7 +2186,7 @@ const VerificationPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   );
 };
 
-const ProfileView: React.FC<{ user: User, setView: (v: View) => void, onBack: () => void, onUpdate: (u: User) => void }> = ({ user, setView, onBack, onUpdate }) => {
+const ProfileView: React.FC<{ user: User, setView: (v: View) => void, setShowPdf: (url: string | null) => void, onBack: () => void, onUpdate: (u: User) => void }> = ({ user, setView, setShowPdf, onBack, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(user.name);
   const [editedGender, setEditedGender] = useState(user.gender || '');
@@ -2591,11 +2477,18 @@ const ProfileView: React.FC<{ user: User, setView: (v: View) => void, onBack: ()
                       { id: 'privacy', title: 'Privacy Policy', desc: 'How we handle and protect your personal data.' },
                       { id: 'terms', title: 'Terms & Conditions', desc: 'Rules and guidelines for using our platform.' },
                       { id: 'refund', title: 'Refund Policy', desc: 'Our policy regarding premium subscriptions.' },
-                      { id: 'honor', title: 'Honor Code', desc: 'Commitment to academic integrity.' }
+                      { id: 'honor', title: 'Honor Code', desc: 'Commitment to academic integrity.' },
+                      { id: 'disclaimer', title: 'Platform Disclaimer', desc: 'Important legal notices and disclaimers.', isPdf: true }
                     ].map(doc => (
                       <button
                         key={doc.id}
-                        onClick={() => setShowLegalSide(doc.id)}
+                        onClick={() => {
+                          if (doc.isPdf) {
+                            setShowPdf('/disclaimer.pdf');
+                          } else {
+                            setShowLegalSide(doc.id);
+                          }
+                        }}
                         className="w-full p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-transparent hover:border-violet-100 dark:hover:border-violet-900 transition-all text-left group"
                       >
                         <h4 className="text-sm font-black text-slate-900 dark:text-slate-200 uppercase tracking-tight group-hover:text-violet-600 transition-colors mb-1">{doc.title}</h4>
@@ -2982,6 +2875,7 @@ const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   <option value="video">YouTube Video</option>
                   <option value="competitive_exam">Competitive Exam Block</option>
                   <option value="stream">Stream Block</option>
+                  <option value="quiz">Mock Test / Quiz</option>
                 </select>
               </div>
               <div className="space-y-1">
@@ -2990,11 +2884,12 @@ const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   <option value="">No Parent</option>
                   {sections.map(s => <option key={s.id} value={s.id}>[Sec] {s.title}</option>)}
                   {folders.map(f => <option key={f.id} value={f.id}>[Dir] {f.title}</option>)}
+                  {contents.filter(c => c.type === 'competitive_exam' || c.type === 'stream').map(cat => <option key={cat.id} value={cat.id}>[{cat.type === 'stream' ? 'Stream' : 'Exam'}] {cat.title}</option>)}
                 </select>
               </div>
             </div>
 
-            {(type === 'file' || type === 'photo' || type === 'video') && (
+            {(type === 'file' || type === 'photo' || type === 'video' || type === 'quiz') && (
               <div className="space-y-1">
                 <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Resource Link (URL)</p>
                 <SmoothInput placeholder="https://..." value={link} onChange={setLink} />
@@ -3050,7 +2945,7 @@ const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 <div key={c.id} className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between group">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-lg">
-                      {c.type === 'section' ? '📁' : c.type === 'folder' ? '📂' : c.type === 'photo' ? '🖼️' : c.type === 'video' ? '📺' : c.type === 'competitive_exam' ? '🏆' : c.type === 'stream' ? '🧭' : '📄'}
+                      {c.type === 'section' ? '📁' : c.type === 'folder' ? '📂' : c.type === 'photo' ? '🖼️' : c.type === 'video' ? '📺' : c.type === 'competitive_exam' ? '🏆' : c.type === 'stream' ? '🧭' : c.type === 'quiz' ? '📝' : '📄'}
                     </div>
                     <div>
                       <h4 className="text-[11px] font-black text-slate-900 dark:text-white uppercase truncate max-w-[180px]">{c.title}</h4>
@@ -3389,6 +3284,7 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('topper_theme') as 'light' | 'dark') || 'light');
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingNet, setIsCheckingNet] = useState(false);
+  const [showPdf, setShowPdf] = useState<string | null>(null);
 
   useEffect(() => {
     // Hide splash screen after app mount
@@ -3399,16 +3295,28 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Sync theme class to body
-    if (theme === 'dark') {
-      document.body.classList.add('dark');
-      document.documentElement.classList.add('dark');
-    } else {
-      document.body.classList.remove('dark');
-      document.documentElement.classList.remove('dark');
-    }
     localStorage.setItem('topper_theme', theme);
+    document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
+
+  const PdfViewer: React.FC<{ url: string, onClose: () => void }> = ({ url, onClose }) => (
+    <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-4xl h-[90vh] rounded-[2.5rem] shadow-2xl relative flex flex-col overflow-hidden animate-in zoom-in duration-300">
+        <div className="p-6 border-b dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-md">
+          <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Document Viewer</h3>
+          <button onClick={onClose} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 active:scale-95 transition-all">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="flex-1 w-full bg-slate-100 dark:bg-slate-950">
+          <iframe src={`${url}#toolbar=0`} className="w-full h-full border-none" title="PDF Viewer" />
+        </div>
+        <div className="p-4 text-center bg-slate-50 dark:bg-slate-900/50">
+          <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.3em]">Confidential Document • CBSE TOPPERS Internal</p>
+        </div>
+      </div>
+    </div>
+  );
 
   // Preloader Logic
   useEffect(() => {
@@ -3571,7 +3479,7 @@ const App: React.FC = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Robust check: it could be { user: { ... } } or just { ... }
+        // Robust check: it could be {user: {... } } or just {... }
         const restoredUser = parsed.user || parsed;
         if (restoredUser && restoredUser.student_id) {
           setUser(restoredUser);
@@ -3674,6 +3582,9 @@ const App: React.FC = () => {
           {view === 'help' && <HelpView onBack={() => setView(user ? 'dashboard' : 'auth')} />}
           {view === 'admin' && <AdminPanel onBack={() => setView(user ? 'dashboard' : 'auth')} />}
 
+          {/* Overlays */}
+          {showPdf && <PdfViewer url={showPdf} onClose={() => setShowPdf(null)} />}
+
           {/* Authenticated Views with Maintenance Check */}
           {view !== 'auth' && view !== 'verify' && view !== 'internship' && view !== 'help' && view !== 'admin' && (
             isMaintenance ? (
@@ -3706,6 +3617,7 @@ const App: React.FC = () => {
                   <ProfileView
                     user={user}
                     setView={setView}
+                    setShowPdf={setShowPdf}
                     onBack={() => setView('dashboard')}
                     onUpdate={handleUpdateProfile}
                   />
