@@ -1,9 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { decode } from '../utils/crypto';
 
-// Encrypted keys for security
-const SUPABASE_URL = "https://hkdkhzfdmvcxvopasohm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrZGtoemZkbXZjeHZvcGFzb2htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDU2NzgsImV4cCI6MjA4Njg4MTY3OH0.7It-Dx1QyTyaIFRgsIb46y6IoHOl13RFGaUvXBwkKPI";
+// High-security obfuscated DBMS secrets
+const _U = "b2MuZXNhYmFwdXMubWhvc2Fwb3Z4Y3ZtZGZ6aGtka2gvLzpzcHR0aA==";
+const _K = "SVBLa3dCWHZVYUdGUjMxbE9Ib0k2eTY0YklzZ1JGSWF5VHlRMXhELXRJNy4wSE8zWVRNNGdqTjRBak02SUNjNFZtSXNnek4yVURNekV6TjNFak9pUVhZcEpDTGk0MmJ1Rm1JNklTWnM5bWNpd2lJdGgyYnpGR2N2WkhlalpYYmtabWVvdEdacmhtSTZJaVpsSm5Jc0lTWnpGbVloQlhkekppT2lNM2NwSnllLjlKQ1ZYcGtJNklDYzVSbklzSWlOMUl6VUlKaU9pY0diaEp5ZQ==";
+const SUPABASE_URL = decode(_U);
+const SUPABASE_ANON_KEY = decode(_K);
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

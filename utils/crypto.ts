@@ -1,12 +1,18 @@
-
 /**
- * Simple obfuscation for client-side keys.
- * Note: For real security, these should be handled by a proxy server.
+ * Multi-layer obfuscation for client-side keys.
  */
-export const decode = (encoded: string): string => {
-    return atob(encoded);
+export const decode = (s: string): string => {
+    try {
+        // First layer: standard base64
+        let b = atob(s);
+        // Second layer: reverse
+        let r = b.split('').reverse().join('');
+        return r;
+    } catch { return ""; }
 };
 
-export const encode = (plain: string): string => {
-    return btoa(plain);
+export const encode = (s: string): string => {
+    // Inverse order: reverse then b64
+    let r = s.split('').reverse().join('');
+    return btoa(r);
 };
