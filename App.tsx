@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { User, QuizResult, Question, DashboardContent, ContentType } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2, STREAM_SUBJECTS } from './constants';
-import { verifyStudent, registerStudent, supabase, saveQuizResult, fetchStudentStats, updateStudentProfile, fetchMaintenanceStatus, fetchDashboardContent, createDashboardContent, deleteDashboardContent } from './services/supabase';
+import { verifyStudent, registerStudent, supabase, saveQuizResult, fetchStudentStats, updateStudentProfile, fetchMaintenanceStatus, fetchDashboardContent, createDashboardContent, deleteDashboardContent, getStudentCount, fetchClasses, fetchStreams, fetchExams, fetchSubjects } from './services/supabase';
 import { analyzeResult, generateAIQuiz, getMotivationalQuote } from './services/ai';
 import AIChatWidget from './AIChatWidget';
 import ReactMarkdown from 'react-markdown';
@@ -17,6 +17,7 @@ import { hapticsImpactLight, hapticsImpactMedium } from './services/haptics';
 import { App as CapApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
+import { AdMob } from '@capacitor-community/admob';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LatexRenderer: React.FC<{ content: string, className?: string }> = ({ content, className }) => {
@@ -390,6 +391,7 @@ const SmoothInput: React.FC<{
   className?: string;
 }> = React.memo(({ type = 'text', placeholder, value, onChange, className }) => {
   const [localValue, setLocalValue] = useState(value);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Sync if parent value changes externally
   useEffect(() => { setLocalValue(value); }, [value]);
@@ -400,14 +402,36 @@ const SmoothInput: React.FC<{
     onChange(v);
   };
 
+  const isPassword = type === 'password';
+
   return (
-    <input
-      type={type}
-      placeholder={placeholder}
-      className={className || "w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 font-bold text-sm outline-none focus:ring-2 focus:ring-violet-100 transition-all"}
-      value={localValue}
-      onChange={handleChange}
-    />
+    <div className="relative w-full">
+      <input
+        type={isPassword ? (showPassword ? 'text' : 'password') : type}
+        placeholder={placeholder}
+        className={className || "w-full p-4 pr-12 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 font-bold text-sm outline-none focus:ring-2 focus:ring-violet-100 transition-all font-sans"}
+        value={localValue}
+        onChange={handleChange}
+      />
+      {isPassword && (
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-violet-600 transition-colors p-1"
+        >
+          {showPassword ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          )}
+        </button>
+      )}
+    </div>
   );
 });
 
@@ -652,10 +676,10 @@ const AuthScreen: React.FC<{
                 <div className="px-1 text-center mb-2">
                   <h3 className="font-black text-[11px] uppercase text-slate-800 tracking-tight mb-1">Step 03: Security & Contact</h3>
                 </div>
-                <input type="email" placeholder="Email Address" className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 font-bold text-sm outline-none focus:ring-2 focus:ring-violet-100" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} />
-                <input type="tel" placeholder="Phone Number (Optional)" className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 font-bold text-sm outline-none focus:ring-2 focus:ring-violet-100" value={regPhone} onChange={(e) => setRegPhone(e.target.value)} />
-                <input type="password" placeholder="Create Password" className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 font-bold text-sm outline-none focus:ring-2 focus:ring-violet-100" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} />
-                <input type="password" placeholder="Confirm Password" className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 font-bold text-sm outline-none focus:ring-2 focus:ring-violet-100" value={regConfirmPassword} onChange={(e) => setRegConfirmPassword(e.target.value)} />
+                <SmoothInput type="email" placeholder="Email Address" value={regEmail} onChange={setRegEmail} />
+                <SmoothInput type="tel" placeholder="Phone Number (Optional)" value={regPhone} onChange={setRegPhone} />
+                <SmoothInput type="password" placeholder="Create Password" value={regPassword} onChange={setRegPassword} />
+                <SmoothInput type="password" placeholder="Confirm Password" value={regConfirmPassword} onChange={setRegConfirmPassword} />
                 {error && <p className="text-red-500 text-[10px] font-black uppercase py-2 bg-red-50 rounded-xl text-center border border-red-100">{error}</p>}
                 <div className="flex gap-2">
                   <button onClick={() => setRegStep(2)} className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest">Back</button>
@@ -1409,6 +1433,68 @@ const LEGAL_DATA: Record<string, { title: string, content: { h: string, p: strin
   }
 };
 
+// ─── Promotions Slider ────────────────────────
+const PromotionsSlider: React.FC = () => {
+  const [current, setCurrent] = useState(0);
+  const ads = [
+    { id: 1, title: 'CBSE TOPPERS PREMIUM', desc: 'Unlock 100+ Mock Tests & AI Analysis.', bg: 'from-violet-600 to-indigo-600' },
+    { id: 2, title: 'JEE/NEET CRASH COURSE', desc: 'Specially designed by IITians & Doctors.', bg: 'from-sky-600 to-blue-600' },
+    { id: 3, title: '1-to-1 AI MENTORSHIP', desc: 'Get your doubts solved instantly with TopperAI.', bg: 'from-pink-600 to-rose-600' }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrent(c => (c + 1) % ads.length), 5000);
+    try {
+      (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+      (window as any).adsbygoogle.push({});
+    } catch (e) {
+      console.error('AdSense error:', e);
+    }
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="max-w-6xl mx-auto px-6 md:px-8 mt-6 overflow-hidden">
+      <div className="relative h-32 md:h-44 rounded-3xl overflow-hidden shadow-xl shadow-slate-200 dark:shadow-none">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={current}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            className={`absolute inset-0 bg-gradient-to-r ${ads[current].bg} p-6 md:p-10 flex flex-col justify-center text-left`}
+          >
+            <div className="relative z-10 font-left text-left">
+              <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-white mb-3 inline-block border border-white/20">Promotion</span>
+              <h3 className="text-lg md:text-2xl font-black text-white uppercase tracking-tighter leading-none mb-1">{ads[current].title}</h3>
+              <p className="text-[10px] md:text-xs font-bold text-white/80 uppercase tracking-widest">{ads[current].desc}</p>
+            </div>
+            {/* AdMob Banner can be overlaid or placed here */}
+            <div className="absolute right-6 bottom-6 opacity-20">
+              <svg className="w-16 h-16 md:w-24 md:h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+          {ads.map((_, i) => (
+            <div key={i} className={`h-1 rounded-full transition-all ${current === i ? 'w-4 bg-white' : 'w-1 bg-white/40'}`} />
+          ))}
+        </div>
+      </div>
+
+      {/* Actual AdMob/AdSense Slot for User Script */}
+      <div className="mt-4 flex justify-center min-h-[50px] overflow-hidden">
+        <ins className="adsbygoogle"
+          style={{ display: 'block', minWidth: '320px', minHeight: '50px' }}
+          data-ad-client="ca-pub-1563010132282807"
+          data-ad-slot="auto"
+          data-ad-format="horizontal"
+          data-full-width-responsive="true"></ins>
+      </div>
+    </div>
+  );
+};
+
 const Dashboard: React.FC<{
   user: User,
   onStartExam: (s: string, p: string) => void,
@@ -1419,8 +1505,9 @@ const Dashboard: React.FC<{
   setTheme: (t: 'light' | 'dark') => void,
   dbSubjects: SubjectCategory[],
   dbStreams: StreamCategory[],
-  setShowPdf: (url: string | null) => void
-}> = ({ user, onStartExam, setView, selectedSubject, setSelectedSubject, theme, setTheme, dbSubjects, dbStreams, setShowPdf }) => {
+  setShowPdf: (url: string | null) => void,
+  showPromotions: boolean
+}> = ({ user, onStartExam, setView, selectedSubject, setSelectedSubject, theme, setTheme, dbSubjects, dbStreams, setShowPdf, showPromotions }) => {
   const [showStats, setShowStats] = useState(false);
   const [showTgMenu, setShowTgMenu] = useState(false);
   const [showLegalSide, setShowLegalSide] = useState<string | null>(null);
@@ -1570,8 +1657,7 @@ const Dashboard: React.FC<{
           </button>
         </div>
       </header>
-
-
+      {showPromotions && <PromotionsSlider />}
       <MotivationalQuote user={user} />
 
       <main className="max-w-6xl mx-auto p-4 md:p-12">
@@ -2219,8 +2305,10 @@ const ProfileView: React.FC<{
   onUpdate: (u: User) => void,
   dbClasses: ClassCategory[],
   dbStreams: StreamCategory[],
-  dbExams: ExamCategory[]
-}> = ({ user, setView, setShowPdf, onBack, onUpdate, dbClasses, dbStreams, dbExams }) => {
+  dbExams: ExamCategory[],
+  showPromotions: boolean,
+  setShowPromotions: (v: boolean) => void
+}> = ({ user, setView, setShowPdf, onBack, onUpdate, dbClasses, dbStreams, dbExams, showPromotions, setShowPromotions }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(user.name);
   const [editedGender, setEditedGender] = useState(user.gender || '');
@@ -2429,9 +2517,25 @@ const ProfileView: React.FC<{
           </div>
 
           {/* App & Support Group */}
-          <div className="space-y-4 mt-8 px-6">
+          <div className="space-y-4 mt-8 px-6 pb-20">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">App & Support</h3>
             <div className="bg-white rounded-[2.5rem] p-4 shadow-sm border border-slate-50 space-y-2">
+              {/* Promotions Toggle */}
+              <div className="flex items-center justify-between p-5 bg-slate-50 rounded-[2rem] border border-slate-100 group transition-all hover:bg-white active:scale-95 cursor-pointer" onClick={() => setShowPromotions(!showPromotions)}>
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-all ${showPromotions ? 'bg-violet-600 text-white' : 'bg-white text-slate-400 border border-slate-100'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M11 5.882V19.297A2.453 2.453 0 019.209 21H8.387a2.453 2.453 0 01-1.791-.703L1.144 14.847l-.144-.144v-4.406l.144-.144L6.596 4.703a2.453 2.453 0 011.791-.703h.822A2.453 2.453 0 0111 5.882zM15 10v4m4-8v12M23 4v16" /></svg>
+                  </div>
+                  <div className="text-left font-left">
+                    <p className="text-[11px] font-black uppercase text-slate-900 leading-tight">Enable Promotions</p>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Show Special Ads & Offers</p>
+                  </div>
+                </div>
+                <div className={`w-12 h-6 rounded-full p-1 transition-all ${showPromotions ? 'bg-violet-600' : 'bg-slate-200'}`}>
+                  <div className={`w-4 h-4 rounded-full bg-white shadow-md transition-all ${showPromotions ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+              </div>
+
               <button
                 onClick={() => setShowAbout(true)}
                 className="w-full flex items-center justify-between p-5 hover:bg-slate-50 rounded-2xl transition-all group"
@@ -3490,6 +3594,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingNet, setIsCheckingNet] = useState(false);
   const [showPdf, setShowPdf] = useState<string | null>(null);
+  const [showPromotions, setShowPromotions] = useState<boolean>(() => localStorage.getItem('topper_show_promotions') === 'true');
   const [dbClasses, setDbClasses] = useState<ClassCategory[]>([]);
   const [dbStreams, setDbStreams] = useState<StreamCategory[]>([]);
   const [dbExams, setDbExams] = useState<ExamCategory[]>([]);
@@ -3509,13 +3614,41 @@ const App: React.FC = () => {
 
   useEffect(() => {
     loadCategories();
+    // Initialize AdMob
+    try {
+      AdMob.initialize();
+    } catch (e) {
+      console.warn('AdMob initialization failed or not available on this platform');
+    }
   }, []);
 
   useEffect(() => {
     // Hide splash screen after app mount
     const splash = document.getElementById('splash-screen');
+    const userCountText = document.getElementById('user-count-text');
+    const userCountBadge = document.getElementById('user-count-badge');
+
+    const loadUserCount = async () => {
+      try {
+        const count = await getStudentCount();
+        if (userCountText && userCountBadge) {
+          if (count < 10) {
+            userCountText.innerText = count.toString();
+          } else {
+            userCountText.innerText = (Math.floor(count / 10) * 10) + "+";
+          }
+          userCountBadge.classList.remove('opacity-0');
+          userCountBadge.classList.add('opacity-100');
+        }
+      } catch (e) {
+        console.error('Splash user count fetch failed:', e);
+      }
+    };
+
+    loadUserCount();
+
     if (splash) {
-      setTimeout(() => splash.classList.add('hidden'), 800);
+      setTimeout(() => splash.classList.add('hidden'), 2500);
     }
   }, []);
 
@@ -3524,8 +3657,18 @@ const App: React.FC = () => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
+  useEffect(() => {
+    localStorage.setItem('topper_show_promotions', showPromotions.toString());
+  }, [showPromotions]);
+
   const PdfViewer: React.FC<{ url: string, onClose: () => void }> = ({ url, onClose }) => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const finalUrl = url.startsWith('http') ? url : (window.location.origin + '/' + url.replace(/^\//, ''));
+
+    // For remote PDFs, we can try Google Docs Viewer on mobile
+    const mobileFriendlyUrl = (isMobile && url.startsWith('http'))
+      ? `https://docs.google.com/viewer?url=${encodeURIComponent(finalUrl)}&embedded=true`
+      : `${finalUrl}#toolbar=0`;
 
     return (
       <div className="fixed inset-0 z-[1000] bg-black dark:bg-slate-950 flex flex-col animate-in fade-in duration-300">
@@ -3534,21 +3677,26 @@ const App: React.FC = () => {
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
-        <div className="flex-1 w-full relative flex flex-col">
+        <div className="flex-1 w-full relative flex flex-col pt-16">
           <iframe
-            src={`${finalUrl}#toolbar=0`}
+            src={mobileFriendlyUrl}
             className="w-full h-full border-none bg-white"
             title="PDF Viewer"
           />
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center pointer-events-none -z-10">
-            <svg className="w-16 h-16 text-slate-200 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-relaxed">If the document doesn't load,<br />tap below to open in browser</p>
-            <button
-              onClick={() => window.open(finalUrl, '_blank')}
-              className="mt-6 px-8 py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl pointer-events-auto active:scale-95 transition-all"
-            >
-              Open Externally
-            </button>
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center pointer-events-none -z-10 mt-16">
+            <div className="bg-slate-900/50 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/10 max-w-sm">
+              <div className="w-16 h-16 bg-violet-600/20 text-violet-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              </div>
+              <h3 className="text-white font-black uppercase text-sm tracking-widest mb-2">Notice for Mobile Users</h3>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-relaxed mb-6">Mobile devices require external viewing for confidential documents.</p>
+              <button
+                onClick={() => window.open(finalUrl, '_blank')}
+                className="w-full py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl pointer-events-auto active:scale-95 transition-all"
+              >
+                Launch Document Browser
+              </button>
+            </div>
           </div>
         </div>
         <div className="p-2 text-center bg-black/40 backdrop-blur-md absolute bottom-0 left-0 right-0 pointer-events-none">
@@ -3642,6 +3790,15 @@ const App: React.FC = () => {
     const checkMaintenance = async () => {
       const data = await fetchMaintenanceStatus();
       if (data?.maintenance_enabled) {
+        // Auto-disable check if opening date is set
+        if (data.maintenance_opening_date) {
+          const openingTime = new Date(data.maintenance_opening_date).getTime();
+          const now = new Date().getTime();
+          if (now >= openingTime) {
+            setIsMaintenance(false);
+            return;
+          }
+        }
         setIsMaintenance(true);
         setMaintenanceData(data);
       } else {
@@ -3860,6 +4017,7 @@ const App: React.FC = () => {
                     dbSubjects={dbSubjects}
                     dbStreams={dbStreams}
                     setShowPdf={setShowPdf}
+                    showPromotions={showPromotions}
                   />
                 )}
                 {view === 'exam' && user && examConfig && (
@@ -3883,6 +4041,8 @@ const App: React.FC = () => {
                     dbClasses={dbClasses}
                     dbStreams={dbStreams}
                     dbExams={dbExams}
+                    showPromotions={showPromotions}
+                    setShowPromotions={setShowPromotions}
                   />
                 )}
                 {view === 'store' && user && (

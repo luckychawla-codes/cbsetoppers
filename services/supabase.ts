@@ -360,3 +360,17 @@ export const deleteDashboardContent = async (id: string) => {
     return true;
   }
 };
+
+export const getStudentCount = async () => {
+  try {
+    const { count, error } = await supabase
+      .from('students')
+      .select('*', { count: 'exact', head: true });
+    if (error) throw error;
+    return count || 0;
+  } catch (e) {
+    console.error('getStudentCount error:', e);
+    return 0;
+  }
+};
+

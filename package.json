@@ -10,11 +10,12 @@
     "start": "vite preview --host 0.0.0.0 --port ${PORT:-10000}",
     "app:build": "npm run build && npx cap sync",
     "app:open": "npx cap open android",
-    "app:build:user:final": "npm run build && npx cap sync && cd android && gradlew assembleLearningRelease && copy app\\build\\outputs\\apk\\learning\\release\\app-learning-release-unsigned.apk ..\\..\\CBSE_TOPPERS_learning_user.apk",
-    "app:build:admin:final": "npm run build && npx cap sync && cd android && gradlew assembleAdminRelease && copy app\\build\\outputs\\apk\\admin\\release\\app-admin-release-unsigned.apk ..\\..\\CBSE_TOPPERS_admin_exclusive.apk",
+    "app:build:user:final": "npm run build && npx cap sync && cd android && set ANDROID_HOME=C:\\Users\\lucky\\AppData\\Local\\Android\\Sdk&& gradlew assembleLearningRelease && copy app\\build\\outputs\\apk\\learning\\release\\app-learning-release.apk ..\\..\\CBSE_TOPPERS_learning_user_v2.apk",
+    "app:build:admin:final": "npm run build && npx cap sync && cd android && set ANDROID_HOME=C:\\Users\\lucky\\AppData\\Local\\Android\\Sdk&& gradlew assembleAdminRelease && copy app\\build\\outputs\\apk\\admin\\release\\app-admin-release.apk ..\\..\\CBSE_TOPPERS_admin_exclusive_v2.apk",
     "app:build:final": "npm run app:build:user:final"
   },
   "dependencies": {
+    "@capacitor-community/admob": "^8.0.0",
     "@capacitor/android": "^5.7.8",
     "@capacitor/app": "^5.0.8",
     "@capacitor/cli": "^5.7.8",
