@@ -1433,63 +1433,58 @@ const LEGAL_DATA: Record<string, { title: string, content: { h: string, p: strin
   }
 };
 
-// ─── Promotions Slider ────────────────────────
+// ─── Promotions Slider (AdMob Exclusively) ────────────────────────
 const PromotionsSlider: React.FC = () => {
   const [current, setCurrent] = useState(0);
-  const ads = [
-    { id: 1, title: 'CBSE TOPPERS PREMIUM', desc: 'Unlock 100+ Mock Tests & AI Analysis.', bg: 'from-violet-600 to-indigo-600' },
-    { id: 2, title: 'JEE/NEET CRASH COURSE', desc: 'Specially designed by IITians & Doctors.', bg: 'from-sky-600 to-blue-600' },
-    { id: 3, title: '1-to-1 AI MENTORSHIP', desc: 'Get your doubts solved instantly with TopperAI.', bg: 'from-pink-600 to-rose-600' }
-  ];
+  // We'll simulate sliding between multiple ad slots if they want a 'sliding' effect
+  // with AdMob ads. Or just show the main Ad slot.
+  const adSlots = [1, 2, 3]; // Multiple slots to simulate 'sliding'
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrent(c => (c + 1) % ads.length), 5000);
+    const timer = setInterval(() => setCurrent(c => (c + 1) % adSlots.length), 8000);
     try {
       (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+      // Push for each slot if they appear
       (window as any).adsbygoogle.push({});
     } catch (e) {
-      console.error('AdSense error:', e);
+      console.error('AdMob Error:', e);
     }
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className="max-w-6xl mx-auto px-6 md:px-8 mt-6 overflow-hidden">
-      <div className="relative h-32 md:h-44 rounded-3xl overflow-hidden shadow-xl shadow-slate-200 dark:shadow-none">
+    <div className="max-w-6xl mx-auto px-6 md:px-8 mt-6">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200 dark:shadow-none overflow-hidden relative min-h-[100px] flex items-center justify-center">
+        <div className="absolute top-2 left-4 z-20">
+          <span className="text-[7px] font-black uppercase text-slate-300 dark:text-slate-600 tracking-[0.3em]">Sponsored • Promotions</span>
+        </div>
+
         <AnimatePresence mode="wait">
           <motion.div
             key={current}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
-            className={`absolute inset-0 bg-gradient-to-r ${ads[current].bg} p-6 md:p-10 flex flex-col justify-center text-left`}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="w-full flex items-center justify-center min-h-[100px] p-4"
           >
-            <div className="relative z-10 font-left text-left">
-              <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-white mb-3 inline-block border border-white/20">Promotion</span>
-              <h3 className="text-lg md:text-2xl font-black text-white uppercase tracking-tighter leading-none mb-1">{ads[current].title}</h3>
-              <p className="text-[10px] md:text-xs font-bold text-white/80 uppercase tracking-widest">{ads[current].desc}</p>
-            </div>
-            {/* AdMob Banner can be overlaid or placed here */}
-            <div className="absolute right-6 bottom-6 opacity-20">
-              <svg className="w-16 h-16 md:w-24 md:h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg>
+            {/* AdMob Slot Container */}
+            <div className="w-full h-full flex items-center justify-center overflow-hidden">
+              <ins className="adsbygoogle"
+                style={{ display: 'block', minWidth: '320px', height: '100px' }}
+                data-ad-client="ca-pub-1563010132282807"
+                data-ad-slot="8331114560" // Generic or user's slot if provided, using a common format
+                data-ad-format="horizontal"
+                data-full-width-responsive="true"></ins>
             </div>
           </motion.div>
         </AnimatePresence>
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
-          {ads.map((_, i) => (
-            <div key={i} className={`h-1 rounded-full transition-all ${current === i ? 'w-4 bg-white' : 'w-1 bg-white/40'}`} />
+
+        {/* Indicators */}
+        <div className="absolute bottom-2 right-4 flex gap-1 z-20">
+          {adSlots.map((_, i) => (
+            <div key={i} className={`h-1 rounded-full transition-all ${current === i ? 'w-3 bg-violet-600' : 'w-1 bg-slate-200'}`} />
           ))}
         </div>
-      </div>
-
-      {/* Actual AdMob/AdSense Slot for User Script */}
-      <div className="mt-4 flex justify-center min-h-[50px] overflow-hidden">
-        <ins className="adsbygoogle"
-          style={{ display: 'block', minWidth: '320px', minHeight: '50px' }}
-          data-ad-client="ca-pub-1563010132282807"
-          data-ad-slot="auto"
-          data-ad-format="horizontal"
-          data-full-width-responsive="true"></ins>
       </div>
     </div>
   );
