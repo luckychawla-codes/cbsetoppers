@@ -1436,43 +1436,44 @@ const LEGAL_DATA: Record<string, { title: string, content: { h: string, p: strin
 // ─── Promotions Slider (AdMob Exclusively) ────────────────────────
 const PromotionsSlider: React.FC = () => {
   const [current, setCurrent] = useState(0);
-  // We'll simulate sliding between multiple ad slots if they want a 'sliding' effect
-  // with AdMob ads. Or just show the main Ad slot.
-  const adSlots = [1, 2, 3]; // Multiple slots to simulate 'sliding'
+  const totalAds = 3;
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrent(c => (c + 1) % adSlots.length), 8000);
-    try {
-      (window as any).adsbygoogle = (window as any).adsbygoogle || [];
-      // Push for each slot if they appear
-      (window as any).adsbygoogle.push({});
-    } catch (e) {
-      console.error('AdMob Error:', e);
-    }
+    const timer = setInterval(() => setCurrent(c => (c + 1) % totalAds), 10000);
+    const pushAds = () => {
+      try {
+        (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+        (window as any).adsbygoogle.push({});
+      } catch (e) {
+        console.error('AdMob/AdSense error:', e);
+      }
+    };
+    pushAds();
     return () => clearInterval(timer);
   }, []);
 
   return (
     <div className="max-w-6xl mx-auto px-6 md:px-8 mt-6">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200 dark:shadow-none overflow-hidden relative min-h-[100px] flex items-center justify-center">
-        <div className="absolute top-2 left-4 z-20">
-          <span className="text-[7px] font-black uppercase text-slate-300 dark:text-slate-600 tracking-[0.3em]">Sponsored • Promotions</span>
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200 dark:shadow-none overflow-hidden relative h-32 md:h-44 flex items-center justify-center">
+        <div className="absolute top-2 left-6 z-20">
+          <span className="text-[7px] font-black uppercase text-slate-300 dark:text-slate-600 tracking-[0.3em]">Official Promotions • Powered by AdMob</span>
         </div>
 
         <AnimatePresence mode="wait">
           <motion.div
             key={current}
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="w-full flex items-center justify-center min-h-[100px] p-4"
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="w-full h-full flex items-center justify-center p-4"
           >
             {/* AdMob Slot Container */}
-            <div className="w-full h-full flex items-center justify-center overflow-hidden">
+            <div className="w-full h-full flex items-center justify-center mt-2">
               <ins className="adsbygoogle"
-                style={{ display: 'block', minWidth: '320px', height: '100px' }}
+                style={{ display: 'flex', minWidth: '320px', height: '100px', justifyContent: 'center', alignItems: 'center' }}
                 data-ad-client="ca-pub-1563010132282807"
-                data-ad-slot="8331114560" // Generic or user's slot if provided, using a common format
+                data-ad-slot="auto"
                 data-ad-format="horizontal"
                 data-full-width-responsive="true"></ins>
             </div>
@@ -1480,9 +1481,9 @@ const PromotionsSlider: React.FC = () => {
         </AnimatePresence>
 
         {/* Indicators */}
-        <div className="absolute bottom-2 right-4 flex gap-1 z-20">
-          {adSlots.map((_, i) => (
-            <div key={i} className={`h-1 rounded-full transition-all ${current === i ? 'w-3 bg-violet-600' : 'w-1 bg-slate-200'}`} />
+        <div className="absolute bottom-3 right-6 flex gap-1.5 z-20">
+          {[...Array(totalAds)].map((_, i) => (
+            <div key={i} className={`h-1 rounded-full transition-all duration-500 ${current === i ? 'w-4 bg-violet-600' : 'w-1 bg-slate-200 dark:bg-slate-800'}`} />
           ))}
         </div>
       </div>
