@@ -2533,6 +2533,19 @@ const ProfileView: React.FC<{
               </div>
 
               <button
+                onClick={() => setView('store')}
+                className="w-full flex items-center justify-between p-5 hover:bg-slate-50 rounded-2xl transition-all group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                  </div>
+                  <span className="text-[11px] font-black uppercase text-slate-700 tracking-wider">Premium Store</span>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </button>
+
+              <button
                 onClick={() => setShowAbout(true)}
                 className="w-full flex items-center justify-between p-5 hover:bg-slate-50 rounded-2xl transition-all group"
               >
@@ -2938,16 +2951,16 @@ const HelpView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   );
 };
 
-
-
 const AdminPanel: React.FC<{
   onBack: () => void,
-  dbClasses: ClassCategory[],
-  dbStreams: StreamCategory[],
-  dbExams: ExamCategory[],
+  dbClasses: SubjectCategory[],
+  dbStreams: SubjectCategory[],
+  dbExams: SubjectCategory[],
   dbSubjects: SubjectCategory[],
-  onRefreshCategories: () => void
-}> = ({ onBack, dbClasses, dbStreams, dbExams, dbSubjects, onRefreshCategories }) => {
+  onRefreshCategories: () => void,
+  theme: 'light' | 'dark',
+  setTheme: (t: 'light' | 'dark') => void
+}> = ({ onBack, dbClasses, dbStreams, dbExams, dbSubjects, onRefreshCategories, theme, setTheme }) => {
   const [contents, setContents] = useState<DashboardContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
@@ -3066,12 +3079,19 @@ const AdminPanel: React.FC<{
         <button onClick={() => { setIsAdding(!isAdding); setIsManagingCategories(false); }} className="p-2 bg-violet-600 text-white rounded-xl shadow-lg active:scale-95 transition-all">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
         </button>
-        <button onClick={() => { setIsManagingCategories(!isManagingCategories); setIsAdding(false); }} className="p-2 bg-slate-900 text-white rounded-xl shadow-lg active:scale-95 transition-all">
+        <button onClick={() => { setIsManagingCategories(!isManagingCategories); setIsAdding(false); }} className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl shadow-lg active:scale-95 transition-all">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        </button>
+        <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 rounded-xl active:scale-90 transition-all">
+          {theme === 'dark' ? (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" /></svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+          )}
         </button>
       </div>
 
-      <div className="max-w-xl w-full mx-auto p-6 space-y-8">
+      <div className="w-full mx-auto p-4 md:p-8 space-y-8">
         {isManagingCategories && (
           <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800 space-y-8 animate-in slide-in-from-top-4 duration-500">
             <h2 className="text-lg font-black uppercase text-slate-900 dark:text-white mb-4">Manage Categories</h2>
@@ -3989,6 +4009,8 @@ const App: React.FC = () => {
               dbExams={dbExams}
               dbSubjects={dbSubjects}
               onRefreshCategories={loadCategories}
+              theme={theme}
+              setTheme={setTheme}
             />
           )}
 
@@ -4054,16 +4076,15 @@ const App: React.FC = () => {
       </AnimatePresence>
 
       {!isMaintenance && user && view === 'dashboard' && (
-        <button
-          onClick={() => { hapticsImpactLight(); setView('store'); }}
-          className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-tr from-violet-600 to-indigo-700 text-white rounded-[1.8rem] shadow-[0_20px_50px_rgba(79,70,229,0.3)] flex flex-col items-center justify-center active:scale-90 transition-all z-[100] group overflow-hidden border-2 border-white/20"
-        >
-          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 relative z-10 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-          </svg>
-          <span className="text-[7px] font-black uppercase tracking-widest relative z-10 leading-none">Store</span>
-        </button>
+        <AIChatWidget
+          user={user}
+          currentView={view}
+          selectedSubject={selectedSubject}
+          onStartAIQuiz={({ subject }) => {
+            setExamConfig({ subj: subject, pid: 'AI_QZ_' + Date.now().toString() });
+            setView('exam');
+          }}
+        />
       )}
 
       {/* ── Global Zoom Modal ── */}

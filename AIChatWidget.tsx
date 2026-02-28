@@ -15,7 +15,7 @@ const AIChatWidget: React.FC<{
     onStartAIQuiz?: (config: { subject: string }) => void
 }> = ({ user, currentView, selectedSubject, onStartAIQuiz }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<{ role: string, content: string }[]>([]);
+    const [messages, setMessages] = useState<{ role: string, content: string, reasoning_details?: any }[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [pyodide, setPyodide] = useState<any>(null);
@@ -68,9 +68,11 @@ const AIChatWidget: React.FC<{
         setIsLoading(true);
 
         const chatHistory = [...messages, { role: 'user', content: userMsg }];
-        const aiResponse = await chatWithAI(chatHistory, user || undefined, { currentView, selectedSubject });
+        const aiResponseObj = await chatWithAI(chatHistory, user || undefined, { currentView, selectedSubject });
+        const aiResponse = typeof aiResponseObj === 'string' ? aiResponseObj : (aiResponseObj.content || '');
+        const reasoningDetails = typeof aiResponseObj === 'string' ? null : aiResponseObj.reasoning_details;
 
-        setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+        setMessages(prev => [...prev, { role: 'assistant', content: aiResponse, reasoning_details: reasoningDetails }]);
         setIsLoading(false);
 
         // Check for Quiz Generation JSON

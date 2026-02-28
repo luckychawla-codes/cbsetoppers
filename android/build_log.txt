@@ -1,0 +1,65 @@
+
+> Configure project :app
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Configure project :capacitor-cordova-android-plugins
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+WARNING: We recommend using a newer Android Gradle plugin to use compileSdk = 34
+
+This Android Gradle plugin (8.0.0) was tested up to compileSdk = 33.
+
+You are strongly encouraged to update your project to use a newer
+Android Gradle plugin that has been tested with compileSdk = 34.
+
+If you are already using the latest version of the Android Gradle plugin,
+you may need to wait until a newer version with support for compileSdk = 34 is available.
+
+To suppress this warning, add/update
+    android.suppressUnsupportedCompileSdk=34
+to this project's gradle.properties.
+
+> Task :capacitor-community-admob:preBuild UP-TO-DATE
+> Task :capacitor-community-admob:preReleaseBuild UP-TO-DATE
+> Task :capacitor-community-admob:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :capacitor-community-admob:mergeReleaseNativeLibs NO-SOURCE
+> Task :capacitor-community-admob:stripReleaseDebugSymbols NO-SOURCE
+> Task :capacitor-community-admob:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :capacitor-community-admob:generateReleaseResValues UP-TO-DATE
+> Task :capacitor-community-admob:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :capacitor-android:preBuild UP-TO-DATE
+> Task :capacitor-android:preReleaseBuild UP-TO-DATE
+> Task :capacitor-android:generateReleaseResValues UP-TO-DATE
+> Task :capacitor-android:generateReleaseResources UP-TO-DATE
+> Task :capacitor-android:packageReleaseResources UP-TO-DATE
+> Task :capacitor-android:parseReleaseLocalResources UP-TO-DATE
+> Task :capacitor-android:processReleaseManifest UP-TO-DATE
+> Task :capacitor-android:generateReleaseRFile UP-TO-DATE
+> Task :capacitor-android:javaPreCompileRelease UP-TO-DATE
+> Task :capacitor-android:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :capacitor-android:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :capacitor-community-admob:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :capacitor-community-admob:generateReleaseResources UP-TO-DATE
+> Task :capacitor-community-admob:packageReleaseResources UP-TO-DATE
+> Task :capacitor-community-admob:parseReleaseLocalResources UP-TO-DATE
+> Task :capacitor-community-admob:processReleaseManifest UP-TO-DATE
+> Task :capacitor-community-admob:generateReleaseRFile UP-TO-DATE
+> Task :capacitor-community-admob:compileReleaseKotlin UP-TO-DATE
+> Task :capacitor-community-admob:extractReleaseAnnotations UP-TO-DATE
+> Task :capacitor-community-admob:javaPreCompileRelease UP-TO-DATE
+> Task :capacitor-community-admob:compileReleaseJavaWithJavac FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':capacitor-community-admob:compileReleaseJavaWithJavac'.
+> error: invalid source release: 21
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+
+* Get more help at https://help.gradle.org
+
+BUILD FAILED in 2s
+20 actionable tasks: 1 executed, 19 up-to-date

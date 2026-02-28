@@ -22,25 +22,22 @@ export const chatWithAI = async (
     user: User | undefined,
     websiteContext?: { currentView?: string, selectedSubject?: string | null }
 ) => {
-    let lastError: any;
-
-    for (const modelId of MODELS) {
-        try {
-            console.log(`Trying model: ${modelId}`);
-            const response = await fetch("https://api.openai.com/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${OPENAI_API_KEY}`,
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": window.location.origin,
-                    "X-Title": "CBSE TOPPERS"
-                },
-                body: JSON.stringify({
-                    "model": modelId,
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": `You are TopperAI, the #1 AI Mentor for CBSE Class 10/12 students.
+    try {
+        const OPENROUTER_API_KEY = "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";
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                "Content-Type": "application/json",
+                "HTTP-Referer": window.location.origin,
+                "X-Title": "CBSE TOPPERS"
+            },
+            body: JSON.stringify({
+                "model": "arcee-ai/trinity-large-preview:free",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": `You are TopperAI, the #1 AI Mentor for CBSE Class 10/12 students.
             
             ─── STUDENT PROFILE ───
             Name: ${user?.name || 'Friend'}
@@ -78,25 +75,28 @@ export const chatWithAI = async (
             PERSONA: Friendly mentor for CBSE 2026, JEE/NEET.
             ALWAYS use LaTeX ($...$ or $$...$$) for equations.
             AI launches 'Quiz Mode' automatically from the JSON.`
-                        },
-                        ...messages
-                    ]
-                })
-            });
+                    },
+                    ...messages
+                ],
+                "include_reasoning": true,
+                "reasoning": { "enabled": true }
+            })
+        });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            return data.choices[0].message.content;
-        } catch (error) {
-            console.error(`AI Chat Error with ${modelId}:`, error);
-            lastError = error;
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
         }
+
+        const data = await response.json();
+        return {
+            content: data.choices[0].message.content || "",
+            reasoning_details: data.choices[0].message.reasoning_details || null
+        };
+    } catch (error) {
+        console.error(`AI Chat Error:`, error);
+        return { content: "Hey buddy, my connection flickered for a second. Let me try once more or refresh! 💙", reasoning_details: null };
     }
-    return "Hey buddy, my connection flickered for a second. Let me try once more or refresh! 💙";
 };
 
 export const generateAIQuiz = async (topic: string) => {
