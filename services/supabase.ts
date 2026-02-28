@@ -3,7 +3,7 @@ import { decode } from '../utils/crypto';
 
 // Encrypted keys for security
 const SUPABASE_URL = "https://hkdkhzfdmvcxvopasohm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJoa2RraHpmZG12Y3h2b3Bhc29obSIsInJlZiI6ImhrZGtoemZkbXZjeHZvcGFzb2htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTMwNTY2NzEsImV4cCI6MjA0ODgxNjczMH0.7It-Dx1QyTyaIFRgsIb46y6IoHOl13RFGaUvXBwkKPI";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrZGtoemZkbXZjeHZvcGFzb2htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDU2NzgsImV4cCI6MjA4Njg4MTY3OH0.7It-Dx1QyTyaIFRgsIb46y6IoHOl13RFGaUvXBwkKPI";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
