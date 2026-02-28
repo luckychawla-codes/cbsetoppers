@@ -86,8 +86,9 @@ export const chatWithAI = async (
         if (!response.ok) {
             const errorData = await response.json();
             if (response.status === 401 || response.status === 403) {
+                const openRouterMsg = errorData?.error?.message || "Invalid Key";
                 console.error("OpenRouter Auth Error:", errorData);
-                return { content: "⚠️ System Alert: My OpenRouter API Key is missing or invalid. Please insert a valid API key in `services/ai.ts` to wake me up! 💙", reasoning_details: null };
+                return { content: `⚠️ **OpenRouter API Error:** The API Key was rejected by OpenRouter servers. Reason: *"${openRouterMsg}"*. Please generate a fresh API key from your OpenRouter dashboard.`, reasoning_details: null };
             }
             throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
         }
