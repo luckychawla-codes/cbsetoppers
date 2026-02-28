@@ -124,9 +124,29 @@ export const verifyStudent = async (identifier: string, password?: string) => {
       .eq('email', email)
       .maybeSingle();
 
-    if (profileError || !profile) return null;
+    // 4. Fetch from operators table
+    const { data: operator } = await supabase
+      .from('operators')
+      .select('id, name, role')
+      .eq('email', email)
+      .maybeSingle();
 
-    return profile;
+    if ((profileError || !profile) && !operator) return null;
+
+    let result = profile || {
+      id: authData?.user?.id || 'op_' + Date.now(),
+      name: operator?.name || 'Operator',
+      student_id: 'OP_' + (authData?.user?.id?.substring(0, 5)?.toUpperCase() || 'MOD'),
+      email: email,
+      class: 'Admin',
+      dob: new Date().toISOString().split('T')[0]
+    };
+
+    if (operator) {
+      result.is_operator = true;
+    }
+
+    return result;
   } catch (err: any) {
     if (err.message === 'Incorrect password') throw err;
     console.error('Login error:', err);

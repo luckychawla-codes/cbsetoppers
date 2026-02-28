@@ -1553,7 +1553,7 @@ const Dashboard: React.FC<{
   };
   const handleContentClick = (item: DashboardContent) => {
     hapticsImpactLight();
-    if (item.type === 'folder' || item.type === 'competitive_exam' || item.type === 'stream') {
+    if (item.type === 'folder' || item.type === 'competitive_exam' || item.type === 'stream' || item.type === 'subject_core' || item.type === 'subject_additional') {
       setHistory([...history, currentFolder].filter(Boolean) as DashboardContent[]);
       setCurrentFolder(item);
     } else if (item.type === 'quiz') {
@@ -1586,33 +1586,42 @@ const Dashboard: React.FC<{
     (window as any).isStatsOpen = showStats;
   }, [showStats]);
 
-  const renderDashboardItem = (item: DashboardContent) => (
-    <button
-      key={item.id}
-      onClick={() => handleContentClick(item)}
-      className="bg-white dark:bg-slate-800/50 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-violet-400 transition-all text-center flex flex-col items-center gap-4 group animate-in zoom-in duration-300 relative overflow-hidden"
-    >
-      <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-violet-50 dark:bg-slate-700/50 text-violet-600 dark:text-violet-400 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-all">
-        {item.type === 'folder' ? (
-          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-        ) : item.type === 'competitive_exam' ? (
-          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-2.066 3.42 3.42 0 004.438 0 3.42 3.42 0 001.946 2.066 3.42 3.42 0 000 4.606 3.42 3.42 0 00-1.946 2.066 3.42 3.42 0 00-4.438 0 3.42 3.42 0 00-1.946-2.066 3.42 3.42 0 000-4.606z" /><path d="M12 12a3 3 0 100-6 3 3 0 000 6z" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
-        ) : item.type === 'stream' ? (
-          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 4L9 7" /></svg>
-        ) : item.type === 'quiz' ? (
-          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-        ) : item.type === 'video' ? (
-          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-        ) : item.type === 'photo' ? (
-          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 00-2 2z" /></svg>
-        ) : (
-          <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-        )}
-      </div>
-      <span className="text-[10px] md:text-[12px] font-black uppercase text-slate-800 dark:text-slate-200 tracking-tight leading-tight px-2">{item.title}</span>
-    </button>
-  );
+  const renderDashboardItem = (item: DashboardContent) => {
+    let ytThumb = null;
+    if (item.type === 'video' && item.content_link) {
+      const videoId = item.content_link.split('v=')[1]?.split('&')[0] || item.content_link.split('/').pop();
+      if (videoId) ytThumb = `https://img.youtube.com/vi/${videoId}/0.jpg`;
+    }
 
+    return (
+      <button
+        key={item.id}
+        onClick={() => handleContentClick(item)}
+        className="bg-white dark:bg-slate-800/50 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-violet-400 transition-all text-center flex flex-col items-center gap-4 group animate-in zoom-in duration-300 relative overflow-hidden"
+      >
+        <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-violet-50 dark:bg-slate-700/50 text-violet-600 dark:text-violet-400 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-all overflow-hidden relative">
+          {ytThumb ? (
+            <img src={ytThumb} className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-500" alt="Video Thumbnail" />
+          ) : item.type === 'folder' || item.type === 'subject_core' || item.type === 'subject_additional' ? (
+            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+          ) : item.type === 'competitive_exam' ? (
+            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-2.066 3.42 3.42 0 004.438 0 3.42 3.42 0 001.946 2.066 3.42 3.42 0 000 4.606 3.42 3.42 0 00-1.946 2.066 3.42 3.42 0 00-4.438 0 3.42 3.42 0 00-1.946-2.066 3.42 3.42 0 000-4.606z" /><path d="M12 12a3 3 0 100-6 3 3 0 000 6z" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+          ) : item.type === 'stream' ? (
+            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 4L9 7" /></svg>
+          ) : item.type === 'quiz' ? (
+            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+          ) : item.type === 'video' ? (
+            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          ) : item.type === 'photo' ? (
+            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 00-2 2z" /></svg>
+          ) : (
+            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          )}
+        </div>
+        <span className="text-[10px] md:text-[12px] font-black uppercase text-slate-800 dark:text-slate-200 tracking-tight leading-tight px-2">{item.title}</span>
+      </button>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f172a] pb-20 relative text-left transition-colors duration-500">
@@ -1693,7 +1702,33 @@ const Dashboard: React.FC<{
                 </section>
               ))}
 
-              {dynamicContent.filter(c => !c.parent_id && c.type !== 'section').length > 0 && (
+              {dynamicContent.filter(c => !c.parent_id && c.type === 'subject_core').length > 0 && (
+                <section className="mb-16">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="h-px flex-1 bg-violet-100 dark:bg-violet-900/30" />
+                    <h3 className="text-[10px] font-black text-violet-600 dark:text-violet-400 uppercase tracking-[0.3em] flex items-center gap-2"><span>🎯</span> Core Subjects</h3>
+                    <div className="h-px flex-1 bg-violet-100 dark:bg-violet-900/30" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                    {dynamicContent.filter(c => !c.parent_id && c.type === 'subject_core').map(item => renderDashboardItem(item))}
+                  </div>
+                </section>
+              )}
+
+              {dynamicContent.filter(c => !c.parent_id && c.type === 'subject_additional').length > 0 && (
+                <section className="mb-16">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="h-px flex-1 bg-sky-100 dark:bg-sky-900/30" />
+                    <h3 className="text-[10px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-[0.3em] flex items-center gap-2"><span>✨</span> Additional Subjects</h3>
+                    <div className="h-px flex-1 bg-sky-100 dark:bg-sky-900/30" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                    {dynamicContent.filter(c => !c.parent_id && c.type === 'subject_additional').map(item => renderDashboardItem(item))}
+                  </div>
+                </section>
+              )}
+
+              {dynamicContent.filter(c => !c.parent_id && c.type !== 'section' && c.type !== 'subject_core' && c.type !== 'subject_additional').length > 0 && (
                 <section className="mb-16">
                   <div className="flex items-center gap-4 mb-8">
                     <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
@@ -1701,7 +1736,7 @@ const Dashboard: React.FC<{
                     <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                    {dynamicContent.filter(c => !c.parent_id && c.type !== 'section').map(item => renderDashboardItem(item))}
+                    {dynamicContent.filter(c => !c.parent_id && c.type !== 'section' && c.type !== 'subject_core' && c.type !== 'subject_additional').map(item => renderDashboardItem(item))}
                   </div>
                 </section>
               )}
@@ -3203,7 +3238,9 @@ const AdminPanel: React.FC<{
                 <p className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-1">Type</p>
                 <select className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 dark:text-white font-bold text-sm outline-none" value={type} onChange={(e) => setType(e.target.value as ContentType)}>
                   <option value="section">Section</option>
-                  <option value="folder">Folder</option>
+                  <option value="folder">Folder / Subfolder</option>
+                  <option value="subject_core">Core Subject Folder</option>
+                  <option value="subject_additional">Additional Subject Folder</option>
                   <option value="file">File / PDF</option>
                   <option value="photo">Photo / Image</option>
                   <option value="video">YouTube Video</option>
@@ -3639,6 +3676,27 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // ─── Native Back Button Handling (Capacitor) ──────────────────
+    let unlisten: any = null;
+    const backBtn = async () => {
+      try {
+        const { App: CapApp } = await import('@capacitor/app');
+        unlisten = await CapApp.addListener('backButton', () => {
+          if (view === 'dashboard' || view === 'auth') {
+            CapApp.exitApp();
+          } else {
+            setView('dashboard');
+          }
+        });
+      } catch (_) { }
+    };
+    backBtn();
+    return () => {
+      if (unlisten) unlisten.remove();
+    };
+  }, [view]);
+
+  useEffect(() => {
     // Hide splash screen after app mount
     const splash = document.getElementById('splash-screen');
     const userCountText = document.getElementById('user-count-text');
@@ -4019,7 +4077,7 @@ const App: React.FC = () => {
 
           {/* Authenticated Views with Maintenance Check */}
           {view !== 'auth' && view !== 'verify' && view !== 'internship' && view !== 'help' && view !== 'admin' && (
-            isMaintenance ? (
+            isMaintenance && !user?.is_operator ? (
               <MaintenancePage data={maintenanceData} />
             ) : (
               <>
@@ -4075,7 +4133,7 @@ const App: React.FC = () => {
         </motion.div>
       </AnimatePresence>
 
-      {!isMaintenance && user && view === 'dashboard' && (
+      {(!isMaintenance || user?.is_operator) && user && view === 'dashboard' && (
         <AIChatWidget
           user={user}
           currentView={view}

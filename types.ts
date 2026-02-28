@@ -40,6 +40,7 @@ export interface User {
   gender?: 'MALE' | 'FEMALE' | 'PREFER_NOT_SAY';
   is_verified?: boolean;
   competitive_exams?: string[];
+  is_operator?: boolean;
 }
 
 export interface QuizResult {
@@ -60,7 +61,7 @@ export interface LeaderboardEntry {
   created_at: string;
 }
 
-export type ContentType = 'section' | 'folder' | 'file' | 'photo' | 'video' | 'competitive_exam' | 'stream' | 'quiz';
+export type ContentType = 'section' | 'folder' | 'file' | 'photo' | 'video' | 'competitive_exam' | 'stream' | 'quiz' | 'subject_core' | 'subject_additional';
 
 export interface DashboardContent {
   id: string;
