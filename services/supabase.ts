@@ -346,6 +346,72 @@ export const fetchMaterials = async (folderId: string): Promise<Material[]> => {
   return data as Material[];
 };
 
+export const createFolder = async (folder: Partial<Folder>) => {
+  const { data, error } = await supabase.from('folders').insert([folder]).select().single();
+  if (error) throw error;
+  return data as Folder;
+};
+
+export const updateFolder = async (id: string, updates: Partial<Folder>) => {
+  const { data, error } = await supabase.from('folders').update(updates).eq('id', id).select().single();
+  if (error) throw error;
+  return data as Folder;
+};
+
+export const deleteFolder = async (id: string) => {
+  const { error } = await supabase.from('folders').delete().eq('id', id);
+  if (error) throw error;
+};
+
+export const createMaterial = async (material: Partial<Material>) => {
+  const { data, error } = await supabase.from('materials').insert([material]).select().single();
+  if (error) throw error;
+  return data as Material;
+};
+
+export const updateMaterial = async (id: string, updates: Partial<Material>) => {
+  const { data, error } = await supabase.from('materials').update(updates).eq('id', id).select().single();
+  if (error) throw error;
+  return data as Material;
+};
+
+export const deleteMaterial = async (id: string) => {
+  const { error } = await supabase.from('materials').delete().eq('id', id);
+  if (error) throw error;
+};
+
+export const createSubject = async (name: string, stream_id?: string, class_name?: string): Promise<Subject> => {
+  const { data, error } = await supabase.from('subjects').insert([{
+    name,
+    target_stream: stream_id,
+    target_class: class_name,
+    category: 'Core', // default
+    code: name.substring(0, 3).toUpperCase() + Math.floor(Math.random() * 1000)
+  }]).select().single();
+  if (error) throw error;
+  return data as Subject;
+};
+
+export const deleteSubject = async (id: string) => {
+  const { error } = await supabase.from('subjects').delete().eq('id', id);
+  if (error) throw error;
+};
+
+export const deleteClass = async (id: string) => {
+  const { error } = await supabase.from('classes').delete().eq('id', id);
+  if (error) throw error;
+};
+
+export const deleteStream = async (id: string) => {
+  const { error } = await supabase.from('streams').delete().eq('id', id);
+  if (error) throw error;
+};
+
+export const deleteExam = async (id: string) => {
+  const { error } = await supabase.from('competitive_exams').delete().eq('id', id);
+  if (error) throw error;
+};
+
 export const getStudentCount = async () => {
   try {
     const { count, error } = await supabase

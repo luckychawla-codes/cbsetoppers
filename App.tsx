@@ -1604,16 +1604,26 @@ const Dashboard: React.FC<{
       <header className="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md border-b dark:border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-[60]">
         <div className="flex items-center gap-3">
           <img src={LOGO_URL} className="w-10 h-10 rounded-2xl shadow-sm" />
-          <div className="text-left">
-            <h2 className="text-sm font-black uppercase text-slate-800 dark:text-white tracking-widest leading-none">Toppers</h2>
-            <span className="text-[10px] text-violet-600 font-black uppercase">{user.class} {user.stream || ''}</span>
+          <div className="text-left w-full overflow-hidden">
+            <h2 className="text-sm font-black uppercase text-slate-800 dark:text-white tracking-widest leading-none truncate">
+              {user.name && user.name.trim() !== '' ? user.name : 'CBSE Student'} | {user.class}
+            </h2>
+            <span className="text-[10px] text-violet-600 font-black uppercase">{user.stream || 'Learning Portal'}</span>
           </div>
         </div>
         <div className="flex gap-2">
+          {user.is_operator && (
+            <button onClick={() => setView('admin')} className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center border border-amber-100">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </button>
+          )}
           <button onClick={() => setShowStats(true)} className="w-10 h-10 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center border border-violet-100">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
           </button>
-          <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-white rounded-xl flex items-center justify-center">
+          <button onClick={() => setView('profile')} className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-white rounded-xl hidden md:flex items-center justify-center border border-slate-100 dark:border-slate-800">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+          </button>
+          <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-white rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800">
             {theme === 'light' ? (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
             ) : (
@@ -1720,8 +1730,21 @@ const Dashboard: React.FC<{
       {/* Video Overlay */}
       {videoUrl && <FullScreenVideo url={videoUrl} onClose={() => setVideoUrl(null)} />}
 
-      {/* Bottom Nav Simulation / Space */}
-      <div className="fixed bottom-0 left-0 right-0 h-2 bg-gradient-to-t from-slate-900/10 dark:from-black/40 pointer-events-none" />
+      {/* Real Bottom Nav */}
+      <div className="fixed bottom-0 left-0 right-0 h-[72px] bg-white dark:bg-[#0f172a] border-t border-slate-100 dark:border-slate-800 flex items-center justify-around px-4 z-[70] pb-2 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-none">
+        <button onClick={() => { setCurrentSubject(null); setView('dashboard'); }} className="flex flex-col items-center gap-1.5 text-violet-600 dark:text-violet-400">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+          <span className="text-[9px] font-black uppercase tracking-widest py-0">Home</span>
+        </button>
+        <button onClick={() => setShowStats(true)} className="flex flex-col items-center gap-1.5 text-slate-400 dark:text-slate-500 hover:text-violet-500 transition-colors">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+          <span className="text-[9px] font-black uppercase tracking-widest py-0">Stats</span>
+        </button>
+        <button onClick={() => setView('profile')} className="flex flex-col items-center gap-1.5 text-slate-400 dark:text-slate-500 hover:text-violet-500 transition-colors">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+          <span className="text-[9px] font-black uppercase tracking-widest py-0">Profile</span>
+        </button>
+      </div>
 
       {/* Modal Overlay Components (Stats, etc) */}
       <AnimatePresence>
