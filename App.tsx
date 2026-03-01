@@ -1620,8 +1620,8 @@ const Dashboard: React.FC<{
           <button onClick={() => setShowStats(true)} className="w-10 h-10 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center border border-violet-100">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
           </button>
-          <button onClick={() => setView('profile')} className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-white rounded-xl hidden md:flex items-center justify-center border border-slate-100 dark:border-slate-800">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+          <button onClick={() => setView('profile')} className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-white rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800 overflow-hidden hover:opacity-80 transition-opacity">
+            <img src={user.gender === 'FEMALE' ? '/female_avtar.png' : '/male_avtar.png'} className="w-full h-full object-cover" alt="Profile" />
           </button>
           <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-white rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800">
             {theme === 'light' ? (
@@ -1730,21 +1730,8 @@ const Dashboard: React.FC<{
       {/* Video Overlay */}
       {videoUrl && <FullScreenVideo url={videoUrl} onClose={() => setVideoUrl(null)} />}
 
-      {/* Real Bottom Nav */}
-      <div className="fixed bottom-0 left-0 right-0 h-[72px] bg-white dark:bg-[#0f172a] border-t border-slate-100 dark:border-slate-800 flex items-center justify-around px-4 z-[70] pb-2 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-none">
-        <button onClick={() => { setCurrentSubject(null); setView('dashboard'); }} className="flex flex-col items-center gap-1.5 text-violet-600 dark:text-violet-400">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-          <span className="text-[9px] font-black uppercase tracking-widest py-0">Home</span>
-        </button>
-        <button onClick={() => setShowStats(true)} className="flex flex-col items-center gap-1.5 text-slate-400 dark:text-slate-500 hover:text-violet-500 transition-colors">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-          <span className="text-[9px] font-black uppercase tracking-widest py-0">Stats</span>
-        </button>
-        <button onClick={() => setView('profile')} className="flex flex-col items-center gap-1.5 text-slate-400 dark:text-slate-500 hover:text-violet-500 transition-colors">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-          <span className="text-[9px] font-black uppercase tracking-widest py-0">Profile</span>
-        </button>
-      </div>
+      {/* Bottom Nav Simulation / Space */}
+      <div className="fixed bottom-0 left-0 right-0 h-2 bg-gradient-to-t from-slate-900/10 dark:from-black/40 pointer-events-none" />
 
       {/* Modal Overlay Components (Stats, etc) */}
       <AnimatePresence>
