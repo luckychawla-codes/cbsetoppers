@@ -16,8 +16,8 @@ WHERE target_stream IS NOT NULL
 AND target_stream != ''
 AND (target_streams IS NULL OR array_length(target_streams, 1) = 0);
 
--- Note: Class X subjects should have 'Science' as default stream
+-- Note: Class IX and X subjects should have 'Science' as default stream
 UPDATE subjects
 SET target_streams = array_append(target_streams, 'Science')
-WHERE 'X' = ANY(target_classes)
+WHERE ('IX' = ANY(target_classes) OR 'X' = ANY(target_classes))
 AND NOT ('Science' = ANY(target_streams));
