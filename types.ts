@@ -63,6 +63,9 @@ export interface Subject {
   category: SubjectCategory;
   target_class: string;
   target_stream?: string;
+  target_classes?: string[];
+  target_streams?: string[];
+  target_exams?: string[];
   created_at: string;
 }
 

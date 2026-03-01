@@ -305,24 +305,58 @@ export const createExam = async (name: string) => {
 
 import { Subject, Folder, Material, SubjectCategory } from '../types';
 
-/** Fetch subjects relevant to a student's class and stream */
-export const fetchSubjects = async (targetClass?: string, targetStream?: string): Promise<Subject[]> => {
+/** Fetch subjects relevant to a student's class, stream, and competitive exams */
+export const fetchSubjects = async (targetClass?: string, targetStream?: string, competitiveExams: string[] = []): Promise<Subject[]> => {
   let query = supabase.from('subjects').select('*');
-  if (targetClass) query = query.eq('target_class', targetClass);
 
-  // If IX or X or XII+, stream is ignored in fetch (per rules, they won't have it)
-  // But we filter specifically to match DB rows
-  if (targetStream && ['XI', 'XII'].includes(targetClass)) {
-    // If XI/XII, we strictly show subjects for THAT stream
-    query = query.eq('target_stream', targetStream);
-  } else {
-    // For IX, X, XII+, we show subjects where stream is NULL
-    query = query.is('target_stream', null);
+  // We want subjects that match either the class/stream OR one of the competitive exams
+  let orFilters: string[] = [];
+
+  if (targetClass) {
+    // Matches class (legacy or new array)
+    orFilters.push(`target_class.eq.${targetClass}`);
+    orFilters.push(`target_classes.cs.{${targetClass}}`);
+  }
+
+  if (competitiveExams && competitiveExams.length > 0) {
+    competitiveExams.forEach(exam => {
+      orFilters.push(`target_exams.cs.{${exam}}`);
+    });
+  }
+
+  if (orFilters.length > 0) {
+    query = query.or(orFilters.join(','));
   }
 
   const { data, error } = await query.order('name');
   if (error) throw error;
-  return data as Subject[];
+
+  let subjects = data as Subject[];
+
+  // Secondary filtering for stream: If a subject is class-specific AND has stream requirements,
+  // it must match the student's stream.
+  if (targetClass) {
+    subjects = subjects.filter(s => {
+      // If it's an exam-linked subject, we usually show it regardless of class/stream in some contexts,
+      // but here we are filtering for a specific "Dashboard" view.
+
+      const isExamSubject = competitiveExams.some(ex => s.target_exams?.includes(ex));
+      if (isExamSubject) return true;
+
+      // Class check
+      const matchesClass = s.target_class === targetClass || s.target_classes?.includes(targetClass);
+      if (!matchesClass) return false;
+
+      // Stream check
+      const hasStreamReq = s.target_stream || (s.target_streams && s.target_streams.length > 0);
+      if (!hasStreamReq) return true; // General subject
+
+      const matchesStream = s.target_stream === targetStream || s.target_streams?.includes(targetStream!);
+      return matchesStream;
+    });
+  }
+
+  return subjects;
 };
 
 /** Fetch folders for a subject/parent */

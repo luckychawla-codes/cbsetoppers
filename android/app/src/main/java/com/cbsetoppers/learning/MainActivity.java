@@ -2,6 +2,7 @@ package com.cbsetoppers.learning;
 
 import android.os.Bundle;
 import android.webkit.WebView;
+import android.webkit.WebSettings;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -11,8 +12,18 @@ public class MainActivity extends BridgeActivity {
 
         // Performance Hybridisation: Enable Hardware Acceleration & Optimized Layering
         WebView webView = this.getBridge().getWebView();
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setDomStorageEnabled(true);
+        WebSettings settings = webView.getSettings();
+
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+
+        // ─── Media & Video Playback Support ───
+        // Allow inline HTML5 video (required for YouTube iframe to play in-app)
+        settings.setMediaPlaybackRequiresUserGesture(false);
+        // Allow loading mixed content (http iframes inside https pages)
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+        // Allow content access for richer media features
+        settings.setAllowContentAccess(true);
 
         // Native Feel: Disable scrollbars and long-press (disables copy menu)
         webView.setHorizontalScrollBarEnabled(false);

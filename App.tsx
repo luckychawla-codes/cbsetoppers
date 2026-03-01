@@ -1490,7 +1490,7 @@ const Dashboard: React.FC<{
   const loadRootSubjects = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchSubjects(user.class, user.stream);
+      const data = await fetchSubjects(user.class, user.stream, user.competitive_exams || []);
       setSubjects(data);
     } catch (_) { }
     setLoading(false);
@@ -1571,83 +1571,80 @@ const Dashboard: React.FC<{
     return url.split('/').pop()?.split('?')[0] || '';
   };
 
-  // ─── Premium In-App YouTube Player ───
+  // ─── Premium In-App YouTube Player with Free Rotation & Screen Fit ───
   const YouTubePlayer: React.FC<{ url: string, onClose: () => void }> = ({ url, onClose }) => {
     const videoId = getYouTubeId(url);
-    const [isFullscreen, setIsFullscreen] = useState(false);
-    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const [showHint, setShowHint] = useState(true);
 
-    const toggleFullscreen = () => {
-      if (!isFullscreen) {
-        const el = iframeRef.current;
-        if (el?.requestFullscreen) el.requestFullscreen();
-        else if ((el as any)?.webkitRequestFullscreen) (el as any).webkitRequestFullscreen();
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-      }
-      setIsFullscreen(f => !f);
+    const unlockRotation = () => {
+      try { (screen.orientation as any).unlock(); } catch (_) { }
     };
 
+    const lockPortrait = async () => {
+      try {
+        await (screen.orientation as any).lock('portrait-primary');
+      } catch (_) {
+        try {
+          await (screen.orientation as any).lock('portrait');
+        } catch (__) { }
+      }
+    };
+
+    // Free rotation on open; restore portrait on close
     useEffect(() => {
-      const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
-      document.addEventListener('fullscreenchange', onFsChange);
-      document.addEventListener('webkitfullscreenchange', onFsChange);
+      unlockRotation();
+      const hintTimer = setTimeout(() => setShowHint(false), 3500);
       return () => {
-        document.removeEventListener('fullscreenchange', onFsChange);
-        document.removeEventListener('webkitfullscreenchange', onFsChange);
+        clearTimeout(hintTimer);
+        // Force portrait again on close
+        lockPortrait();
       };
     }, []);
 
+    const handleClose = () => {
+      lockPortrait();
+      setTimeout(onClose, 200);
+    };
+
     return (
-      <div className="fixed inset-0 z-[1000] bg-black flex flex-col" style={{ touchAction: 'none' }}>
-        {/* Top Bar */}
-        <div className="flex items-center justify-between px-4 py-3 bg-black/80 backdrop-blur-md shrink-0">
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-black uppercase tracking-widest truncate">▶ Now Playing</p>
-            <p className="text-white/50 text-[9px] font-bold uppercase tracking-wider truncate">{videoId}</p>
-          </div>
-          <div className="flex items-center gap-2 ml-3 shrink-0">
-            {/* Fullscreen Toggle */}
-            <button
-              onClick={toggleFullscreen}
-              className="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-xl transition-all active:scale-90"
-            >
-              {isFullscreen ? (
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9V4.5M15 9h4.5M15 9l5.25-5.25M15 15v4.5M15 15h4.5M15 15l5.25 5.25" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-                </svg>
-              )}
-            </button>
-            {/* Close */}
-            <button
-              onClick={onClose}
-              className="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-red-500/80 rounded-xl transition-all active:scale-90"
-            >
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+      <div className="fixed inset-0 z-[1000] bg-black" style={{ touchAction: 'none' }}>
+
+        {/* ─── Top Right Close Icon ─── */}
+        <div className="absolute top-4 right-6 z-20">
+          <button
+            onClick={handleClose}
+            className="w-10 h-10 flex items-center justify-center bg-black/50 hover:bg-red-600 active:scale-90 rounded-full transition-all border border-white/20 shadow-2xl backdrop-blur-md"
+            title="Close Video"
+          >
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* YouTube iFrame
+            controls=1 brings back YouTube's default settings/controls UI
+            We keep playsinline=1 for mobile inline play */}
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&fs=1&controls=1`}
+          className="absolute inset-0 w-full h-full border-none"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', objectFit: 'cover', width: '100vw', height: '100vh' }}
+          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+          allowFullScreen
+          title="CBSE TOPPERS Video"
+        />
+
+        {/* Hint Toast — auto-hides after 3.5s */}
+        {showHint && (
+          <div className="absolute bottom-10 left-0 right-0 flex justify-center z-20 pointer-events-none">
+            <div className="flex items-center gap-2 bg-black/75 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-5 py-3 rounded-2xl border border-white/10 shadow-2xl">
+              <svg className="w-4 h-4 text-emerald-400 shrink-0 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
               </svg>
-            </button>
+              Auto Rotation Enabled
+            </div>
           </div>
-        </div>
-
-        {/* YouTube iFrame — fills all remaining space */}
-        <div className="flex-1 w-full relative bg-black">
-          <iframe
-            ref={iframeRef}
-            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&fs=1`}
-            className="absolute inset-0 w-full h-full border-none"
-            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-            allowFullScreen
-            title="CBSE TOPPERS Video"
-          />
-        </div>
-
-        {/* Bottom Safe Area */}
-        <div className="h-safe bg-black shrink-0" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }} />
+        )}
       </div>
     );
   };
@@ -3665,6 +3662,15 @@ const App: React.FC = () => {
       AdMob.initialize();
     } catch (e) {
       console.warn('AdMob initialization failed or not available on this platform');
+    }
+
+    // Default global orientation to portrait
+    try {
+      (screen.orientation as any).lock('portrait-primary');
+    } catch (_) {
+      try {
+        (screen.orientation as any).lock('portrait');
+      } catch (__) { }
     }
   }, []);
 
