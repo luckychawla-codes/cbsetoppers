@@ -35,19 +35,31 @@ export const registerStudent = async (params: {
 
     if (authError) throw authError;
 
-    // 2. Insert additional details into our 'students' table
+    // 2. Fetch linked IDs for categorical data
+    const [{ data: cls }, { data: strm }, { data: exms }] = await Promise.all([
+      supabase.from('classes').select('id').eq('name', params.studentClass).maybeSingle(),
+      params.stream ? supabase.from('streams').select('id').eq('name', params.stream).maybeSingle() : Promise.resolve({ data: null }),
+      params.competitiveExams && params.competitiveExams.length > 0
+        ? supabase.from('competitive_exams').select('id').in('name', params.competitiveExams)
+        : Promise.resolve({ data: [] })
+    ]);
+
+    // 3. Insert additional details into our 'students' table
     const { data: profileData, error: profileError } = await supabase
       .from('students')
       .insert([{
         name: params.name.trim(),
         dob: params.dob,
         class: params.studentClass,
+        class_id: cls?.id || null,
         stream: params.stream || null,
+        stream_id: strm?.id || null,
         email: params.email.trim(),
         phone: params.phone?.trim() || null,
         student_id: params.rollNumber.trim(),
         gender: params.gender,
         competitive_exams: params.competitiveExams || [],
+        competitive_exam_ids: (exms as any[])?.map(e => e.id) || [],
         is_verified: true
       }])
       .select()
@@ -119,7 +131,7 @@ export const verifyStudent = async (identifier: string, password?: string) => {
     // 3. Fetch full profile from 'students' table
     const { data: profile, error: profileError } = await supabase
       .from('students')
-      .select('id, name, student_id, email, dob, class, stream, phone, gender, is_verified, competitive_exams')
+      .select('id, name, student_id, email, dob, class, stream, phone, gender, is_verified, competitive_exams, class_id, stream_id, competitive_exam_ids')
       .eq('email', email)
       .maybeSingle();
 
@@ -138,7 +150,11 @@ export const verifyStudent = async (identifier: string, password?: string) => {
       student_id: 'OP_' + (authData?.user?.id?.substring(0, 5)?.toUpperCase() || 'MOD'),
       email: email,
       class: 'Admin',
-      dob: new Date().toISOString().split('T')[0]
+      dob: new Date().toISOString().split('T')[0],
+      competitive_exams: [],
+      class_id: null,
+      stream_id: null,
+      competitive_exam_ids: []
     };
 
     if (operator) {

@@ -40,6 +40,9 @@ export interface User {
   gender?: 'MALE' | 'FEMALE' | 'PREFER_NOT_SAY';
   is_verified?: boolean;
   competitive_exams?: string[];
+  class_id?: string | null;
+  stream_id?: string | null;
+  competitive_exam_ids?: string[];
   is_operator?: boolean;
 }
 
