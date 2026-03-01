@@ -306,8 +306,9 @@ export const createExam = async (name: string) => {
 import { Subject, Folder, Material, SubjectCategory } from '../types';
 
 /** Fetch subjects relevant to a student's class and stream */
-export const fetchSubjects = async (targetClass: string, targetStream?: string): Promise<Subject[]> => {
-  let query = supabase.from('subjects').select('*').eq('target_class', targetClass);
+export const fetchSubjects = async (targetClass?: string, targetStream?: string): Promise<Subject[]> => {
+  let query = supabase.from('subjects').select('*');
+  if (targetClass) query = query.eq('target_class', targetClass);
 
   // If IX or X or XII+, stream is ignored in fetch (per rules, they won't have it)
   // But we filter specifically to match DB rows
