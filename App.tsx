@@ -3610,9 +3610,24 @@ const App: React.FC = () => {
       mobileFriendlyUrl = url.includes('/preview') ? url : url.replace(/\/view(\?.*)?$/, '/preview');
     }
 
+    const handleDownload = () => {
+      let downloadUrl = finalUrl;
+      if (url.includes('drive.google.com')) {
+        downloadUrl = url.replace(/\/preview$/, '/view').replace(/\/view(\?.*)?$/, '/view?export=download');
+      }
+      window.open(downloadUrl, '_blank');
+    };
+
     return (
       <div className="fixed inset-0 z-[1000] bg-black dark:bg-slate-950 flex flex-col animate-in fade-in duration-300">
-        <div className="absolute top-6 right-6 z-[1010]">
+        <div className="absolute top-6 right-6 z-[1010] flex items-center gap-3">
+          <button
+            onClick={handleDownload}
+            className="p-3 bg-violet-600/80 hover:bg-violet-600 backdrop-blur-md rounded-full text-white transition-all active:scale-95 shadow-2xl border border-white/10"
+            title="Download PDF"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+          </button>
           <button onClick={onClose} className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all active:scale-95 shadow-2xl border border-white/10">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
