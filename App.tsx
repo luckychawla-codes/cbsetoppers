@@ -18,6 +18,7 @@ import { App as CapApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
 import { AdMob } from '@capacitor-community/admob';
+import { ScreenOrientation } from '@capacitor/screen-orientation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LatexRenderer: React.FC<{ content: string, className?: string }> = ({ content, className }) => {
@@ -1583,17 +1584,13 @@ const Dashboard: React.FC<{
     const [showHint, setShowHint] = useState(true);
 
     const unlockRotation = () => {
-      try { (screen.orientation as any).unlock(); } catch (_) { }
+      try { ScreenOrientation.unlock(); } catch (_) { }
     };
 
     const lockPortrait = async () => {
       try {
-        await (screen.orientation as any).lock('portrait-primary');
-      } catch (_) {
-        try {
-          await (screen.orientation as any).lock('portrait');
-        } catch (__) { }
-      }
+        await ScreenOrientation.lock({ orientation: 'portrait' });
+      } catch (_) { }
     };
 
     // Free rotation on open; restore portrait on close
@@ -3672,12 +3669,8 @@ const App: React.FC = () => {
 
     // Default global orientation to portrait
     try {
-      (screen.orientation as any).lock('portrait-primary');
-    } catch (_) {
-      try {
-        (screen.orientation as any).lock('portrait');
-      } catch (__) { }
-    }
+      ScreenOrientation.lock({ orientation: 'portrait' });
+    } catch (_) { }
   }, []);
 
   useEffect(() => {
