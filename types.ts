@@ -34,8 +34,8 @@ export interface User {
   student_id: string;
   email: string;
   dob: string;
-  class: string;
-  stream?: string;
+  class: 'IX' | 'X' | 'XI' | 'XII' | 'XII+';
+  stream?: 'PCB' | 'PCM' | 'PCBM';
   phone?: string;
   gender?: 'MALE' | 'FEMALE' | 'PREFER_NOT_SAY';
   is_verified?: boolean;
@@ -46,27 +46,50 @@ export interface User {
 export interface QuizResult {
   score: number;
   total: number;
-  paperId: string; // Changed to string to handle 'P1', 'P2', 'Mock'
+  paperId: string;
   subject: string;
   answers: (number | null)[];
   timestamp: number;
   timeSpent: number; // in seconds
 }
 
-export interface LeaderboardEntry {
+export type SubjectCategory = 'Core' | 'Additional';
+export type MaterialType = 'pdf' | 'image' | 'video';
+
+export interface Subject {
+  id: string;
   name: string;
-  score: number;
-  paper_id: string;
-  subject: string;
+  code: string;
+  category: SubjectCategory;
+  target_class: string;
+  target_stream?: string;
   created_at: string;
 }
 
-export type ContentType = 'section' | 'folder' | 'file' | 'photo' | 'video' | 'competitive_exam' | 'stream' | 'quiz' | 'subject_core' | 'subject_additional';
+export interface Folder {
+  id: string;
+  subject_id: string;
+  parent_id?: string;
+  name: string;
+  order_index: number;
+  created_at: string;
+}
 
+export interface Material {
+  id: string;
+  folder_id: string;
+  title: string;
+  type: MaterialType;
+  url: string;
+  order_index: number;
+  created_at: string;
+}
+
+// Keep for legacy support during transition if needed
 export interface DashboardContent {
   id: string;
   title: string;
-  type: ContentType;
+  type: string;
   content_link?: string;
   parent_id?: string;
   order_index: number;
@@ -74,25 +97,4 @@ export interface DashboardContent {
   stream_target?: string;
   exam_target?: string;
   created_at?: string;
-}
-export interface ClassCategory {
-  id: string;
-  name: string; // e.g., 'Xth', 'XIIth'
-}
-
-export interface StreamCategory {
-  id: string;
-  name: string; // e.g., 'Science', 'Commerce'
-}
-
-export interface ExamCategory {
-  id: string;
-  name: string; // e.g., 'JEE', 'NEET'
-}
-
-export interface SubjectCategory {
-  id: string;
-  name: string;
-  stream_id?: string;
-  class_name?: string;
 }

@@ -300,84 +300,50 @@ export const createExam = async (name: string) => {
   return data as ExamCategory;
 };
 
-export const deleteClass = async (id: string) => {
-  const { error } = await supabase.from('classes').delete().eq('id', id);
-  if (error) throw error;
-};
 
-export const deleteStream = async (id: string) => {
-  const { error } = await supabase.from('streams').delete().eq('id', id);
-  if (error) throw error;
-};
+// ─── CONTENT MANAGEMENT (STUDENT FETCH) ─────────────────────────────
 
-export const deleteExam = async (id: string) => {
-  const { error } = await supabase.from('competitive_exams').delete().eq('id', id);
-  if (error) throw error;
-};
+import { Subject, Folder, Material, SubjectCategory } from '../types';
 
-export const fetchSubjects = async () => {
-  const { data, error } = await supabase.from('subjects').select('*').order('name');
-  if (error) throw error;
-  return data as SubjectCategory[];
-};
+/** Fetch subjects relevant to a student's class and stream */
+export const fetchSubjects = async (targetClass: string, targetStream?: string): Promise<Subject[]> => {
+  let query = supabase.from('subjects').select('*').eq('target_class', targetClass);
 
-export const createSubject = async (name: string, stream_id?: string, class_name?: string) => {
-  const { data, error } = await supabase.from('subjects').insert([{ name, stream_id, class_name }]).select().single();
-  if (error) throw error;
-  return data as SubjectCategory;
-};
-
-export const deleteSubject = async (id: string) => {
-  const { error } = await supabase.from('subjects').delete().eq('id', id);
-  if (error) throw error;
-};
-
-export const fetchDashboardContent = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('dashboard_content')
-      .select('*')
-      .order('order_index', { ascending: true });
-    if (error) throw error;
-    return data as DashboardContent[];
-  } catch (e) {
-    console.warn('Dashboard content fetch failed, using mock data');
-    const saved = localStorage.getItem('pe_cbt_dynamic_content');
-    return saved ? JSON.parse(saved) : [];
+  // If IX or X or XII+, stream is ignored in fetch (per rules, they won't have it)
+  // But we filter specifically to match DB rows
+  if (targetStream && ['XI', 'XII'].includes(targetClass)) {
+    // If XI/XII, we strictly show subjects for THAT stream
+    query = query.eq('target_stream', targetStream);
+  } else {
+    // For IX, X, XII+, we show subjects where stream is NULL
+    query = query.is('target_stream', null);
   }
+
+  const { data, error } = await query.order('name');
+  if (error) throw error;
+  return data as Subject[];
 };
 
-export const createDashboardContent = async (content: Omit<DashboardContent, 'id' | 'created_at'>) => {
-  try {
-    const { data, error } = await supabase
-      .from('dashboard_content')
-      .insert([content])
-      .select()
-      .single();
-    if (error) throw error;
-    return data as DashboardContent;
-  } catch (e) {
-    console.error('Create content error:', e);
-    const id = Math.random().toString(36).substr(2, 9);
-    const newContent = { ...content, id, created_at: new Date().toISOString() };
-    const saved = JSON.parse(localStorage.getItem('pe_cbt_dynamic_content') || '[]');
-    saved.push(newContent);
-    localStorage.setItem('pe_cbt_dynamic_content', JSON.stringify(saved));
-    return newContent;
-  }
+/** Fetch folders for a subject/parent */
+export const fetchFolders = async (subjectId: string, parentId: string | null = null): Promise<Folder[]> => {
+  let query = supabase.from('folders').select('*').eq('subject_id', subjectId);
+  if (parentId) query = query.eq('parent_id', parentId);
+  else query = query.is('parent_id', null);
+
+  const { data, error } = await query.order('order_index');
+  if (error) throw error;
+  return data as Folder[];
 };
 
-export const deleteDashboardContent = async (id: string) => {
-  try {
-    const { error } = await supabase.from('dashboard_content').delete().eq('id', id);
-    if (error) throw error;
-    return true;
-  } catch (e) {
-    const saved = JSON.parse(localStorage.getItem('pe_cbt_dynamic_content') || '[]');
-    const filtered = saved.filter((c: any) => c.id !== id);
-    localStorage.setItem('pe_cbt_dynamic_content', JSON.stringify(filtered));
-    return true;
-  }
+/** Fetch materials in a folder */
+export const fetchMaterials = async (folderId: string): Promise<Material[]> => {
+  const { data, error } = await supabase
+    .from('materials')
+    .select('*')
+    .eq('folder_id', folderId)
+    .order('order_index');
+  if (error) throw error;
+  return data as Material[];
 };
 
 export const getStudentCount = async () => {

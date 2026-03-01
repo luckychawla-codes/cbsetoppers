@@ -1,8 +1,8 @@
 // CBSE TOPPERS - Premium Education Platform
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { User, QuizResult, Question, DashboardContent, ContentType } from './types';
+import { User, QuizResult, Question, Subject, Folder, Material, SubjectCategory, MaterialType } from './types';
 import { PAPER_1_QUESTIONS, CASE_STUDIES_P1, PAPER_2_QUESTIONS, CASE_STUDIES_P2, STREAM_SUBJECTS } from './constants';
-import { verifyStudent, registerStudent, supabase, saveQuizResult, fetchStudentStats, updateStudentProfile, fetchMaintenanceStatus, fetchDashboardContent, createDashboardContent, deleteDashboardContent, getStudentCount, fetchClasses, fetchStreams, fetchExams, fetchSubjects } from './services/supabase';
+import { verifyStudent, registerStudent, supabase, saveQuizResult, fetchStudentStats, updateStudentProfile, fetchMaintenanceStatus, fetchSubjects, fetchFolders, fetchMaterials, getStudentCount } from './services/supabase';
 import { analyzeResult, generateAIQuiz, getMotivationalQuote } from './services/ai';
 import AIChatWidget from './AIChatWidget';
 import ReactMarkdown from 'react-markdown';
@@ -1495,394 +1495,242 @@ const Dashboard: React.FC<{
   user: User,
   onStartExam: (s: string, p: string) => void,
   setView: (v: View) => void,
-  selectedSubject: string | null,
-  setSelectedSubject: (s: string | null) => void,
   theme: 'light' | 'dark',
   setTheme: (t: 'light' | 'dark') => void,
-  dbSubjects: SubjectCategory[],
-  dbStreams: StreamCategory[],
   setShowPdf: (url: string | null) => void,
   showPromotions: boolean
-}> = ({ user, onStartExam, setView, selectedSubject, setSelectedSubject, theme, setTheme, dbSubjects, dbStreams, setShowPdf, showPromotions }) => {
+}> = ({ user, onStartExam, setView, theme, setTheme, setShowPdf, showPromotions }) => {
   const [showStats, setShowStats] = useState(false);
-  const [showTgMenu, setShowTgMenu] = useState(false);
-  const [showLegalSide, setShowLegalSide] = useState<string | null>(null);
-  const [dynamicContent, setDynamicContent] = useState<DashboardContent[]>([]);
-  const [currentFolder, setCurrentFolder] = useState<DashboardContent | null>(null);
-  const [history, setHistory] = useState<DashboardContent[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
+  const [childFolders, setChildFolders] = useState<Folder[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [history, setHistory] = useState<Folder[]>([]);
+  const [currentSubject, setCurrentSubject] = useState<Subject | null>(null);
+  const [loading, setLoading] = useState(true);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadDynamicContent();
-  }, [user.class, user.stream, user.competitive_exams]);
+  const loadRootSubjects = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await fetchSubjects(user.class, user.stream);
+      setSubjects(data);
+    } catch (_) { }
+    setLoading(false);
+  }, [user.class, user.stream]);
 
-  const loadDynamicContent = async () => {
-    const data = await fetchDashboardContent();
-    // Filter by class and stream
-    const filtered = data.filter(c => {
-      const classMatch = !c.class_target || c.class_target === user.class;
-      const streamMatch = !c.stream_target || c.stream_target === user.stream;
-      const examMatch = !c.exam_target || (user.competitive_exams || []).includes(c.exam_target);
-      return classMatch && streamMatch && examMatch;
-    });
-    setDynamicContent(filtered);
+  useEffect(() => { loadRootSubjects(); }, [loadRootSubjects]);
+
+  const enterSubject = async (s: Subject) => {
+    hapticsImpactMedium();
+    setCurrentSubject(s);
+    setHistory([]);
+    setCurrentFolder(null);
+    setLoading(true);
+    try {
+      const folders = await fetchFolders(s.id, null);
+      setChildFolders(folders);
+      setMaterials([]);
+    } catch (_) { }
+    setLoading(false);
   };
 
-  const FullScreenVideo: React.FC<{ url: string, onClose: () => void }> = ({ url, onClose }) => {
-    // Extract ID from youtube link
-    const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
-
-    return (
-      <div className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center animate-in fade-in duration-300">
-        <div className="absolute top-6 right-6 z-[1010]">
-          <button onClick={onClose} className="p-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all active:scale-95 shadow-2xl">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
-        <div className="w-full h-full relative group">
-          <iframe
-            src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-            className="w-full h-full border-none"
-            allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-        <p className="fixed bottom-6 text-[10px] font-black text-white/40 uppercase tracking-[0.5em] pointer-events-none">Landscape orientation recommended</p>
-      </div>
-    );
-  };
-  const handleContentClick = (item: DashboardContent) => {
+  const enterFolder = async (f: Folder) => {
     hapticsImpactLight();
-    if (item.type === 'folder' || item.type === 'competitive_exam' || item.type === 'stream' || item.type === 'subject_core' || item.type === 'subject_additional') {
-      setHistory([...history, currentFolder].filter(Boolean) as DashboardContent[]);
-      setCurrentFolder(item);
-    } else if (item.type === 'quiz') {
-      onStartExam(item.title, item.content_link || 'Mock');
-    } else if (item.type === 'video') {
-      setVideoUrl(item.content_link || '');
-    } else if (item.content_link) {
-      if (item.content_link.toLowerCase().endsWith('.pdf')) {
-        setShowPdf(item.content_link);
-      } else {
-        window.open(item.content_link, '_blank');
-      }
-    }
+    setHistory([...history, f]);
+    setCurrentFolder(f);
+    setLoading(true);
+    try {
+      const [fld, mat] = await Promise.all([
+        fetchFolders(currentSubject!.id, f.id),
+        fetchMaterials(f.id)
+      ]);
+      setChildFolders(fld);
+      setMaterials(mat);
+    } catch (_) { }
+    setLoading(false);
   };
 
   const navigateBack = () => {
-    const prev = history[history.length - 1] || null;
+    hapticsImpactLight();
     const newHistory = history.slice(0, -1);
-    setCurrentFolder(prev);
+    const prev = newHistory[newHistory.length - 1] || null;
     setHistory(newHistory);
+    setCurrentFolder(prev);
+
+    if (!prev && currentSubject) {
+      enterSubject(currentSubject);
+    } else if (prev) {
+      loadLevel(prev);
+    }
   };
 
-  useEffect(() => {
-    const handleOpenStats = () => setShowStats(true);
-    window.addEventListener('open-stats', handleOpenStats);
-    return () => window.removeEventListener('open-stats', handleOpenStats);
-  }, []);
+  const loadLevel = async (f: Folder) => {
+    setLoading(true);
+    try {
+      const [fld, mat] = await Promise.all([
+        fetchFolders(currentSubject!.id, f.id),
+        fetchMaterials(f.id)
+      ]);
+      setChildFolders(fld);
+      setMaterials(mat);
+    } catch (_) { }
+    setLoading(false);
+  };
 
-  useEffect(() => {
-    (window as any).isStatsOpen = showStats;
-  }, [showStats]);
-
-  const renderDashboardItem = (item: DashboardContent) => {
-    let ytThumb = null;
-    if (item.type === 'video' && item.content_link) {
-      const videoId = item.content_link.split('v=')[1]?.split('&')[0] || item.content_link.split('/').pop();
-      if (videoId) ytThumb = `https://img.youtube.com/vi/${videoId}/0.jpg`;
-    }
-
+  const FullScreenVideo: React.FC<{ url: string, onClose: () => void }> = ({ url, onClose }) => {
+    const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
     return (
-      <button
-        key={item.id}
-        onClick={() => handleContentClick(item)}
-        className="bg-white dark:bg-slate-800/50 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-violet-400 transition-all text-center flex flex-col items-center gap-4 group animate-in zoom-in duration-300 relative overflow-hidden"
-      >
-        <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-violet-50 dark:bg-slate-700/50 text-violet-600 dark:text-violet-400 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-all overflow-hidden relative">
-          {ytThumb ? (
-            <img src={ytThumb} className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-500" alt="Video Thumbnail" />
-          ) : item.type === 'folder' || item.type === 'subject_core' || item.type === 'subject_additional' ? (
-            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-          ) : item.type === 'competitive_exam' ? (
-            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-2.066 3.42 3.42 0 004.438 0 3.42 3.42 0 001.946 2.066 3.42 3.42 0 000 4.606 3.42 3.42 0 00-1.946 2.066 3.42 3.42 0 00-4.438 0 3.42 3.42 0 00-1.946-2.066 3.42 3.42 0 000-4.606z" /><path d="M12 12a3 3 0 100-6 3 3 0 000 6z" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
-          ) : item.type === 'stream' ? (
-            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 4L9 7" /></svg>
-          ) : item.type === 'quiz' ? (
-            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-          ) : item.type === 'video' ? (
-            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          ) : item.type === 'photo' ? (
-            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 00-2 2z" /></svg>
-          ) : (
-            <svg className="w-6 h-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-          )}
-        </div>
-        <span className="text-[10px] md:text-[12px] font-black uppercase text-slate-800 dark:text-slate-200 tracking-tight leading-tight px-2">{item.title}</span>
-      </button>
+      <div className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center">
+        <button onClick={onClose} className="absolute top-6 right-6 p-4 bg-white/10 rounded-full text-white z-[1010]"><svg className="w-8 h-8 rotate-45" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14" /></svg></button>
+        <iframe src={`https://www.youtube.com/embed/${videoId}?autoplay=1`} className="w-full h-full border-none" allow="autoplay; encrypted-media" allowFullScreen />
+      </div>
     );
   };
 
+  const handleMaterialClick = (m: Material) => {
+    hapticsImpactLight();
+    if (m.type === 'video') setVideoUrl(m.url);
+    else if (m.type === 'pdf') setShowPdf(m.url);
+    else if (m.type === 'image') window.dispatchEvent(new CustomEvent('topper-zoom', { detail: m.url }));
+  };
+
+  const coreSubs = subjects.filter(s => s.category === 'Core');
+  const addSubs = subjects.filter(s => s.category === 'Additional');
+
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f172a] pb-20 relative text-left transition-colors duration-500">
-      <header className="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md border-b dark:border-slate-800 px-6 md:px-12 py-4 md:py-6 flex justify-between items-center sticky top-0 z-50 shadow-md">
-        <div className="flex items-center gap-3 md:gap-4">
-          <img src={LOGO_URL} className="w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl shadow-sm" />
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f172a] pb-24 relative transition-colors duration-500 overflow-x-hidden">
+      {/* Header */}
+      <header className="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md border-b dark:border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-[60]">
+        <div className="flex items-center gap-3">
+          <img src={LOGO_URL} className="w-10 h-10 rounded-2xl shadow-sm" />
           <div className="text-left">
-            <h2 className="text-[12px] md:text-lg font-black uppercase leading-tight text-slate-800 dark:text-white tracking-tighter">CBSE TOPPERS</h2>
-            <div className="flex items-center gap-1.5 md:gap-2 mt-0.5">
-              <span className="text-violet-600 font-black text-[9px] md:text-[12px] uppercase">{user.name}</span>
-            </div>
+            <h2 className="text-sm font-black uppercase text-slate-800 dark:text-white tracking-widest leading-none">Toppers</h2>
+            <span className="text-[10px] text-violet-600 font-black uppercase">{user.class} {user.stream || ''}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2 md:gap-3">
-          {/* My Stats Button */}
-          <button onClick={() => setShowStats(true)} className="bg-violet-50 px-3 py-2 md:px-4 rounded-xl text-violet-600 hover:bg-violet-600 hover:text-white border border-violet-100 transition-all active:scale-95 flex items-center gap-1.5 font-black text-[10px] uppercase tracking-widest">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-            <span className="hidden md:inline">My Stats</span>
+        <div className="flex gap-2">
+          <button onClick={() => setShowStats(true)} className="w-10 h-10 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center border border-violet-100">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
           </button>
-          <button
-            onClick={() => { hapticsImpactLight(); setTheme(t => t === 'light' ? 'dark' : 'light'); }}
-            className="bg-slate-50 dark:bg-slate-800 p-2 md:p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-violet-600 hover:text-white transition-all active:scale-95"
-          >
+          <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-white rounded-xl flex items-center justify-center">
             {theme === 'light' ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.364 17.636l-.707.707M17.636 17.636l-.707-.707M6.364 6.364l-.707.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            )}
-          </button>
-          <button onClick={() => setView('profile')} className="bg-violet-50 dark:bg-slate-800 p-1 rounded-xl text-violet-600 dark:text-slate-300 hover:bg-violet-600 hover:text-white border border-violet-100 dark:border-slate-700 transition-all active:scale-95 overflow-hidden w-9 h-9 md:w-11 md:h-11 flex items-center justify-center">
-            {user.gender === 'MALE' ? (
-              <img src="/male_avtar.png" className="w-full h-full object-cover rounded-lg" alt="Profile" />
-            ) : user.gender === 'FEMALE' ? (
-              <img src="/female_avtar.png" className="w-full h-full object-cover rounded-lg" alt="Profile" />
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
             )}
           </button>
         </div>
       </header>
-      {showPromotions && <PromotionsSlider />}
-      <MotivationalQuote user={user} />
 
-      <main className="max-w-6xl mx-auto p-4 md:p-12">
-        <div className="animate-in fade-in duration-700">
-          <div className="mb-10 text-center">
-            <h2 className="text-2xl md:text-4xl font-black text-violet-600 uppercase tracking-tighter leading-tight mb-1 min-h-[1.2em]">
-              <TypingGreeting name={user.name.split(' ')[0]} />
-            </h2>
-            <p className="text-slate-400 font-bold text-[10px] md:text-xs uppercase tracking-[0.3em]">
-              Select a Subject to start MOCK TEST
-            </p>
-            <div className="mt-6 flex justify-center">
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent('open-topper-chat', { detail: { message: `Hey TopperAI, I'm a Class ${user.class}${user.stream ? ' ' + user.stream : ''} student. Can you analyze my syllabus and create a personalized 30-day preparation plan? 📅` } }))}
-                className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center gap-3"
-              >
-                <span className="text-lg">🗓️</span> AI Syllabus Planner
-              </button>
+      {/* Main Container */}
+      <main className="px-6 py-6 space-y-8">
+        {!currentSubject ? (
+          <>
+            {showPromotions && <PromoBanner current={0} totalAds={1} autoScroll={true} />}
+
+            {/* Core Subjects Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-4 bg-violet-600 rounded-full" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Core Subjects</h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {coreSubs.map(s => (
+                  <button key={s.id} onClick={() => enterSubject(s)} className="bg-white dark:bg-slate-800/40 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 hover:border-violet-500/50 transition-all flex flex-col items-center gap-4 group">
+                    <div className="w-14 h-14 bg-violet-50 dark:bg-slate-700/50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500">📚</div>
+                    <span className="text-[12px] font-bold text-slate-800 dark:text-white uppercase tracking-tight text-center">{s.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Additional Subjects Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-4 bg-emerald-500 rounded-full" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Additional</h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {addSubs.map(s => (
+                  <button key={s.id} onClick={() => enterSubject(s)} className="bg-white dark:bg-slate-800/40 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 transition-all flex flex-col items-center gap-4 group">
+                    <div className="w-14 h-14 bg-emerald-50 dark:bg-slate-700/50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500">📖</div>
+                    <span className="text-[12px] font-bold text-slate-800 dark:text-white uppercase tracking-tight text-center">{s.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Sub-Navigation (Folders / Files) */
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <button onClick={() => { if (history.length > 0) navigateBack(); else setCurrentSubject(null); }} className="p-3 bg-violet-600 text-white rounded-xl shadow-lg shadow-violet-500/20 active:scale-95 transition-all">
+                <svg className="w-5 h-5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M9 5l7 7-7 7" /></svg>
+              </button>
+              <div className="text-right">
+                <h3 className="text-lg font-black uppercase text-slate-900 dark:text-white tracking-tighter">{currentFolder?.name || currentSubject.name}</h3>
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">{currentSubject.name} Hierarchy</p>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="py-20 flex justify-center"><svg className="w-8 h-8 animate-spin text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg></div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AnimatePresence mode="popLayout">
+                  {childFolders.map((f, i) => (
+                    <motion.button
+                      initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                      key={f.id} onClick={() => enterFolder(f)}
+                      className="p-5 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl flex items-center gap-4 hover:shadow-xl hover:scale-[1.02] transition-all group"
+                    >
+                      <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-xl group-hover:bg-violet-600 group-hover:text-white transition-colors">📂</div>
+                      <div className="text-left">
+                        <span className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">{f.name}</span>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Browse Materials</p>
+                      </div>
+                    </motion.button>
+                  ))}
+                  {materials.map((m, i) => (
+                    <motion.button
+                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                      key={m.id} onClick={() => handleMaterialClick(m)}
+                      className="p-5 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl flex items-center gap-4 hover:bg-violet-500/5 transition-all group"
+                    >
+                      <div className="w-12 h-12 bg-violet-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-xl">
+                        {m.type === 'pdf' ? '📄' : m.type === 'image' ? '🖼️' : '📺'}
+                      </div>
+                      <div className="text-left max-w-[200px]">
+                        <span className="text-xs font-black uppercase text-slate-800 dark:text-slate-200 truncate block">{m.title}</span>
+                        <span className="text-[8px] font-black text-violet-500 uppercase tracking-widest">{m.type} material</span>
+                      </div>
+                    </motion.button>
+                  ))}
+                </AnimatePresence>
+                {childFolders.length === 0 && materials.length === 0 && (
+                  <div className="col-span-full py-20 text-center text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Coming Soon...</div>
+                )}
+              </div>
+            )}
           </div>
-
-          <SyllabusTrackerSection user={user} dbSubjects={dbSubjects} dbStreams={dbStreams} />
-
-          {/* Dynamic Sections and Folders */}
-          {!currentFolder ? (
-            <>
-              {dynamicContent.filter(c => c.type === 'section').map(section => (
-                <section key={section.id} className="mb-16">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-                    <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">{section.title}</h3>
-                    <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                    {dynamicContent.filter(c => c.parent_id === section.id).map(item => renderDashboardItem(item))}
-                  </div>
-                </section>
-              ))}
-
-              {dynamicContent.filter(c => !c.parent_id && c.type === 'subject_core').length > 0 && (
-                <section className="mb-16">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="h-px flex-1 bg-violet-100 dark:bg-violet-900/30" />
-                    <h3 className="text-[10px] font-black text-violet-600 dark:text-violet-400 uppercase tracking-[0.3em] flex items-center gap-2"><span>🎯</span> Core Subjects</h3>
-                    <div className="h-px flex-1 bg-violet-100 dark:bg-violet-900/30" />
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                    {dynamicContent.filter(c => !c.parent_id && c.type === 'subject_core').map(item => renderDashboardItem(item))}
-                  </div>
-                </section>
-              )}
-
-              {dynamicContent.filter(c => !c.parent_id && c.type === 'subject_additional').length > 0 && (
-                <section className="mb-16">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="h-px flex-1 bg-sky-100 dark:bg-sky-900/30" />
-                    <h3 className="text-[10px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-[0.3em] flex items-center gap-2"><span>✨</span> Additional Subjects</h3>
-                    <div className="h-px flex-1 bg-sky-100 dark:bg-sky-900/30" />
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                    {dynamicContent.filter(c => !c.parent_id && c.type === 'subject_additional').map(item => renderDashboardItem(item))}
-                  </div>
-                </section>
-              )}
-
-              {dynamicContent.filter(c => !c.parent_id && c.type !== 'section' && c.type !== 'subject_core' && c.type !== 'subject_additional').length > 0 && (
-                <section className="mb-16">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-                    <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">Quick Access</h3>
-                    <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                    {dynamicContent.filter(c => !c.parent_id && c.type !== 'section' && c.type !== 'subject_core' && c.type !== 'subject_additional').map(item => renderDashboardItem(item))}
-                  </div>
-                </section>
-              )}
-
-              {/* Content added via Admin will appear in sections or Quick Access above */}
-            </>
-          ) : (
-            <div className="animate-in slide-in-from-right duration-500">
-              <button onClick={navigateBack} className="mb-10 flex items-center gap-3 text-[10px] font-black uppercase text-slate-400 hover:text-violet-600 transition-all active:scale-95">
-                <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center border dark:border-slate-800 shadow-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                </div>
-                Back to {history[history.length - 1]?.title || 'Portal'}
-              </button>
-              <div className="mb-10 text-center md:text-left">
-                <h3 className="text-2xl md:text-5xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight">{currentFolder.title}</h3>
-                <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.3em] mt-2">Browsing Folder Content</p>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                {dynamicContent.filter(c => c.parent_id === currentFolder.id).map(item => renderDashboardItem(item))}
-              </div>
-              {dynamicContent.filter(c => c.parent_id === currentFolder.id).length === 0 && (
-                <div className="py-20 text-center">
-                  <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">No resources in this folder yet.</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Render Video Player if active */}
-          {videoUrl && <FullScreenVideo url={videoUrl} onClose={() => setVideoUrl(null)} />}
-        </div>
+        )}
       </main>
 
-      {/* My Stats full-screen panel */}
-      {showStats && <StatsPanel user={user} onClose={() => setShowStats(false)} />}
+      {/* Video Overlay */}
+      {videoUrl && <FullScreenVideo url={videoUrl} onClose={() => setVideoUrl(null)} />}
 
-      {/* ── Minimalist Light Footer ── */}
-      <footer className="mt-20 pb-12 flex flex-col items-center gap-4">
+      {/* Bottom Nav Simulation / Space */}
+      <div className="fixed bottom-0 left-0 right-0 h-2 bg-gradient-to-t from-slate-900/10 dark:from-black/40 pointer-events-none" />
 
-        <p className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em]">© 2026 CBSE TOPPERS · Premium Education</p>
-      </footer>
-
-      {/* Telegram Bottom Sheet Support */}
-      {showTgMenu && (
-        <div className="fixed inset-0 z-[400] flex items-end justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
-            onClick={() => setShowTgMenu(false)}
-          />
-          <div className="bg-white dark:bg-[#1e293b] w-full max-w-md rounded-[3rem] shadow-2xl relative z-10 p-8 pb-10 animate-in slide-in-from-bottom-full duration-500">
-            <div className="w-12 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full mx-auto mb-8" />
-
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Support Center</h3>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-1">Connect with the Founders</p>
-            </div>
-
-            <div className="space-y-4">
-              <a href={CONTACT_FOUNDER} target="_blank" onClick={() => setShowTgMenu(false)} className="flex items-center gap-5 p-6 bg-violet-50/50 dark:bg-slate-800/50 rounded-[2rem] group border-2 border-transparent hover:border-indigo-200 dark:hover:border-violet-600 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm">
-                <div className="w-16 h-16 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" /></svg>
-                </div>
-                <div className="text-left">
-                  <h4 className="text-xl font-black text-slate-800 dark:text-slate-200 leading-none flex items-center gap-2">
-                    Lucky Chawla
-                    <span className="text-[9px] w-5 h-5 flex items-center justify-center bg-violet-600 text-white rounded-full shadow-sm">F</span>
-                  </h4>
-                  <p className="text-[11px] font-bold text-slate-400 mt-2">{EMAIL_FOUNDER}</p>
-                </div>
-              </a>
-
-              <a href={CONTACT_OWNER} target="_blank" onClick={() => setShowTgMenu(false)} className="flex items-center gap-5 p-6 bg-sky-50/50 dark:bg-slate-800/50 rounded-[2rem] group border-2 border-transparent hover:border-sky-200 dark:hover:border-sky-600 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm">
-                <div className="w-16 h-16 bg-[#0088cc] text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" /></svg>
-                </div>
-                <div className="text-left">
-                  <h4 className="text-xl font-black text-slate-800 dark:text-slate-200 leading-none flex items-center gap-2">
-                    Tarun Kumar
-                    <span className="text-[9px] w-5 h-5 flex items-center justify-center bg-sky-500 text-white rounded-full shadow-sm">O</span>
-                  </h4>
-                  <p className="text-[11px] font-bold text-slate-400 mt-2">{EMAIL_OWNER}</p>
-                </div>
-              </a>
-              <a href={CONTACT_CEO} target="_blank" onClick={() => setShowTgMenu(false)} className="flex items-center gap-5 p-6 bg-violet-50/50 dark:bg-slate-800/50 rounded-[2rem] group border-2 border-transparent hover:border-indigo-200 dark:hover:border-violet-600 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm">
-                <div className="w-16 h-16 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.76-3.35 3.69-1.53 4.45-1.8 4.95-1.81.11 0 .36.03.52.16.13.11.17.26.18.37.01.07.01.14 0 .2z" /></svg>
-                </div>
-                <div className="text-left">
-                  <h4 className="text-xl font-black text-slate-800 dark:text-slate-200 leading-none flex items-center gap-2">
-                    Abhishek Pani
-                    <span className="text-[9px] w-5 h-5 flex items-center justify-center bg-violet-600 text-white rounded-full shadow-sm">C</span>
-                  </h4>
-                  <p className="text-[11px] font-bold text-slate-400 mt-2">{EMAIL_CEO}</p>
-                </div>
-              </a>
-            </div>
-
-            <button
-              onClick={() => setShowTgMenu(false)}
-              className="w-full mt-8 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all"
-            >
-              Close Support
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Legal Bottom Sheet */}
-      {showLegalSide && (
-        <div className="fixed inset-0 z-[400] flex items-end justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300"
-            onClick={() => setShowLegalSide(null)}
-          />
-          <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl relative z-10 p-10 pb-12 animate-in slide-in-from-bottom-full duration-500 overflow-hidden">
-            <div className="w-12 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full mx-auto mb-10" />
-
-            <div className="text-center mb-10">
-              <h3 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">{LEGAL_DATA[showLegalSide].title}</h3>
-              <p className="text-[10px] font-bold text-violet-500 dark:text-violet-400 uppercase tracking-[0.3em] mt-2">Compliance & Security</p>
-            </div>
-
-            <div className="space-y-8 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar text-left font-left">
-              {LEGAL_DATA[showLegalSide].content.map((item, idx) => (
-                <div key={idx} className="space-y-2 text-left">
-                  <h4 className="font-black text-slate-800 dark:text-slate-200 uppercase text-xs tracking-widest">{item.h}</h4>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{item.p}</p>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => setShowLegalSide(null)}
-              className="w-full mt-12 py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all"
-            >
-              Accept & Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Legal Bottom Sheet Removed Here as it's below in the logic */}
+      {/* Modal Overlay Components (Stats, etc) */}
+      <AnimatePresence>
+        {showStats && <StatsPanel user={user} onClose={() => setShowStats(false)} />}
+      </AnimatePresence>
     </div>
   );
 };
+
 
 // QuizEngine, ResultView components remain the same as they are stable
 const QuizEngine: React.FC<{ subject: string, paperId: string, onFinish: (res: QuizResult) => void, user: User }> = ({ subject, paperId, onFinish, user }) => {
