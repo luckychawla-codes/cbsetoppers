@@ -667,7 +667,7 @@ const AuthScreen: React.FC<{
                 {error && <p className="text-red-500 text-[10px] font-black uppercase py-2 bg-red-50 rounded-xl text-center border border-red-100">{error}</p>}
                 <div className="flex gap-2">
                   <button onClick={() => setRegStep(1)} className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest">Back</button>
-                  <button onClick={() => { if (!regName || !regDOB || !regClass || !regGender) return setError('Fill all details'); if (regClass === 'XIIth' && !regStream) return setError('Select stream'); setError(''); setRegStep(3); }} className="flex-[2] py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg">Next Step</button>
+                  <button onClick={() => { if (!regName || !regDOB || !regClass || !regGender) return setError('Fill all details'); if ((regClass === 'XIIth' || regClass === 'XII') && !regStream) return setError('Select stream'); setError(''); setRegStep(3); }} className="flex-[2] py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg">Next Step</button>
                 </div>
               </div>
             )}
