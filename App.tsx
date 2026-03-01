@@ -3826,7 +3826,7 @@ const App: React.FC = () => {
     const checkMaintenance = async () => {
       const data = await fetchMaintenanceStatus();
       if (data?.maintenance_enabled) {
-        // Auto-disable check if opening date is set
+        // Auto-disable check if opening date is set and exists in schema
         if (data.maintenance_opening_date) {
           const openingTime = new Date(data.maintenance_opening_date).getTime();
           const now = new Date().getTime();
@@ -3873,10 +3873,10 @@ const App: React.FC = () => {
     });
 
     // Keyboard Awareness
-    Keyboard.addListener('keyboardWillShow', info => {
+    Keyboard.addListener?.('keyboardWillShow', info => {
       document.body.classList.add('keyboard-open');
     });
-    Keyboard.addListener('keyboardWillHide', () => {
+    Keyboard.addListener?.('keyboardWillHide', () => {
       document.body.classList.remove('keyboard-open');
     });
 
