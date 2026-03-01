@@ -636,8 +636,8 @@ const AuthScreen: React.FC<{
                 <div className="space-y-1 mt-2">
                   <p className="text-[10px] font-black text-slate-400 uppercase ml-4">Select Class</p>
                   <div className="grid grid-cols-2 gap-2">
-                    {dbClasses.map(c => (
-                      <button key={c.id} onClick={() => { setRegClass(c.name); if (c.name !== 'XII' && c.name !== 'XIIth') setRegStream(''); }} className={`py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border-2 transition-all ${regClass === c.name ? 'bg-violet-600 border-violet-600 text-white shadow-md' : 'bg-slate-50 dark:bg-slate-800 border-transparent dark:border-slate-700 text-slate-400 dark:text-slate-500'}`}>{c.name}</button>
+                    {(dbClasses.length > 0 ? dbClasses : [{ id: 'f1', name: 'IX' }, { id: 'f2', name: 'X' }, { id: 'f3', name: 'XI' }, { id: 'f4', name: 'XII' }, { id: 'f5', name: 'XII+' }]).map(c => (
+                      <button key={c.id} onClick={() => { setRegClass(c.name); if (!['XI', 'XIth', 'XII', 'XIIth', 'XII+'].includes(c.name)) setRegStream(''); }} className={`py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border-2 transition-all ${regClass === c.name ? 'bg-violet-600 border-violet-600 text-white shadow-md' : 'bg-slate-50 dark:bg-slate-800 border-transparent dark:border-slate-700 text-slate-400 dark:text-slate-500'}`}>{c.name}</button>
                     ))}
                   </div>
                 </div>
@@ -645,7 +645,7 @@ const AuthScreen: React.FC<{
                   <div className="space-y-1 mt-2 animate-in fade-in duration-300">
                     <p className="text-[10px] font-black text-slate-400 uppercase ml-4">Select Stream</p>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {dbStreams.map(s => (
+                      {(dbStreams.length > 0 ? dbStreams : [{ id: 's1', name: 'PCM' }, { id: 's2', name: 'PCB' }, { id: 's3', name: 'Commerce' }, { id: 's4', name: 'Arts' }, { id: 's5', name: 'Science' }]).map(s => (
                         <button key={s.id} onClick={() => setRegStream(s.name)} className={`py-3 rounded-xl font-black text-[9px] uppercase tracking-tighter border-2 transition-all ${regStream === s.name ? 'bg-violet-600 border-violet-600 text-white shadow-md' : 'bg-slate-50 dark:bg-slate-800 border-transparent dark:border-slate-700 text-slate-400 dark:text-slate-500'}`}>{s.name}</button>
                       ))}
                     </div>
