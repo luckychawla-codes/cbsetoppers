@@ -1637,7 +1637,7 @@ const Dashboard: React.FC<{
       <main className="px-6 py-6 space-y-8">
         {!currentSubject ? (
           <>
-            {showPromotions && <PromoBanner current={0} totalAds={1} autoScroll={true} />}
+            {showPromotions && <PromotionsSlider />}
 
             {/* Core Subjects Section */}
             <div className="space-y-4">
