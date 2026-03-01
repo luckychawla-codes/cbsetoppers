@@ -3601,9 +3601,14 @@ const App: React.FC = () => {
     const finalUrl = url.startsWith('http') ? url : (window.location.origin + '/' + url.replace(/^\//, ''));
 
     // For remote PDFs, we can try Google Docs Viewer on mobile
-    const mobileFriendlyUrl = (isMobile && url.startsWith('http'))
+    let mobileFriendlyUrl = (isMobile && url.startsWith('http'))
       ? `https://docs.google.com/viewer?url=${encodeURIComponent(finalUrl)}&embedded=true`
       : `${finalUrl}#toolbar=0`;
+
+    // Special Handling: Google Drive links should use their internal preview directly
+    if (url.includes('drive.google.com')) {
+      mobileFriendlyUrl = url.includes('/preview') ? url : url.replace(/\/view(\?.*)?$/, '/preview');
+    }
 
     return (
       <div className="fixed inset-0 z-[1000] bg-black dark:bg-slate-950 flex flex-col animate-in fade-in duration-300">
