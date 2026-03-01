@@ -479,7 +479,7 @@ const AuthScreen: React.FC<{
     if (!regName.trim() || !regDOB || !regClass || !regEmail.trim() || !regPassword || !regConfirmPassword || !regGender) {
       return setError('Please fill all required fields.');
     }
-    if (regClass === 'XIIth' && !regStream) {
+    if (['XI', 'XIth', 'XII', 'XIIth', 'XII+'].includes(regClass) && !regStream) {
       return setError('Please select your stream.');
     }
     if (regPassword !== regConfirmPassword) {
@@ -496,7 +496,7 @@ const AuthScreen: React.FC<{
         name: regName,
         dob: regDOB,
         studentClass: regClass,
-        stream: regClass === 'XIIth' ? regStream : undefined,
+        stream: ['XI', 'XIth', 'XII', 'XIIth', 'XII+'].includes(regClass) ? regStream : undefined,
         email: regEmail,
         phone: regPhone || undefined,
         password: regPassword,
@@ -633,16 +633,22 @@ const AuthScreen: React.FC<{
                   <p className="text-[10px] font-black text-slate-400 uppercase ml-4">Date of Birth</p>
                   <input type="date" className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 font-bold text-sm dark:text-white outline-none focus:ring-2 focus:ring-violet-100" value={regDOB} onChange={(e) => setRegDOB(e.target.value)} />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {dbClasses.map(c => (
-                    <button key={c.id} onClick={() => setRegClass(c.name)} className={`py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border-2 transition-all ${regClass === c.name ? 'bg-violet-600 border-violet-600 text-white shadow-md' : 'bg-slate-50 dark:bg-slate-800 border-transparent dark:border-slate-700 text-slate-400 dark:text-slate-500'}`}>{c.name}</button>
-                  ))}
-                </div>
-                {regClass === 'XIIth' && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 animate-in fade-in duration-300">
-                    {dbStreams.map(s => (
-                      <button key={s.id} onClick={() => setRegStream(s.name)} className={`py-3 rounded-xl font-black text-[9px] uppercase tracking-tighter border-2 transition-all ${regStream === s.name ? 'bg-violet-50 border-violet-200 text-violet-600' : 'bg-slate-50 border-transparent text-slate-400'}`}>{s.name}</button>
+                <div className="space-y-1 mt-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase ml-4">Select Class</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {dbClasses.map(c => (
+                      <button key={c.id} onClick={() => { setRegClass(c.name); if (c.name !== 'XII' && c.name !== 'XIIth') setRegStream(''); }} className={`py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border-2 transition-all ${regClass === c.name ? 'bg-violet-600 border-violet-600 text-white shadow-md' : 'bg-slate-50 dark:bg-slate-800 border-transparent dark:border-slate-700 text-slate-400 dark:text-slate-500'}`}>{c.name}</button>
                     ))}
+                  </div>
+                </div>
+                {(regClass === 'XIIth' || regClass === 'XII' || regClass === 'XI' || regClass === 'XIth') && (
+                  <div className="space-y-1 mt-2 animate-in fade-in duration-300">
+                    <p className="text-[10px] font-black text-slate-400 uppercase ml-4">Select Stream</p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {dbStreams.map(s => (
+                        <button key={s.id} onClick={() => setRegStream(s.name)} className={`py-3 rounded-xl font-black text-[9px] uppercase tracking-tighter border-2 transition-all ${regStream === s.name ? 'bg-violet-600 border-violet-600 text-white shadow-md' : 'bg-slate-50 dark:bg-slate-800 border-transparent dark:border-slate-700 text-slate-400 dark:text-slate-500'}`}>{s.name}</button>
+                      ))}
+                    </div>
                   </div>
                 )}
                 <div className="space-y-1 mt-2">
@@ -667,7 +673,7 @@ const AuthScreen: React.FC<{
                 {error && <p className="text-red-500 text-[10px] font-black uppercase py-2 bg-red-50 rounded-xl text-center border border-red-100">{error}</p>}
                 <div className="flex gap-2">
                   <button onClick={() => setRegStep(1)} className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest">Back</button>
-                  <button onClick={() => { if (!regName || !regDOB || !regClass || !regGender) return setError('Fill all details'); if ((regClass === 'XIIth' || regClass === 'XII') && !regStream) return setError('Select stream'); setError(''); setRegStep(3); }} className="flex-[2] py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg">Next Step</button>
+                  <button onClick={() => { if (!regName || !regDOB || !regClass || !regGender) return setError('Fill all details'); if (['XI', 'XIth', 'XII', 'XIIth', 'XII+'].includes(regClass) && !regStream) return setError('Select stream'); setError(''); setRegStep(3); }} className="flex-[2] py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg">Next Step</button>
                 </div>
               </div>
             )}
