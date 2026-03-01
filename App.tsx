@@ -1558,12 +1558,96 @@ const Dashboard: React.FC<{
     setLoading(false);
   };
 
-  const FullScreenVideo: React.FC<{ url: string, onClose: () => void }> = ({ url, onClose }) => {
-    const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+  // ─── YouTube Video ID extractor ───
+  const getYouTubeId = (url: string): string => {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/.*[?&]v=([a-zA-Z0-9_-]{11})/,
+    ];
+    for (const p of patterns) {
+      const m = url.match(p);
+      if (m) return m[1];
+    }
+    return url.split('/').pop()?.split('?')[0] || '';
+  };
+
+  // ─── Premium In-App YouTube Player ───
+  const YouTubePlayer: React.FC<{ url: string, onClose: () => void }> = ({ url, onClose }) => {
+    const videoId = getYouTubeId(url);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+
+    const toggleFullscreen = () => {
+      if (!isFullscreen) {
+        const el = iframeRef.current;
+        if (el?.requestFullscreen) el.requestFullscreen();
+        else if ((el as any)?.webkitRequestFullscreen) (el as any).webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+      setIsFullscreen(f => !f);
+    };
+
+    useEffect(() => {
+      const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+      document.addEventListener('fullscreenchange', onFsChange);
+      document.addEventListener('webkitfullscreenchange', onFsChange);
+      return () => {
+        document.removeEventListener('fullscreenchange', onFsChange);
+        document.removeEventListener('webkitfullscreenchange', onFsChange);
+      };
+    }, []);
+
     return (
-      <div className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center">
-        <button onClick={onClose} className="absolute top-6 right-6 p-4 bg-white/10 rounded-full text-white z-[1010]"><svg className="w-8 h-8 rotate-45" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14" /></svg></button>
-        <iframe src={`https://www.youtube.com/embed/${videoId}?autoplay=1`} className="w-full h-full border-none" allow="autoplay; encrypted-media" allowFullScreen />
+      <div className="fixed inset-0 z-[1000] bg-black flex flex-col" style={{ touchAction: 'none' }}>
+        {/* Top Bar */}
+        <div className="flex items-center justify-between px-4 py-3 bg-black/80 backdrop-blur-md shrink-0">
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-xs font-black uppercase tracking-widest truncate">▶ Now Playing</p>
+            <p className="text-white/50 text-[9px] font-bold uppercase tracking-wider truncate">{videoId}</p>
+          </div>
+          <div className="flex items-center gap-2 ml-3 shrink-0">
+            {/* Fullscreen Toggle */}
+            <button
+              onClick={toggleFullscreen}
+              className="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-xl transition-all active:scale-90"
+            >
+              {isFullscreen ? (
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9V4.5M15 9h4.5M15 9l5.25-5.25M15 15v4.5M15 15h4.5M15 15l5.25 5.25" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                </svg>
+              )}
+            </button>
+            {/* Close */}
+            <button
+              onClick={onClose}
+              className="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-red-500/80 rounded-xl transition-all active:scale-90"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* YouTube iFrame — fills all remaining space */}
+        <div className="flex-1 w-full relative bg-black">
+          <iframe
+            ref={iframeRef}
+            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&fs=1`}
+            className="absolute inset-0 w-full h-full border-none"
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+            allowFullScreen
+            title="CBSE TOPPERS Video"
+          />
+        </div>
+
+        {/* Bottom Safe Area */}
+        <div className="h-safe bg-black shrink-0" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }} />
       </div>
     );
   };
@@ -1700,7 +1784,7 @@ const Dashboard: React.FC<{
             {loading ? (
               <div className="py-20 flex justify-center"><svg className="w-8 h-8 animate-spin text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg></div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 <AnimatePresence mode="popLayout">
                   {childFolders.map((f, i) => (
                     <motion.button
@@ -1715,21 +1799,59 @@ const Dashboard: React.FC<{
                       </div>
                     </motion.button>
                   ))}
-                  {materials.map((m, i) => (
-                    <motion.button
-                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                      key={m.id} onClick={() => handleMaterialClick(m)}
-                      className="p-5 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl flex items-center gap-4 hover:bg-violet-500/5 transition-all group"
-                    >
-                      <div className="w-12 h-12 bg-violet-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-xl">
-                        {m.type === 'pdf' ? '📄' : m.type === 'image' ? '🖼️' : '📺'}
-                      </div>
-                      <div className="text-left max-w-[200px]">
-                        <span className="text-xs font-black uppercase text-slate-800 dark:text-slate-200 truncate block">{m.title}</span>
-                        <span className="text-[8px] font-black text-violet-500 uppercase tracking-widest">{m.type} material</span>
-                      </div>
-                    </motion.button>
-                  ))}
+                  {materials.map((m, i) => {
+                    const isVideo = m.type === 'video';
+                    const vid = isVideo ? getYouTubeId(m.url) : '';
+                    const thumb = vid ? `https://img.youtube.com/vi/${vid}/mqdefault.jpg` : null;
+                    return (
+                      <motion.button
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                        key={m.id} onClick={() => handleMaterialClick(m)}
+                        className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden hover:shadow-lg active:scale-[0.98] transition-all group w-full text-left"
+                      >
+                        {/* Video Thumbnail */}
+                        {thumb ? (
+                          <div className="relative w-full aspect-video bg-black overflow-hidden">
+                            <img
+                              src={thumb}
+                              alt={m.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                            {/* Play Button Overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/20 transition-all">
+                              <div className="w-14 h-14 bg-red-600 hover:bg-red-500 rounded-full flex items-center justify-center shadow-2xl shadow-red-600/40 group-hover:scale-110 transition-transform">
+                                <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z" />
+                                </svg>
+                              </div>
+                            </div>
+                            {/* Duration Badge */}
+                            <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">YouTube</div>
+                          </div>
+                        ) : null}
+                        {/* Info Row */}
+                        <div className="flex items-center gap-3 p-4">
+                          {!thumb && (
+                            <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0
+                              bg-violet-50 dark:bg-slate-900">
+                              {m.type === 'pdf' ? '📄' : m.type === 'image' ? '🖼️' : '📺'}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-black uppercase text-slate-800 dark:text-slate-200 leading-tight block truncate">{m.title}</span>
+                            <span className={`text-[8px] font-black uppercase tracking-widest mt-0.5 block ${isVideo ? 'text-red-500' : m.type === 'pdf' ? 'text-blue-500' : 'text-emerald-500'
+                              }`}>
+                              {isVideo ? '▶ Tap to Watch' : m.type === 'pdf' ? '📄 PDF Document' : '🖼️ Image'}
+                            </span>
+                          </div>
+                          <svg className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
                 </AnimatePresence>
                 {childFolders.length === 0 && materials.length === 0 && (
                   <div className="col-span-full py-20 text-center text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Coming Soon...</div>
@@ -1740,8 +1862,8 @@ const Dashboard: React.FC<{
         )}
       </main>
 
-      {/* Video Overlay */}
-      {videoUrl && <FullScreenVideo url={videoUrl} onClose={() => setVideoUrl(null)} />}
+      {/* Premium In-App YouTube Player */}
+      {videoUrl && <YouTubePlayer url={videoUrl} onClose={() => setVideoUrl(null)} />}
 
       {/* Bottom Nav Simulation / Space */}
       <div className="fixed bottom-0 left-0 right-0 h-2 bg-gradient-to-t from-slate-900/10 dark:from-black/40 pointer-events-none" />

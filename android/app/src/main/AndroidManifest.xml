@@ -20,6 +20,13 @@
             </intent-filter>
         </activity>
 
+        <!-- ✅ AdMob App ID — REQUIRED to prevent crash on launch -->
+        <!-- Replace with your REAL AdMob App ID from https://apps.admob.com -->
+        <!-- Format: ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-1563010132282807~4921764461" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
