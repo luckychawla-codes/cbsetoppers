@@ -1093,60 +1093,37 @@ const GamificationSection: React.FC<{ user: User; xp: number }> = ({ user, xp })
         <h3 className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-[0.3em] flex items-center gap-2"><span>🎮</span> Level Up Your Preparation</h3>
         <div className="h-px flex-1 bg-gradient-to-l from-transparent to-violet-100 dark:to-violet-900/30" />
       </div>
-      <div className="grid md:grid-cols-2 gap-5">
-        {/* Left: Streak + XP + Badges */}
-        <div className="space-y-4">
-          <div className="glass-card p-6 flex items-center gap-5 hover:scale-[1.02]">
-            <div className="text-5xl animate-flameBounce">🔥</div>
-            <div>
-              <p className="text-3xl font-black text-slate-900 dark:text-white leading-tight">{streak} Day Streak</p>
-              <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest mt-0.5">Keep going, {user.name.split(' ')[0]}!</p>
-            </div>
-          </div>
-          <div className="glass-card p-6 hover:scale-[1.02]">
-            <div className="flex justify-between items-center mb-3">
-              <p className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">🎯 XP Progress</p>
-              <p className="text-sm font-black text-violet-600 dark:text-violet-400">{xp} / {xpGoal} XP</p>
-            </div>
-            <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-violet-600 to-purple-400 transition-all duration-1000 ease-out shadow-sm shadow-violet-300 dark:shadow-violet-900/50"
-                style={{ width: barFilled ? `${pct}%` : '0%' }} />
-            </div>
-            <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2 uppercase tracking-widest">{pct}% to next level</p>
-          </div>
-          <div className="glass-card p-6 hover:scale-[1.02]">
-            <p className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest mb-4">🏅 Badge Path</p>
-            <div className="grid grid-cols-4 gap-2">
-              {badges.map((b, i) => (
-                <div key={b.name} className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all ${i === currentBadge ? `bg-gradient-to-br ${b.bg} shadow-lg scale-110 ring-2 ring-violet-200 dark:ring-violet-900` : 'bg-slate-50 dark:bg-slate-800 opacity-50'
-                  }`}>
-                  <span className="text-2xl">{b.icon}</span>
-                  <p className={`text-[8px] font-black uppercase tracking-tight ${i === currentBadge ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`}>{b.name}</p>
-                </div>
-              ))}
-            </div>
+      {/* Streak + XP + Badges — Full Width (Leaderboard removed) */}
+      <div className="grid md:grid-cols-3 gap-5">
+        <div className="glass-card p-6 flex items-center gap-5 hover:scale-[1.02]">
+          <div className="text-5xl animate-flameBounce">🔥</div>
+          <div>
+            <p className="text-3xl font-black text-slate-900 dark:text-white leading-tight">{streak} Day Streak</p>
+            <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest mt-0.5">Keep going, {user.name.split(' ')[0]}!</p>
           </div>
         </div>
-        {/* Right: Leaderboard */}
-        <div className="glass-card p-6 hover:scale-[1.02] flex flex-col">
-          <div className="flex items-center justify-between mb-5">
-            <p className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">🏆 Top Performers</p>
-            <span className="bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 text-[8px] font-black px-2 py-1 rounded-lg uppercase tracking-widest border border-violet-100 dark:border-violet-900/30">Leaderboard</span>
+        <div className="glass-card p-6 hover:scale-[1.02]">
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">🎯 XP Progress</p>
+            <p className="text-sm font-black text-violet-600 dark:text-violet-400">{xp} / {xpGoal} XP</p>
           </div>
-          <div className="space-y-2.5 flex-1">
-            {MOCK_LEADERBOARD.map((s, i) => (
-              <div key={s.name} className={`flex items-center gap-3 p-3 rounded-2xl transition-all hover:scale-[1.01] ${i === 0 ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30' : i === 1 ? 'bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700' : 'bg-slate-50 dark:bg-slate-800'
+          <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full rounded-full bg-gradient-to-r from-violet-600 to-purple-400 transition-all duration-1000 ease-out shadow-sm shadow-violet-300 dark:shadow-violet-900/50"
+              style={{ width: barFilled ? `${pct}%` : '0%' }} />
+          </div>
+          <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2 uppercase tracking-widest">{pct}% to next level</p>
+        </div>
+        <div className="glass-card p-6 hover:scale-[1.02]">
+          <p className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest mb-4">🏅 Badge Path</p>
+          <div className="grid grid-cols-4 gap-2">
+            {badges.map((b, i) => (
+              <div key={b.name} className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all ${i === currentBadge ? `bg-gradient-to-br ${b.bg} shadow-lg scale-110 ring-2 ring-violet-200 dark:ring-violet-900` : 'bg-slate-50 dark:bg-slate-800 opacity-50'
                 }`}>
-                <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-sm font-black shrink-0 ${i === 0 ? 'bg-amber-400 text-white' : i === 1 ? 'bg-slate-300 dark:bg-slate-600 text-white dark:text-slate-300' : i === 2 ? 'bg-amber-700 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
-                  }`}>{i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`}</div>
-                <p className="font-black text-sm text-slate-800 dark:text-slate-200 flex-1 truncate">{s.name}</p>
-                <span className="text-[10px] font-black text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/30 px-2 py-0.5 rounded-lg border border-violet-100 dark:border-violet-900/30">{s.xp} XP</span>
+                <span className="text-2xl">{b.icon}</span>
+                <p className={`text-[8px] font-black uppercase tracking-tight ${i === currentBadge ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`}>{b.name}</p>
               </div>
             ))}
           </div>
-          <button className="mt-5 w-full py-3 border-2 border-violet-100 text-violet-600 font-black uppercase text-[9px] tracking-widest rounded-2xl hover:bg-violet-600 hover:text-white hover:border-violet-600 transition-all active:scale-95">
-            View Full Leaderboard →
-          </button>
         </div>
       </div>
     </section>
@@ -1604,75 +1581,108 @@ const Dashboard: React.FC<{
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f172a] pb-24 relative transition-colors duration-500 overflow-x-hidden">
       {/* Header */}
-      <header className="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md border-b dark:border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-[60]">
-        <div className="flex items-center gap-3">
-          <img src={LOGO_URL} className="w-10 h-10 rounded-2xl shadow-sm" />
-          <div className="text-left w-full overflow-hidden">
-            <h2 className="text-sm font-black uppercase text-slate-800 dark:text-white tracking-widest leading-none truncate">
-              {user.name && user.name.trim() !== '' ? user.name : 'CBSE Student'} | {user.class}
+      <header className="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md border-b dark:border-slate-800 px-4 py-3 flex justify-between items-center sticky top-0 z-[60]">
+        {/* Left: Logo + Platform Name + Student Info */}
+        <div className="flex items-center gap-3 min-w-0">
+          <img src={LOGO_URL} className="w-9 h-9 rounded-xl shadow-sm shrink-0" />
+          <div className="text-left min-w-0">
+            <h2 className="text-sm font-black uppercase text-violet-600 dark:text-violet-400 tracking-widest leading-none">
+              CBSE TOPPERS
             </h2>
-            <span className="text-[10px] text-violet-600 font-black uppercase">{user.stream || 'Learning Portal'}</span>
+            <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide leading-tight mt-0.5 truncate">
+              {user.name && user.name.trim() !== '' ? user.name : 'Student'} | {user.class}
+            </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        {/* Right: Actions + Profile (profile always far right) */}
+        <div className="flex items-center gap-2 shrink-0">
           {user.is_operator && (
-            <button onClick={() => setView('admin')} className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center border border-amber-100">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            <button onClick={() => setView('admin')} className="w-9 h-9 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center border border-amber-100">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
             </button>
           )}
-          <button onClick={() => setShowStats(true)} className="w-10 h-10 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center border border-violet-100">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+          <button onClick={() => setShowStats(true)} className="w-9 h-9 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center border border-violet-100">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
           </button>
-          <button onClick={() => setView('profile')} className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-white rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800 overflow-hidden hover:opacity-80 transition-opacity">
-            <img src={user.gender === 'FEMALE' ? '/female_avtar.png' : '/male_avtar.png'} className="w-full h-full object-cover" alt="Profile" />
-          </button>
-          <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-white rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800">
+          <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="w-9 h-9 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-white rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800">
             {theme === 'light' ? (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
             ) : (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
             )}
+          </button>
+          {/* Profile Icon — Always Far Right */}
+          <button onClick={() => setView('profile')} className="w-9 h-9 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-white rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800 overflow-hidden hover:opacity-80 transition-opacity">
+            <img src={user.gender === 'FEMALE' ? '/female_avtar.png' : '/male_avtar.png'} className="w-full h-full object-cover" alt="Profile" />
           </button>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="px-6 py-6 space-y-8">
+      <main className="px-4 py-5 space-y-6">
         {!currentSubject ? (
           <>
             {showPromotions && <PromotionsSlider />}
 
-            {/* Core Subjects Section */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-4 bg-violet-600 rounded-full" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Core Subjects</h3>
+            {/* Loading Skeleton — shown while fetching subjects */}
+            {loading && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-4 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse" />
+                  <div className="h-3 w-24 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="bg-slate-100 dark:bg-slate-800 rounded-[2rem] h-32 animate-pulse" />
+                  ))}
+                </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {coreSubs.map(s => (
-                  <button key={s.id} onClick={() => enterSubject(s)} className="bg-white dark:bg-slate-800/40 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 hover:border-violet-500/50 transition-all flex flex-col items-center gap-4 group">
-                    <div className="w-14 h-14 bg-violet-50 dark:bg-slate-700/50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500">📚</div>
-                    <span className="text-[12px] font-bold text-slate-800 dark:text-white uppercase tracking-tight text-center">{s.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            )}
 
-            {/* Additional Subjects Section */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-4 bg-emerald-500 rounded-full" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Additional</h3>
+            {/* Core Subjects Section — only shown when at least 1 core subject exists */}
+            {!loading && coreSubs.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-4 bg-violet-600 rounded-full" />
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Core Subjects</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {coreSubs.map(s => (
+                    <button key={s.id} onClick={() => enterSubject(s)} className="bg-white dark:bg-slate-800/40 p-5 rounded-[1.75rem] border border-slate-100 dark:border-slate-800 hover:border-violet-500/50 active:scale-95 transition-all flex flex-col items-center gap-3 group">
+                      <div className="w-12 h-12 bg-violet-50 dark:bg-slate-700/50 rounded-2xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300">📚</div>
+                      <span className="text-[11px] font-bold text-slate-800 dark:text-white uppercase tracking-tight text-center leading-tight">{s.name}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {addSubs.map(s => (
-                  <button key={s.id} onClick={() => enterSubject(s)} className="bg-white dark:bg-slate-800/40 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 transition-all flex flex-col items-center gap-4 group">
-                    <div className="w-14 h-14 bg-emerald-50 dark:bg-slate-700/50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500">📖</div>
-                    <span className="text-[12px] font-bold text-slate-800 dark:text-white uppercase tracking-tight text-center">{s.name}</span>
-                  </button>
-                ))}
+            )}
+
+            {/* Additional Subjects Section — only shown when at least 1 additional subject exists */}
+            {!loading && addSubs.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-4 bg-emerald-500 rounded-full" />
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Additional</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {addSubs.map(s => (
+                    <button key={s.id} onClick={() => enterSubject(s)} className="bg-white dark:bg-slate-800/40 p-5 rounded-[1.75rem] border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 active:scale-95 transition-all flex flex-col items-center gap-3 group">
+                      <div className="w-12 h-12 bg-emerald-50 dark:bg-slate-700/50 rounded-2xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300">📖</div>
+                      <span className="text-[11px] font-bold text-slate-800 dark:text-white uppercase tracking-tight text-center leading-tight">{s.name}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Empty state — shown after loading if no subjects found */}
+            {!loading && coreSubs.length === 0 && addSubs.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="text-5xl mb-4">📚</div>
+                <h3 className="text-base font-black text-slate-700 dark:text-slate-300 uppercase tracking-tight mb-2">No Subjects Yet</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subjects for your class will appear here once added</p>
+              </div>
+            )}
           </>
         ) : (
           /* Sub-Navigation (Folders / Files) */
