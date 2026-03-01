@@ -77,7 +77,8 @@ export interface Folder {
 
 export interface Material {
   id: string;
-  folder_id: string;
+  folder_id?: string | null;
+  subject_id: string;
   title: string;
   type: MaterialType;
   url: string;

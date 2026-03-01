@@ -1528,9 +1528,12 @@ const Dashboard: React.FC<{
     setCurrentFolder(null);
     setLoading(true);
     try {
-      const folders = await fetchFolders(s.id, null);
+      const [folders, materials] = await Promise.all([
+        fetchFolders(s.id, null),
+        fetchMaterials(s.id, null)
+      ]);
       setChildFolders(folders);
-      setMaterials([]);
+      setMaterials(materials);
     } catch (_) { }
     setLoading(false);
   };
@@ -1543,7 +1546,7 @@ const Dashboard: React.FC<{
     try {
       const [fld, mat] = await Promise.all([
         fetchFolders(currentSubject!.id, f.id),
-        fetchMaterials(f.id)
+        fetchMaterials(currentSubject!.id, f.id)
       ]);
       setChildFolders(fld);
       setMaterials(mat);
@@ -1570,7 +1573,7 @@ const Dashboard: React.FC<{
     try {
       const [fld, mat] = await Promise.all([
         fetchFolders(currentSubject!.id, f.id),
-        fetchMaterials(f.id)
+        fetchMaterials(currentSubject!.id, f.id)
       ]);
       setChildFolders(fld);
       setMaterials(mat);
