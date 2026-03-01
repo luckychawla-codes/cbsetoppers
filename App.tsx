@@ -4132,52 +4132,41 @@ const PdfViewer: React.FC<{ url: string, onClose: () => void }> = ({ url, onClos
     mobileFriendlyUrl = url.includes('/preview') ? url : url.replace(/\/view(\?.*)?$/, '/preview');
   }
 
-  const handleDownload = () => {
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
     let downloadUrl = finalUrl;
     if (url.includes('drive.google.com')) {
       downloadUrl = url.replace(/\/preview$/, '/view').replace(/\/view(\?.*)?$/, '/view?export=download');
     }
-    window.open(downloadUrl, '_blank');
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.target = '_blank';
+    link.download = url.split('/').pop() || 'document.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-black dark:bg-slate-950 flex flex-col animate-in fade-in duration-300">
-      <div className="absolute top-6 right-6 z-[1010] flex items-center gap-3">
+    <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-in fade-in duration-300">
+      <div className="absolute top-4 right-4 z-[1010] flex items-center gap-2">
         <button
           onClick={handleDownload}
-          className="p-3 bg-violet-600/80 hover:bg-violet-600 backdrop-blur-md rounded-full text-white transition-all active:scale-95 shadow-2xl border border-white/10"
+          className="p-2.5 bg-black/10 hover:bg-violet-600 text-slate-700 hover:text-white backdrop-blur-md rounded-xl transition-all active:scale-95 border border-black/5"
           title="Download PDF"
         >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
         </button>
-        <button onClick={onClose} className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all active:scale-95 shadow-2xl border border-white/10">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12" /></svg>
+        <button onClick={onClose} className="p-2.5 bg-black/10 hover:bg-red-500 text-slate-700 hover:text-white backdrop-blur-md rounded-xl transition-all active:scale-95 border border-black/5">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
       </div>
-      <div className="flex-1 w-full relative flex flex-col pt-16">
+      <div className="flex-1 w-full relative flex flex-col">
         <iframe
           src={mobileFriendlyUrl}
           className="w-full h-full border-none bg-white"
           title="PDF Viewer"
         />
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center pointer-events-none -z-10 mt-16">
-          <div className="bg-slate-900/50 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/10 max-w-sm">
-            <div className="w-16 h-16 bg-violet-600/20 text-violet-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-            </div>
-            <h3 className="text-white font-black uppercase text-sm tracking-widest mb-2">Notice for Mobile Users</h3>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-relaxed mb-6">Mobile devices require external viewing for confidential documents.</p>
-            <button
-              onClick={() => window.open(finalUrl, '_blank')}
-              className="w-full py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl pointer-events-auto active:scale-95 transition-all"
-            >
-              Launch Document Browser
-            </button>
-          </div>
-        </div>
-      </div>
-      <div className="p-2 text-center bg-black/40 backdrop-blur-md absolute bottom-0 left-0 right-0 pointer-events-none">
-        <p className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em]">Confidential Document • CBSE TOPPERS • PDF Preview</p>
       </div>
     </div>
   );

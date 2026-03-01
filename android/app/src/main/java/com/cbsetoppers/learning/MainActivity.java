@@ -1,6 +1,7 @@
 package com.cbsetoppers.learning;
 
 import android.os.Bundle;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
 import com.getcapacitor.BridgeActivity;
@@ -9,6 +10,11 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // ✅ Security: Prevent Screenshots & Screen Recording
+        // Disables screenshotting/recording across the entire application for
+        // confidentiality.
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
 
         // Performance Hybridisation: Enable Hardware Acceleration & Optimized Layering
         WebView webView = this.getBridge().getWebView();
