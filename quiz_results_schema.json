@@ -1,0 +1,49 @@
+{
+  "quiz_results": {
+    "required": [
+      "id",
+      "topic",
+      "score",
+      "total_questions"
+    ],
+    "properties": {
+      "id": {
+        "description": "Note:\nThis is a Primary Key.<pk/>",
+        "format": "bigint",
+        "type": "integer"
+      },
+      "created_at": {
+        "default": "now()",
+        "format": "timestamp with time zone",
+        "type": "string"
+      },
+      "student_id": {
+        "description": "Note:\nThis is a Foreign Key to `students.id`.<fk table='students' column='id'/>",
+        "format": "bigint",
+        "type": "integer"
+      },
+      "topic": {
+        "format": "text",
+        "type": "string"
+      },
+      "score": {
+        "format": "integer",
+        "type": "integer"
+      },
+      "total_questions": {
+        "format": "integer",
+        "type": "integer"
+      },
+      "points": {
+        "default": 0,
+        "format": "integer",
+        "type": "integer"
+      },
+      "analysis": {
+        "format": "text",
+        "type": "string"
+      }
+    },
+    "type": "object"
+  }
+}

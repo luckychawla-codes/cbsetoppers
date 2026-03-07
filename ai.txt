@@ -1,0 +1,55 @@
+API KEY (PK) : v1-Z0FBQUFBQnBwUzNHaVFaVWtuNTIwdHNsTUpMUGJDa0dOZVg1RHp0YXAyTG4tRkpNSERoNkNYWW9fc0RCbVJJaEE3UnlUZ0tMUEQ5bGJrejZZTUFpWk8yVWQ5T2tJRXZhbXc9PQ==
+
+
+----------------------------------------------------------------
+ENDPOINT 1 - Chat / LLM
+------------------------
+URL:      https://backend.buildpicoapps.com/aero/run/llm-api?pk=YOUR_PK
+Method:   POST
+Headers:  Content-Type: application/json
+Body:     { prompt: your message here }
+Response: { status: success, text: reply text }
+
+
+----------------------------------------------------------------
+ENDPOINT 2 - Image Generation
+------------------------------
+URL:      https://backend.buildpicoapps.com/aero/run/image-generation-api?pk=YOUR_PK
+Method:   POST
+Headers:  Content-Type: application/json
+Body:     { prompt: image description }
+Response: { status: success, imageUrl: https://... }
+
+
+----------------------------------------------------------------
+SYSTEM PERSONA (prepend to every LLM call)
+------------------------------------------
+Follow instructions precisely! If the user asks to generate,
+create or make an image, photo, or picture by describing it,
+You will reply with /image + description. Otherwise, You will
+respond normally. Avoid additional explanations.
+
+
+----------------------------------------------------------------
+LOGIC FLOW
+----------
+1. If user message starts with /image
+     -> Strip /image -> Send description to Image API
+
+2. Otherwise
+     -> Prepend System Persona to message -> Send to LLM API
+     -> If LLM response starts with /image
+         -> Extract description after /image
+         -> Send description to Image API
+     -> Else
+         -> Display LLM text response
+
+
+----------------------------------------------------------------
+FULL URLS WITH KEY INCLUDED
+----------------------------
+LLM API:
+https://backend.buildpicoapps.com/aero/run/llm-api?pk=v1-Z0FBQUFBQnBwUzNHaVFaVWtuNTIwdHNsTUpMUGJDa0dOZVg1RHp0YXAyTG4tRkpNSERoNkNYWW9fc0RCbVJJaEE3UnlUZ0tMUEQ5bGJrejZZTUFpWk8yVWQ5T2tJRXZhbXc9PQ==
+
+Image API:
+https://backend.buildpicoapps.com/aero/run/image-generation-api?pk=v1-Z0FBQUFBQnBwUzNHaVFaVWtuNTIwdHNsTUpMUGJDa0dOZVg1RHp0YXAyTG4tRkpNSERoNkNYWW9fc0RCbVJJaEE3UnlUZ0tMUEQ5bGJrejZZTUFpWk8yVWQ5T2tJRXZhbXc9PQ==

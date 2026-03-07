@@ -1,0 +1,128 @@
+{
+  "streams": {
+    "required": [
+      "id",
+      "name"
+    ],
+    "properties": {
+      "id": {
+        "default": "extensions.uuid_generate_v4()",
+        "description": "Note:\nThis is a Primary Key.<pk/>",
+        "format": "uuid",
+        "type": "string"
+      },
+      "name": {
+        "format": "text",
+        "type": "string"
+      },
+      "created_at": {
+        "default": "CURRENT_TIMESTAMP",
+        "format": "timestamp with time zone",
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
+  "leaderboard": {
+    "required": [
+      "id",
+      "subject",
+      "score",
+      "total"
+    ],
+    "properties": {
+      "id": {
+        "default": "gen_random_uuid()",
+        "description": "Note:\nThis is a Primary Key.<pk/>",
+        "format": "uuid",
+        "type": "string"
+      },
+      "student_id": {
+        "description": "Note:\nThis is a Foreign Key to `students.student_id`.<fk table='students' column='student_id'/>",
+        "format": "text",
+        "type": "string"
+      },
+      "subject": {
+        "format": "text",
+        "type": "string"
+      },
+      "score": {
+        "format": "integer",
+        "type": "integer"
+      },
+      "total": {
+        "format": "integer",
+        "type": "integer"
+      },
+      "paper_id": {
+        "format": "text",
+        "type": "string"
+      },
+      "time_spent": {
+        "format": "integer",
+        "type": "integer"
+      },
+      "created_at": {
+        "default": "now()",
+        "format": "timestamp with time zone",
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
+  "leaderboard_view": {
+    "properties": {
+      "student_id": {
+        "description": "Note:\nThis is a Primary Key.<pk/>",
+        "format": "bigint",
+        "type": "integer"
+      },
+      "name": {
+        "format": "text",
+        "type": "string"
+      },
+      "display_id": {
+        "format": "character varying",
+        "maxLength": 10,
+        "type": "string"
+      },
+      "total_xp": {
+        "format": "bigint",
+        "type": "integer"
+      },
+      "quizzes_attempted": {
+        "format": "bigint",
+        "type": "integer"
+      },
+      "rank": {
+        "format": "bigint",
+        "type": "integer"
+      }
+    },
+    "type": "object"
+  },
+  "classes": {
+    "required": [
+      "id",
+      "name"
+    ],
+    "properties": {
+      "id": {
+        "default": "extensions.uuid_generate_v4()",
+        "description": "Note:\nThis is a Primary Key.<pk/>",
+        "format": "uuid",
+        "type": "string"
+      },
+      "name": {
+        "format": "text",
+        "type": "string"
+      },
+      "created_at": {
+        "default": "CURRENT_TIMESTAMP",
+        "format": "timestamp with time zone",
+        "type": "string"
+      }
+    },
+    "type": "object"
+  }
+}

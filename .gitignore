@@ -1,0 +1,39 @@
+# Flutter
+FlutterAPP/.dart_tool/
+FlutterAPP/.idea/
+FlutterAPP/build/
+FlutterAPP/.flutter-plugins
+FlutterAPP/.flutter-plugins-dependencies
+FlutterAPP/android/.gradle/
+FlutterAPP/android/local.properties
+FlutterAPP/ios/Pods/
+FlutterAPP/pubspec.lock
+
+# Build artifacts
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# ReactAPP
+ReactAPP/node_modules/
+ReactAPP/.env
+
+# Sensitive files
+FirebaseAdminSDK.json
+keystore_credentials.txt
+supabase.txt
+
+# Build logs
+build_log*.txt
+web_build_log.txt
+
+# OS
+Thumbs.db
+*.tmp
