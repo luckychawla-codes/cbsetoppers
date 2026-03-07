@@ -2,6 +2,7 @@
 FlutterAPP/.dart_tool/
 FlutterAPP/.idea/
 FlutterAPP/build/
+!FlutterAPP/build/web/
 FlutterAPP/.flutter-plugins
 FlutterAPP/.flutter-plugins-dependencies
 FlutterAPP/android/.gradle/
