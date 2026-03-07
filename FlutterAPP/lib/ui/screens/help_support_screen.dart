@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/theme_provider.dart';
+import '../../../providers/theme_provider.dart';
+import '../../../providers/auth_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
@@ -33,6 +34,9 @@ class HelpSupportScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final studentProfile = ref.watch(authProvider).value;
+    final studentName = studentProfile?.name ?? 'Student';
+    final studentId = studentProfile?.studentId ?? 'N/A';
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -86,7 +90,12 @@ class HelpSupportScreen extends ConsumerWidget {
             const SizedBox(height: 40),
             _buildCommunitySection(context, isDark),
             const SizedBox(height: 40),
-            _buildAdministrationSection(context, isDark),
+            _buildAdministrationSection(
+              context,
+              isDark,
+              studentName,
+              studentId,
+            ),
             const SizedBox(height: 40),
             _buildFooter(),
           ],
@@ -270,7 +279,12 @@ class HelpSupportScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAdministrationSection(BuildContext context, bool isDark) {
+  Widget _buildAdministrationSection(
+    BuildContext context,
+    bool isDark,
+    String studentName,
+    String studentId,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -296,6 +310,8 @@ class HelpSupportScreen extends ConsumerWidget {
           'assets/owner.png',
           Colors.indigo,
           isDark,
+          studentName,
+          studentId,
         ),
         const SizedBox(height: 16),
         _buildAdminCard(
@@ -308,6 +324,8 @@ class HelpSupportScreen extends ConsumerWidget {
           'assets/founder.png',
           AppTheme.primaryColor,
           isDark,
+          studentName,
+          studentId,
         ),
         const SizedBox(height: 16),
         _buildAdminCardNoCoffee(
@@ -334,6 +352,8 @@ class HelpSupportScreen extends ConsumerWidget {
     String assetPath,
     Color themeColor,
     bool isDark,
+    String studentName,
+    String studentId,
   ) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -426,6 +446,8 @@ class HelpSupportScreen extends ConsumerWidget {
                   name,
                   themeColor,
                   isDark,
+                  studentName,
+                  studentId,
                 ),
               ),
             ],
@@ -542,6 +564,8 @@ class HelpSupportScreen extends ConsumerWidget {
     String recipientName,
     Color themeColor,
     bool isDark,
+    String studentName,
+    String studentId,
   ) {
     return InkWell(
       onTap: () => _showCoffeeBottomSheet(
@@ -550,6 +574,8 @@ class HelpSupportScreen extends ConsumerWidget {
         recipientName,
         themeColor,
         isDark,
+        studentName,
+        studentId,
       ),
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -585,6 +611,8 @@ class HelpSupportScreen extends ConsumerWidget {
     String recipientName,
     Color themeColor,
     bool isDark,
+    String studentName,
+    String studentId,
   ) {
     showModalBottomSheet(
       context: context,
@@ -596,6 +624,8 @@ class HelpSupportScreen extends ConsumerWidget {
         themeColor: themeColor,
         isDark: isDark,
         onLaunchUrl: (url) => _launchUrl(context, url),
+        studentName: studentName,
+        studentId: studentId,
       ),
     );
   }
@@ -715,6 +745,8 @@ class HelpSupportScreen extends ConsumerWidget {
 class _CoffeeBottomSheet extends StatefulWidget {
   final String upiId;
   final String recipientName;
+  final String studentName;
+  final String studentId;
   final Color themeColor;
   final bool isDark;
   final Future<void> Function(String url) onLaunchUrl;
@@ -722,6 +754,8 @@ class _CoffeeBottomSheet extends StatefulWidget {
   const _CoffeeBottomSheet({
     required this.upiId,
     required this.recipientName,
+    required this.studentName,
+    required this.studentId,
     required this.themeColor,
     required this.isDark,
     required this.onLaunchUrl,
@@ -733,19 +767,26 @@ class _CoffeeBottomSheet extends StatefulWidget {
 
 class _CoffeeBottomSheetState extends State<_CoffeeBottomSheet> {
   int? _selectedAmount;
+  bool _showQrFallback = false;
 
   final List<Map<String, dynamic>> _amounts = [
     {'amount': 25, 'emoji': '☕', 'label': 'Chai'},
     {'amount': 50, 'emoji': '☕☕', 'label': 'Coffee'},
-    {'amount': 75, 'emoji': '🍵', 'label': 'Latte'},
+    {'amount': 75, 'emoji': '🥛', 'label': 'Lassi'},
     {'amount': 100, 'emoji': '🎉', 'label': 'Party'},
   ];
 
+  String _getUpiUrl(int amount, String label) {
+    final note = Uri.encodeComponent(
+      '$label from ${widget.studentName} (ID: ${widget.studentId})',
+    );
+    return 'upi://pay?pa=${widget.upiId}&pn=${Uri.encodeComponent(widget.recipientName)}'
+        '&am=$amount&cu=INR&tn=$note';
+  }
+
   void _payWithUpi(int amount) async {
-    final firstName = widget.recipientName.split(' ')[0].toLowerCase();
-    final upiUrl =
-        'upi://pay?pa=${widget.upiId}&pn=${Uri.encodeComponent(widget.recipientName)}'
-        '&am=$amount&cu=INR&tn=${Uri.encodeComponent('Buy $firstName a coffee ☕')}';
+    final label = _amounts.firstWhere((a) => a['amount'] == amount)['label'];
+    final upiUrl = _getUpiUrl(amount, label);
 
     // Try direct UPI intent
     try {
@@ -756,38 +797,18 @@ class _CoffeeBottomSheetState extends State<_CoffeeBottomSheet> {
       }
     } catch (_) {}
 
-    // Fallback to Google Pay
-    try {
-      final gpayUrl =
-          'tez://upi/pay?pa=${widget.upiId}&pn=${Uri.encodeComponent(widget.recipientName)}'
-          '&am=$amount&cu=INR&tn=${Uri.encodeComponent('Buy a coffee')}';
-      final uri = Uri.parse(gpayUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        return;
-      }
-    } catch (_) {}
+    // Fallback: If can't launch, it means no UPI apps were found or matched
+    setState(() {
+      _showQrFallback = true;
+    });
 
-    // Fallback: PhonePe
-    try {
-      final ppUrl =
-          'phonepe://pay?pa=${widget.upiId}&pn=${Uri.encodeComponent(widget.recipientName)}'
-          '&am=$amount&cu=INR';
-      final uri = Uri.parse(ppUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        return;
-      }
-    } catch (_) {}
-
-    // Last resort — show UPI ID so user can copy it
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'No UPI app found. Please pay ₹$amount to: ${widget.upiId}',
+            'No UPI app found. Please scan the QR code to pay ₹$amount.',
           ),
-          duration: const Duration(seconds: 6),
+          backgroundColor: Colors.orange,
         ),
       );
     }
@@ -860,99 +881,143 @@ class _CoffeeBottomSheetState extends State<_CoffeeBottomSheet> {
 
           const SizedBox(height: 28),
 
-          // Amount grid
-          Text(
-            'SELECT AMOUNT',
-            style: GoogleFonts.outfit(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              color: isDark ? Colors.white38 : Colors.grey,
-              letterSpacing: 2,
+          if (_showQrFallback && _selectedAmount != null) ...[
+            Text(
+              'SCAN TO PAY ₹$_selectedAmount',
+              style: GoogleFonts.outfit(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: AppTheme.primaryColor,
+                letterSpacing: 2,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 2.2,
-            children: _amounts.map((item) {
-              final amount = item['amount'] as int;
-              final isSelected = _selectedAmount == amount;
-              return GestureDetector(
-                onTap: () {
-                  setState(() => _selectedAmount = amount);
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Image.network(
+                'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${Uri.encodeComponent(_getUpiUrl(_selectedAmount!, _amounts.firstWhere((a) => a['amount'] == _selectedAmount)['label']))}',
+                width: 150,
+                height: 150,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const SizedBox(
+                    width: 150,
+                    height: 150,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
                 },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? widget.themeColor
-                        : (isDark
-                              ? Colors.white.withOpacity(0.05)
-                              : Colors.grey.shade50),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Take a screenshot and open in GPay/PhonePe',
+              style: GoogleFonts.outfit(fontSize: 10, color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
+          ] else ...[
+            // Amount grid
+            Text(
+              'SELECT AMOUNT',
+              style: GoogleFonts.outfit(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: isDark ? Colors.white38 : Colors.grey,
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 2.2,
+              children: _amounts.map((item) {
+                final amount = item['amount'] as int;
+                final isSelected = _selectedAmount == amount;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedAmount = amount;
+                      _showQrFallback = false;
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    decoration: BoxDecoration(
                       color: isSelected
                           ? widget.themeColor
-                          : (isDark ? Colors.white10 : Colors.grey.shade200),
-                      width: 2,
+                          : (isDark
+                                ? Colors.white.withOpacity(0.05)
+                                : Colors.grey.shade50),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: isSelected
+                            ? widget.themeColor
+                            : (isDark ? Colors.white10 : Colors.grey.shade200),
+                        width: 2,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: widget.themeColor.withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : [],
                     ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: widget.themeColor.withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          item['emoji'] as String,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(width: 8),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '₹$amount',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDark
+                                          ? Colors.white
+                                          : AppTheme.textHeadingColor),
+                              ),
                             ),
-                          ]
-                        : [],
+                            Text(
+                              item['label'] as String,
+                              style: GoogleFonts.outfit(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: isSelected
+                                    ? Colors.white70
+                                    : Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        item['emoji'] as String,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(width: 8),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '₹$amount',
-                            style: GoogleFonts.outfit(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              color: isSelected
-                                  ? Colors.white
-                                  : (isDark
-                                        ? Colors.white
-                                        : AppTheme.textHeadingColor),
-                            ),
-                          ),
-                          Text(
-                            item['label'] as String,
-                            style: GoogleFonts.outfit(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
-                              color: isSelected ? Colors.white70 : Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-
-          const SizedBox(height: 24),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 24),
+          ],
 
           // Pay button
           SizedBox(
@@ -962,8 +1027,11 @@ class _CoffeeBottomSheetState extends State<_CoffeeBottomSheet> {
               onPressed: _selectedAmount == null
                   ? null
                   : () {
-                      Navigator.pop(context);
-                      _payWithUpi(_selectedAmount!);
+                      if (_showQrFallback) {
+                        Navigator.pop(context);
+                      } else {
+                        _payWithUpi(_selectedAmount!);
+                      }
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: widget.themeColor,
@@ -976,11 +1044,13 @@ class _CoffeeBottomSheetState extends State<_CoffeeBottomSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('☕', style: TextStyle(fontSize: 20)),
+                  const Text('🚀', style: TextStyle(fontSize: 20)),
                   const SizedBox(width: 10),
                   Text(
                     _selectedAmount == null
                         ? 'SELECT AN AMOUNT'
+                        : _showQrFallback
+                        ? 'DONE'
                         : 'PAY ₹$_selectedAmount VIA UPI',
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.w900,
@@ -996,7 +1066,9 @@ class _CoffeeBottomSheetState extends State<_CoffeeBottomSheet> {
 
           const SizedBox(height: 12),
           Text(
-            'You will be redirected to your UPI app',
+            _showQrFallback
+                ? 'Scan the QR code with any UPI app'
+                : 'You will be redirected to your UPI app',
             style: GoogleFonts.outfit(
               fontSize: 10,
               color: Colors.grey,

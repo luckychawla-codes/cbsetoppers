@@ -87,24 +87,34 @@ class _SubjectDetailsScreenState extends ConsumerState<SubjectDetailsScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildAppBar(isDark),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: _isLoading
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 100),
-                        child: CircularProgressIndicator(),
-                      ),
-                    )
-                  : _buildContentList(isDark),
-            ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              _buildAppBar(isDark),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: MediaQuery.of(context).size.width > 800
+                        ? 48.0
+                        : 24.0,
+                    vertical: 24,
+                  ),
+                  child: _isLoading
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 100),
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      : _buildContentList(isDark),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

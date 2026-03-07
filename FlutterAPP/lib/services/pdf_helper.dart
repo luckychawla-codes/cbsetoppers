@@ -79,17 +79,31 @@ String _mathToText(String input) {
 /// Strips markdown bold/italic markers for plain PDF text
 String _stripMarkdown(String text) {
   return text
-      .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'\1')
-      .replaceAll(RegExp(r'\*(.+?)\*'), r'\1')
-      .replaceAll(RegExp(r'__(.+?)__'), r'\1')
-      .replaceAll(RegExp(r'_(.+?)_'), r'\1')
+      .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1')
+      .replaceAll(RegExp(r'\*(.+?)\*'), r'$1')
+      .replaceAll(RegExp(r'__(.+?)__'), r'$1')
+      .replaceAll(RegExp(r'_(.+?)_'), r'$1')
       .replaceAll(RegExp(r'#+\s*'), '')
-      .replaceAll(RegExp(r'`(.+?)`'), r'\1')
+      .replaceAll(RegExp(r'`(.+?)`'), r'$1')
       .replaceAll(RegExp(r'[-*]\s+'), '• ')
       .trim();
 }
 
-String _cleanText(String text) => _stripMarkdown(_mathToText(text));
+String _cleanText(String text) {
+  String cleaned = _stripMarkdown(_mathToText(text));
+
+  // Replace common symbols that might not render correctly in standard fonts
+  cleaned = cleaned
+      .replaceAll('\u26a0', '! ') // Warning
+      .replaceAll('\u24d8', '(i) ') // Info
+      .replaceAll('\u2713', '[Y] ') // Checkmark
+      .replaceAll('\u2717', '[X] ') // Cross
+      .replaceAll('\u2022', '* ') // Bullet point
+      .replaceAll('\r', '') // Erase carriage returns
+      .replaceAll('\b', ''); // Erase backspaces
+
+  return cleaned;
+}
 
 class PdfHelper {
   // ── shared page decoration (square border) ────────────────────────────────
@@ -202,7 +216,7 @@ class PdfHelper {
           children: [
             pw.Expanded(
               child: pw.Text(
-                '\u26a0 AI-Generated Report. May contain errors. Cross-verify before relying. CBSEToppers is not responsible for any inaccuracies.',
+                '! AI-Generated Report. May contain errors. Cross-verify before relying. CBSEToppers is not responsible for any inaccuracies.',
                 style: const pw.TextStyle(
                   color: PdfColors.orange700,
                   fontSize: 6.5,

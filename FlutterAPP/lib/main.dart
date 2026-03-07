@@ -36,9 +36,10 @@ class MyApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return ScreenUtilInit(
-      designSize: const Size(390, 844), // iPhone 13/14 size
+      designSize: const Size(390, 844), // iPhone 13/14 base
       minTextAdapt: true,
       splitScreenMode: true,
+      useInheritedMediaQuery: true,
       builder: (context, child) {
         return MaterialApp(
           title: AppConstants.appName,

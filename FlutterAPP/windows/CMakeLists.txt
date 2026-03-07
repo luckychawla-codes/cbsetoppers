@@ -1,5 +1,16 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
+# Force CMake 3.10+ policy level to avoid errors on modern VS 2026+
+set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
+if(POLICY CMP0000)
+  cmake_policy(SET CMP0000 NEW)
+endif()
+if (COMMAND cmake_policy)
+  if (POLICY CMP0175)
+    cmake_policy(SET CMP0175 NEW)
+  endif()
+endif()
+
 project(learning LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
@@ -9,6 +20,10 @@ set(BINARY_NAME "learning")
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
 cmake_policy(VERSION 3.14...3.25)
+# Suppress strict deprecation errors that break builds on older plugin code
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+add_definitions(-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4199")
 
 # Define build configuration option.
 get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
@@ -106,3 +121,31 @@ install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
 install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
+
+# === Manual DLL Collection (Fix for missing plugin DLLs) ===
+# This part ensures that even if the standard install target fails
+# to pick up some DLLs, we collect them manually from the build tree.
+set(TARGET_RUNTIME_DIR "$<TARGET_FILE_DIR:${BINARY_NAME}>")
+
+# Function to search and copy all DLLs from the build tree
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/copy_dlls.cmake" CONTENT "
+if(\"\${CONFIG}\" STREQUAL \"\")
+    set(CONFIG \"Release\")
+endif()
+message(STATUS \"Collecting DLLs for \${CONFIG}...\")
+file(GLOB_RECURSE FOUND_DLLS
+    \"\${CMAKE_CURRENT_BINARY_DIR}/plugins/*.dll\"
+    \"\${CMAKE_CURRENT_BINARY_DIR}/pdfium-src/*.dll\"
+    \"\${CMAKE_CURRENT_BINARY_DIR}/flutter/*.dll\"
+)
+foreach(DLL IN LISTS FOUND_DLLS)
+    get_filename_component(NAME \${DLL} NAME)
+    message(STATUS \"Copying DLL: \${NAME} -> \${TARGET_DIR}\")
+    file(INSTALL \${DLL} DESTINATION \${TARGET_DIR})
+endforeach()
+")
+
+add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -DCONFIG=$<CONFIG> -DTARGET_DIR=${TARGET_RUNTIME_DIR} -P "${CMAKE_CURRENT_BINARY_DIR}/copy_dlls.cmake"
+    COMMENT "Manually collecting all missing DLLs from build artifacts..."
+)

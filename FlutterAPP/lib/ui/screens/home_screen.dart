@@ -53,27 +53,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
         ),
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            _buildAppBar(context, userAsync.value, isDark),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-                    _buildAiQuote(userAsync.value, isDark),
-                    _buildQuickActions(context, isDark),
-                    const SizedBox(height: 48),
-                    _buildSubjectsList(userAsync.value, isDark),
-                    const SizedBox(height: 100),
-                  ],
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                _buildAppBar(context, userAsync.value, isDark),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width > 800
+                          ? 48.0
+                          : 24.0,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
+                        _buildAiQuote(userAsync.value, isDark),
+                        _buildQuickActions(context, isDark),
+                        const SizedBox(height: 48),
+                        _buildSubjectsList(userAsync.value, isDark),
+                        const SizedBox(height: 100),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -367,11 +376,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildSubjectGrid(List<SubjectModel> subjects, bool isDark) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = screenWidth > 1100 ? 4 : (screenWidth > 800 ? 3 : 2);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
         childAspectRatio: 0.9,
